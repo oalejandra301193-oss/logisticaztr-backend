@@ -11,39 +11,41 @@
 body{
 margin:0;
 font-family:Arial;
-background-image:url("https://images.unsplash.com/photo-1503376780353-7e6692767b70");
+height:100vh;
+
+background-image:url("https://images.unsplash.com/photo-1601584115197-04ecc0da31d7");
 background-size:cover;
 background-position:center;
-height:100vh;
+
 display:flex;
 align-items:center;
 justify-content:center;
-color:white;
 }
 
-.overlay{
+.fondo{
 background:rgba(0,0,0,0.6);
 padding:60px;
 border-radius:15px;
 text-align:center;
+color:white;
 }
 
 h1{
-font-size:50px;
+font-size:55px;
 margin-bottom:10px;
 }
 
 p{
-font-size:20px;
+font-size:22px;
 margin-bottom:30px;
 }
 
 button{
 padding:15px 40px;
 font-size:18px;
-border:none;
-border-radius:8px;
 background:#22c55e;
+border:none;
+border-radius:10px;
 color:white;
 cursor:pointer;
 }
@@ -58,13 +60,13 @@ background:#16a34a;
 
 <body>
 
-<div class="overlay">
+<div class="fondo">
 
 <h1>🚚 LogisticaZTR</h1>
 
-<p>Plataforma inteligente de gestión de cargas</p>
+<p>Sistema inteligente de gestión de cargas</p>
 
-<button onclick="entrar()">Entrar al panel</button>
+<button onclick="entrar()">Entrar al sistema</button>
 
 </div>
 
@@ -72,11 +74,12 @@ background:#16a34a;
 
 function entrar(){
 
-window.location="panel.html";
+window.location="panel.html"
 
 }
 
 </script>
 
 </body>
+
 </html>

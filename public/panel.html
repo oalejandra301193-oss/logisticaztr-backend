@@ -31,7 +31,7 @@ padding:30px;
 .card{
 background:#1e293b;
 padding:30px;
-border-radius:10px;
+border-radius:12px;
 text-align:center;
 cursor:pointer;
 transition:0.3s;
@@ -59,9 +59,8 @@ margin-top:10px;
 
 <div class="container">
 
-<div class="card" onclick="irMapa()">
-📍 Camiones en mapa
-<div class="numero" id="camiones">0</div>
+<div class="card" onclick="window.location='admin-mapa.html'">
+📍 Ver camiones en mapa
 </div>
 
 <div class="card">
@@ -78,25 +77,19 @@ margin-top:10px;
 🏆 Ranking choferes
 </div>
 
-<div class="card" onclick="window.location='empresa.html'">
-🏢 Empresa
-</div>
-
 <div class="card" onclick="window.location='flota.html'">
 🚛 Flota
+</div>
+
+<div class="card" onclick="window.location='empresa.html'">
+🏢 Empresa
 </div>
 
 </div>
 
 <script>
 
-function irMapa(){
-
-window.location="admin-mapa.html";
-
-}
-
-async function cargarDatos(){
+async function cargar(){
 
 const res = await fetch("/trips/mapa");
 
@@ -116,11 +109,10 @@ activos++;
 
 document.getElementById("activos").innerText=activos;
 document.getElementById("cargas").innerText=viajes.length;
-document.getElementById("camiones").innerText=viajes.length;
 
 }
 
-cargarDatos();
+cargar()
 
 </script>
 
