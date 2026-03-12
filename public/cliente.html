@@ -131,12 +131,17 @@ clienteTelefono:document.getElementById("telefono").value
 
 };
 
-body:JSON.stringify({
-origen:origen,
-destino:destino,
-origenLat:markerOrigen.getLatLng().lat,
-origenLng:markerOrigen.getLatLng().lng
-})
+await fetch("/trips",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify(data)
+
+});
 
 alert("Carga publicada");
 

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Estadísticas - LogisticaZTR</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:30px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:10px;
+border-radius:10px;
+}
+
+.numero{
+font-size:35px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>📊 Estadísticas del sistema</h1>
+
+<div class="card">
+Cargas publicadas
+<div class="numero" id="cargas">0</div>
+</div>
+
+<div class="card">
+Viajes activos
+<div class="numero" id="activos">0</div>
+</div>
+
+<div class="card">
+Viajes finalizados
+<div class="numero" id="finalizados">0</div>
+</div>
+
+<div class="card">
+Choferes trabajando
+<div class="numero" id="choferes">0</div>
+</div>
+
+<script>
+
+async function cargar(){
+
+const res = await fetch("/trips");
+const viajes = await res.json();
+
+let activos=0;
+let finalizados=0;
+
+let choferes = new Set();
+
+viajes.forEach(v=>{
+
+if(v.estado==="EN_CAMINO"){
+activos++;
+}
+
+if(v.estado==="ENTREGADO"){
+finalizados++;
+}
+
+if(v.choferNombre){
+choferes.add(v.choferNombre);
+}
+
+});
+
+document.getElementById("cargas").innerText=viajes.length;
+document.getElementById("activos").innerText=activos;
+document.getElementById("finalizados").innerText=finalizados;
+document.getElementById("choferes").innerText=choferes.size;
+
+}
+
+cargar();
+
+</script>
+
+</body>
+
+</html>

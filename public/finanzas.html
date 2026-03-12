@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Finanzas - LogisticaZTR</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:30px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:10px;
+border-radius:10px;
+}
+
+.numero{
+font-size:35px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>💰 Finanzas LogisticaZTR</h1>
+
+<div class="card">
+Total facturado
+<div class="numero" id="totalFacturado">0</div>
+</div>
+
+<div class="card">
+Comisiones de la plataforma
+<div class="numero" id="comisiones">0</div>
+</div>
+
+<div class="card">
+Viajes finalizados
+<div class="numero" id="viajes">0</div>
+</div>
+
+<h2>Detalle de viajes</h2>
+
+<div id="lista"></div>
+
+<script>
+
+async function cargarFinanzas(){
+
+const res = await fetch("/trips");
+const viajes = await res.json();
+
+let total = 0;
+let comisiones = 0;
+let finalizados = 0;
+
+let html="";
+
+viajes.forEach(v=>{
+
+if(v.valor){
+
+total += Number(v.valor);
+
+const comision = v.valor * 0.1;
+comisiones += comision;
+
+}
+
+if(v.estado==="ENTREGADO"){
+finalizados++;
+}
+
+html+=`
+<div class="card">
+${v.origen} → ${v.destino}<br>
+Cliente: ${v.clienteNombre || "-"}<br>
+Valor: $${v.valor || 0}
+</div>
+`;
+
+});
+
+document.getElementById("totalFacturado").innerText="$"+total;
+document.getElementById("comisiones").innerText="$"+comisiones;
+document.getElementById("viajes").innerText=finalizados;
+
+document.getElementById("lista").innerHTML=html;
+
+}
+
+cargarFinanzas();
+
+</script>
+
+</body>
+
+</html>
