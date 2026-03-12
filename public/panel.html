@@ -1,96 +1,129 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
+<meta charset="UTF-8">
 <title>Panel LogisticaZTR</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+}
+
+header{
+background:#020617;
+padding:20px;
+font-size:24px;
+}
+
+.container{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px;
+padding:30px;
+}
+
+.card{
+background:#1e293b;
+padding:30px;
+border-radius:10px;
+text-align:center;
+cursor:pointer;
+transition:0.3s;
+}
+
+.card:hover{
+background:#334155;
+transform:scale(1.05);
+}
+
+.numero{
+font-size:40px;
+margin-top:10px;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h1>Panel Administrador</h1>
+<header>
+🚚 Panel de Operaciones LogisticaZTR
+</header>
 
-<h2>Crear viaje</h2>
+<div class="container">
 
-<input id="cliente" placeholder="Cliente">
-<br><br>
+<div class="card" onclick="irMapa()">
+📍 Camiones en mapa
+<div class="numero" id="camiones">0</div>
+</div>
 
-<input id="origen" placeholder="Origen">
-<br><br>
+<div class="card">
+🚚 Viajes activos
+<div class="numero" id="activos">0</div>
+</div>
 
-<input id="destino" placeholder="Destino">
-<br><br>
+<div class="card">
+📦 Cargas publicadas
+<div class="numero" id="cargas">0</div>
+</div>
 
-<button onclick="crearViaje()">Crear Viaje</button>
+<div class="card" onclick="window.location='ranking.html'">
+🏆 Ranking choferes
+</div>
 
-<hr>
+<div class="card" onclick="window.location='empresa.html'">
+🏢 Empresa
+</div>
 
-<h2>Viajes</h2>
+<div class="card" onclick="window.location='flota.html'">
+🚛 Flota
+</div>
 
-<div id="listaViajes"></div>
+</div>
 
 <script>
 
-async function cargarViajes(){
+function irMapa(){
 
-const res = await fetch("/viajes");
+window.location="admin-mapa.html";
+
+}
+
+async function cargarDatos(){
+
+const res = await fetch("/trips/mapa");
+
 const viajes = await res.json();
 
-let html = "";
+let activos=0;
 
-viajes.forEach(v => {
+viajes.forEach(v=>{
 
-html += `
-<div style="border:1px solid black;margin:10px;padding:10px">
+if(v.estado==="EN_VIAJE"){
 
-<b>Cliente:</b> ${v.cliente}<br>
-<b>Origen:</b> ${v.origen}<br>
-<b>Destino:</b> ${v.destino}<br>
-
-<button onclick="eliminarViaje('${v._id}')">Eliminar</button>
-
-</div>
-`;
-
-});
-
-document.getElementById("listaViajes").innerHTML = html;
+activos++;
 
 }
 
-async function crearViaje(){
-
-const cliente = document.getElementById("cliente").value;
-const origen = document.getElementById("origen").value;
-const destino = document.getElementById("destino").value;
-
-await fetch("/viajes",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-cliente,
-origen,
-destino
-})
 });
 
-cargarViajes();
+document.getElementById("activos").innerText=activos;
+document.getElementById("cargas").innerText=viajes.length;
+document.getElementById("camiones").innerText=viajes.length;
 
 }
 
-async function eliminarViaje(id){
-
-await fetch("/viajes/"+id,{
-method:"DELETE"
-});
-
-cargarViajes();
-
-}
-
-cargarViajes();
+cargarDatos();
 
 </script>
 
 </body>
+
 </html>

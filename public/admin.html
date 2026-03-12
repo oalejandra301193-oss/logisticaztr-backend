@@ -4,47 +4,52 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Dashboard LogisticaZTR</title>
+<title>LogisticaZTR</title>
 
 <style>
 
 body{
-font-family:Arial;
 margin:0;
-background:#0f172a;
+font-family:Arial;
+background-image:url("https://images.unsplash.com/photo-1503376780353-7e6692767b70");
+background-size:cover;
+background-position:center;
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
 color:white;
 }
 
-header{
-background:#020617;
-padding:20px;
-font-size:24px;
-}
-
-.container{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:20px;
-padding:30px;
-}
-
-.card{
-background:#1e293b;
-padding:30px;
-border-radius:12px;
-cursor:pointer;
+.overlay{
+background:rgba(0,0,0,0.6);
+padding:60px;
+border-radius:15px;
 text-align:center;
-transition:0.3s;
 }
 
-.card:hover{
-background:#334155;
-transform:scale(1.05);
+h1{
+font-size:50px;
+margin-bottom:10px;
 }
 
-.numero{
-font-size:40px;
-margin-top:10px;
+p{
+font-size:20px;
+margin-bottom:30px;
+}
+
+button{
+padding:15px 40px;
+font-size:18px;
+border:none;
+border-radius:8px;
+background:#22c55e;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#16a34a;
 }
 
 </style>
@@ -53,67 +58,23 @@ margin-top:10px;
 
 <body>
 
-<header>
-🚚 Dashboard LogisticaZTR
-</header>
+<div class="overlay">
 
-<div class="container">
+<h1>🚚 LogisticaZTR</h1>
 
-<div class="card" onclick="irMapa()">
-📍 Camiones en el mapa
-<div class="numero" id="camiones">0</div>
-</div>
+<p>Plataforma inteligente de gestión de cargas</p>
 
-<div class="card">
-🚚 Viajes activos
-<div class="numero" id="activos">0</div>
-</div>
-
-<div class="card">
-📦 Cargas publicadas
-<div class="numero" id="cargas">0</div>
-</div>
-
-<div class="card" onclick="window.location='ranking.html'">
-🏆 Ranking choferes
-</div>
-
-<div class="card" onclick="window.location='flota.html'">
-🚛 Flota
-</div>
-
-<div class="card" onclick="window.location='empresa.html'">
-🏢 Empresa
-</div>
+<button onclick="entrar()">Entrar al panel</button>
 
 </div>
 
 <script>
 
-function irMapa(){
-window.location="admin-mapa.html";
-}
+function entrar(){
 
-async function cargarDatos(){
-
-const res = await fetch("/trips/mapa");
-const viajes = await res.json();
-
-let activos=0;
-
-viajes.forEach(v=>{
-if(v.estado==="EN_VIAJE"){
-activos++;
-}
-});
-
-document.getElementById("activos").innerText = activos;
-document.getElementById("cargas").innerText = viajes.length;
-document.getElementById("camiones").innerText = viajes.length;
+window.location="panel.html";
 
 }
-
-cargarDatos();
 
 </script>
 
