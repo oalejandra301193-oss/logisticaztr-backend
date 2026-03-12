@@ -2,37 +2,49 @@
 <html>
 
 <head>
-    
-<script src="https://unpkg.com/leaflet.marker.slideto@0.2.0/Leaflet.Marker.SlideTo.js"></script>    
 
 <meta charset="UTF-8">
-<title>Panel Logística ZTR</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<title>Dashboard LogisticaZTR</title>
 
 <style>
 
 body{
-font-family: Arial;
+font-family:Arial;
 margin:0;
+background:#0f172a;
+color:white;
 }
 
-#topbar{
-background:#111;
-color:white;
-padding:15px;
-display:flex;
-gap:30px;
+header{
+background:#020617;
+padding:20px;
+font-size:24px;
+}
+
+.container{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px;
+padding:30px;
 }
 
 .card{
-background:#222;
-padding:10px 20px;
-border-radius:8px;
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+cursor:pointer;
+text-align:center;
+transition:0.3s;
 }
 
-#map{
-height:90vh;
+.card:hover{
+background:#334155;
+transform:scale(1.05);
+}
+
+.numero{
+font-size:40px;
+margin-top:10px;
 }
 
 </style>
@@ -41,326 +53,69 @@ height:90vh;
 
 <body>
 
-<div id="topbar">
+<header>
+🚚 Dashboard LogisticaZTR
+</header>
 
-<div class="card">
-💰 Comisiones: $<span id="comisiones">0</span>
+<div class="container">
+
+<div class="card" onclick="irMapa()">
+📍 Camiones en el mapa
+<div class="numero" id="camiones">0</div>
 </div>
 
 <div class="card">
-🚛 Activos: <span id="activos">0</span>
+🚚 Viajes activos
+<div class="numero" id="activos">0</div>
 </div>
 
 <div class="card">
-📦 Pendientes: <span id="pendientes">0</span>
+📦 Cargas publicadas
+<div class="numero" id="cargas">0</div>
 </div>
 
-<div class="card">
-💵 Total viajes: <span id="total">0</span>
+<div class="card" onclick="window.location='ranking.html'">
+🏆 Ranking choferes
+</div>
+
+<div class="card" onclick="window.location='flota.html'">
+🚛 Flota
+</div>
+
+<div class="card" onclick="window.location='empresa.html'">
+🏢 Empresa
 </div>
 
 </div>
-
-<div id="map"></div>
-
-<h2>Finanzas</h2>
-
-<div id="finanzas"></div>
-
-<h2 style="padding:20px">📦 Cargas</h2>
-<div id="listaViajes" style="padding:20px"></div>
-
-<h2>🏆 Ranking Choferes</h2>
-<div id="rankingChoferes"></div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 
-const map = L.map('map').setView([-34.6,-58.4],5);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-maxZoom:19
-}).addTo(map);
-
-let markers = {};
-let rutasRecorridas = {};
-
-const camionIcon = L.icon({
-iconUrl:"/camion.png",
-iconSize:[40,40]
-});
-
-const iconoCamion = L.divIcon({
-    html: "🚛",
-    className: "icono-camion",
-    iconSize: [30,30]
-})
-
-let camiones = {};
-
-async function cargarFinanzas(){
-
-const res = await fetch("/trips/finanzas");
-
-const data = await res.json();
-
-document.getElementById("finanzas").innerHTML=`
-
-💰 Ingresos: $${data.ingresos}
-
-<br>
-
-💵 Comisiones: $${data.comisiones}
-
-<br>
-
-🛣 KM Totales: ${data.kmTotales}
-
-<br>
-
-🚛 Viajes: ${data.viajes}
-
-`;
-
+function irMapa(){
+window.location="admin-mapa.html";
 }
 
-cargarFinanzas();
-
-async function cargarViajes(){
-
-const res = await fetch("/trips/mapa");
-const trips = await res.json();
-
-let html = "";
-
-let activos = 0;
-let pendientes = 0;
-let comisiones = 0;
-
-trips.forEach(trip=>{
-
-if(trip.estado==="EN_VIAJE") activos++;
-if(trip.estado==="PENDIENTE") pendientes++;
-
-if(trip.comisionPagada){
-comisiones += trip.valor * 0.05;
-}
-
-if(trip.ubicaciones && trip.ubicaciones.length > 0){
-
-const ultima = trip.ubicaciones[trip.ubicaciones.length - 1];
-
-const lat = ultima.lat;
-const lng = ultima.lng;
-
-let color = "blue";
-
-if(trip.estado==="EN_CAMINO") color="green";
-if(trip.estado==="PENDIENTE") color="orange";
-if(trip.estado==="FINALIZADO") color="red";
-
-if(!markers[trip._id]){
-
-L.polyline([
-[trip.origenLat,trip.origenLng],
-[trip.destinoLat,trip.destinoLng]
-],{
-color:"gray",
-dashArray:"10,10",
-weight:3
-}).addTo(map);
-
-rutasRecorridas[trip._id] = L.polyline([],{
-color:"blue",
-weight:4
-}).addTo(map);
-
-markers[trip._id] = L.marker([lat,lng],{
-icon: camionIcon
-}).addTo(map);
-bindPopup(`
-<b>${trip.producto}</b><br>
-${trip.origen} → ${trip.destino}<br>
-Estado: ${trip.estado}
-`);
-
-}else{
-
-markers[trip._id].slideTo([lat,lng],{
-duration:4000
-});
-
-rutasRecorridas[trip._id].addLatLng([lat,lng]);
-
-}
-
-}
-
-L.polyline(trip.ruta_recorrida, {color: "green"}).addTo(map)
-L.polyline(trip.ruta_restante, {color: "blue", dashArray: "5,10"}).addTo(map)
-
-let postulaciones = "Sin postulaciones";
-
-if(trip.postulaciones && trip.postulaciones.length > 0){
-
-postulaciones = trip.postulaciones.map(p => `
-<div style="border:1px solid #ccc;padding:5px;margin:5px">
-
-👤 ${p.nombre}<br>
-📞 ${p.telefono}<br>
-🚛 ${p.patente1}<br>
-🚛 ${p.patente2 || ""}<br>
-🚛 ${p.patente3 || ""}
-
-<button onclick="aceptarChofer(
-'${trip._id}',
-'${p.nombre}',
-'${p.telefono}',
-'${p.dni}',
-'${p.patente1}'
-)">
-Aceptar chofer
-</button>
-
-</div>
-`).join("");
-
-}
-
-html += `
-<div style="background:white;padding:15px;margin-bottom:10px;border-radius:8px">
-
-${trip.alertaDesvio ? "<div style='color:red;font-weight:bold'>⚠ Camión fuera de ruta</div>" : ""}
-
-<b>${trip.producto}</b><br>
-${trip.origen} → ${trip.destino}<br>
-Valor: $${trip.valor}<br>
-Estado: ${trip.estado}
-KM recorridos: ${(trip.distanciaTotal || 0).toFixed(2)} km<br>
-
-<br><br>
-
-<b>Postulaciones:</b>
-
-${postulaciones}
-
-</div>
-`;
-
-});
-
-document.getElementById("activos").innerText = activos;
-document.getElementById("pendientes").innerText = pendientes;
-document.getElementById("total").innerText = trips.length;
-document.getElementById("comisiones").innerText = comisiones.toFixed(0);
-document.getElementById("listaViajes").innerHTML = html;
-
-}
-
-async function cargarMapa(){
+async function cargarDatos(){
 
 const res = await fetch("/trips/mapa");
 const viajes = await res.json();
 
+let activos=0;
+
 viajes.forEach(v=>{
+if(v.estado==="EN_VIAJE"){
+activos++;
+}
+});
 
-if(!v.lat || !v.lng) return;
-
-if(!camiones[v.id]){
-
-camiones[v.id] = L.marker([v.lat,v.lng],{
-icon:camionIcon
-})
-.addTo(map)
-.bindPopup(`
-<b>${v.producto}</b><br>
-${v.origen} → ${v.destino}
-`);
-
-}else{
-
-camiones[v.id].setLatLng([v.lat,v.lng]);
+document.getElementById("activos").innerText = activos;
+document.getElementById("cargas").innerText = viajes.length;
+document.getElementById("camiones").innerText = viajes.length;
 
 }
 
-});
-
-}
-
-setInterval(cargarViajes,5000);
-setInterval(cargarMapa,5000);
-
-cargarMapa();
-
-cargarViajes();
-
-async function aceptarChofer(id,nombre,telefono,dni,camion){
-
-await fetch(`/trips/aceptar-chofer/${id}`,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-nombre,
-telefono,
-dni,
-camion
-})
-});
-
-alert("Chofer asignado");
-
-cargarViajes();
-
-}
-
-async function cargarRanking(){
-
-const res = await fetch("/trips/ranking-choferes");
-const ranking = await res.json();
-
-let html="";
-
-ranking.forEach(c=>{
-
-html += `
-<p>
-${c._id} - ${c.viajes} viajes - ${Math.round(c.km)} km
-</p>
-`;
-
-});
-
-document.getElementById("rankingChoferes").innerHTML = html;
-
-}
-
-cargarRanking();
-
-</script>
-
-<script>
-
-if ("serviceWorker" in navigator) {
-
-window.addEventListener("load", () => {
-
-navigator.serviceWorker.register("/sw.js")
-.then(reg => {
-console.log("Service Worker registrado", reg);
-})
-.catch(err => {
-console.log("Error registrando Service Worker", err);
-});
-
-});
-
-}
+cargarDatos();
 
 </script>
 
 </body>
-
 </html>
