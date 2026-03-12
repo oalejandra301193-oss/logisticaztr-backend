@@ -1,0 +1,37 @@
+<h2>🏆 Ranking Choferes</h2>
+
+<div id="ranking"></div>
+
+<script>
+
+async function cargarRanking(){
+
+const res = await fetch("/trips/ranking-choferes");
+const data = await res.json();
+
+let html="";
+
+data.forEach(r=>{
+
+html+=`
+
+<div style="border:1px solid #ccc;padding:10px;margin:10px">
+
+👤 ${r._id}<br>
+🚛 Viajes: ${r.viajes}<br>
+🛣️ KM: ${r.km?.toFixed(2)}<br>
+⭐ Rating: ${r.rating?.toFixed(2)}
+
+</div>
+
+`;
+
+});
+
+document.getElementById("ranking").innerHTML=html;
+
+}
+
+cargarRanking();
+
+</script>

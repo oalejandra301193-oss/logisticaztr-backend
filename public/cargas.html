@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Cargas disponibles</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f5f5f5;
+padding:30px;
+}
+
+.card{
+background:white;
+padding:20px;
+margin-bottom:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+button{
+padding:10px 20px;
+background:#2ecc71;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>📦 Cargas disponibles</h2>
+
+<div id="cargas"></div>
+
+<script>
+
+async function cargarCargas(){
+
+const res = await fetch("/trips");
+
+const trips = await res.json();
+
+const disponibles = trips.filter(t => t.publicado === true);
+
+let html = "";
+
+disponibles.forEach(trip=>{
+
+html += `
+<div class="card">
+
+<b>Producto:</b> ${trip.producto}<br>
+<b>Origen:</b> ${trip.origen}<br>
+<b>Destino:</b> ${trip.destino}<br>
+
+<p><b>KM recorridos:</b> ${trip.distanciaTotal?.toFixed(2) || 0} km</p>
+<p><b>Dirección:</b> ${trip.clienteDireccion}</p>
+
+<p>
+<b>Comisión:</b> 
+${trip.comisionPagada ? "✅ Pagada" : "❌ Pendiente"}
+</p>
+
+<b>Valor:</b> $${trip.valor}
+
+<br><br>
+
+<button onclick="postular('${trip._id}')">
+Postularme
+</button>
+
+</div>
+`;
+
+<button onclick="pagarComision('${trip.id}')">
+💳 Pagar comisión
+</button>
+
+});
+
+document.getElementById("cargas").innerHTML = html;
+
+}
+
+async function postular(id){
+
+const nombre = prompt("Nombre y apellido");
+const telefono = prompt("Teléfono");
+const dni = prompt("DNI");
+
+const patente1 = prompt("Patente camión 1 (OBLIGATORIO)");
+const patente2 = prompt("Patente camión 2 (OBLIGATORIO)");
+const patente3 = prompt("Patente camión 3 (OPCIONAL)");
+
+if(!nombre.includes(" ")){
+alert("Debe ingresar nombre y apellido");
+return;
+}
+
+if(!patente1 || !patente2){
+alert("Debe ingresar al menos 2 patentes");
+return;
+}
+
+await fetch(`/trips/postular/${id}`,{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+nombre,
+telefono,
+dni,
+patente1,
+patente2,
+patente3
+
+})
+
+});
+
+alert("Postulación enviada");
+
+}
+
+cargarCargas();
+
+async function pagarComision(id){
+
+const res = await fetch(`/trips/pagar-comision/${id}`,{
+method:"POST"
+});
+
+const data = await res.json();
+
+alert("Comisión pagada. Dirección desbloqueada.");
+
+cargarViajes();
+
+}
+
+</script>
+
+</script>
+
+<script>
+
+if ("serviceWorker" in navigator) {
+
+window.addEventListener("load", () => {
+
+navigator.serviceWorker.register("/sw.js")
+.then(reg => {
+console.log("Service Worker registrado", reg);
+})
+.catch(err => {
+console.log("Error registrando Service Worker", err);
+});
+
+});
+
+}
+
+</script>
+
+</body>
+
+</html>
+
+</body>
+</html>

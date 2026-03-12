@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+  <meta charset="UTF-8">
+  <title>Portal Chofer - Logística ZTR</title>
+</head>
+
+<body>
+
+<h2>Portal del Chofer 🚛</h2>
+
+<button onclick="disponible()">🟢 Disponible</button>
+<button onclick="noDisponible()">🔴 No disponible</button>
+
+<div id="tripInfo"></div>
+
+<br>
+
+<button onclick="marcarCargado()">🚛 YA CARGUÉ</button>
+<button onclick="marcarDescarga()">📦 DESCARGA REALIZADA</button>
+<button onclick="finalizarViaje()">  FINALIZAR VIAJE</button>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+const socket = io();
+
+socket.on("nuevo-viaje",(data)=>{
+
+alert("🚛 Nueva carga disponible: "+data.origen+" → "+data.destino);
+
+});  
+
+const params = new URLSearchParams(window.location.search);
+const token = params.get("token");
+
+let tripActual = null;
+let watchId = null;
+
+if (!token) {
+  document.body.innerHTML = "❌ Token inválido";
+}
+
+let lastUpdate = 0;
+
+navigator.geolocation.watchPosition((pos)=>{
+
+const now = Date.now();
+
+if(now-lastUpdate < 20000) return;
+
+lastUpdate = now;
+},
+
+// Cargar viaje
+async function cargarViaje() {
+
+  const res = await fetch("/trips");
+  const trips = await res.json();
+
+  const trip = trips.find(t => t.tokenChofer === token);
+
+  if (!trip) {
+    document.body.innerHTML = "❌ Viaje no encontrado";
+    return;
+  }
+
+  tripActual = trip;
+
+  mostrarViaje();
+},
+
+
+// Mostrar datos del viaje
+
+function mostrarViaje(){
+
+document.getElementById("tripInfo").innerHTML = `
+<p><b>Producto:</b> ${tripActual.producto}</p>
+<p><b>Origen:</b> ${tripActual.origen}</p>
+<p><b>Destino:</b> ${tripActual.destino}</p>
+<p><b>Estado:</b> ${tripActual.estado}</p>
+`;
+
+},
+
+
+// INICIAR SEGUIMIENTO GPS
+function iniciarSeguimiento(){
+
+if(!navigator.geolocation){
+alert("GPS no soportado en este dispositivo");
+return;
+}
+
+watchId = navigator.geolocation.watchPosition(
+
+async(position)=>{
+
+const lat = position.coords.latitude;
+const lng = position.coords.longitude;
+
+const now = Date.now();
+if(now-lastUpdate < 20000) return;
+lastUpdate = now;
+
+// guardar ubicación del chofer
+await fetch("/trips/location",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+lat:lat,
+lng:lng,
+driverId:tripActual.choferId
+})
+});
+
+// guardar ubicación del viaje
+await fetch(`/trips/token/${token}/ubicacion`,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+lat:lat,
+lng:lng
+})
+});
+
+console.log("📍 Ubicación enviada");
+
+},
+
+(error)=>{
+console.log("Error GPS:",error);
+},
+
+{
+enableHighAccuracy:true,
+maximumAge:0,
+timeout:5000
+}
+
+);
+
+},
+
+
+// MARCAR CARGA
+async function marcarCargado(){
+
+await fetch(`/trips/token/${token}/estado`,{
+method:"PUT",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+estado:"EN_CAMINO"
+})
+});
+
+tripActual.estado="EN_CAMINO";
+mostrarViaje();
+
+iniciarSeguimiento();
+
+alert("🚛 Carga confirmada. Seguimiento activado.");
+
+},
+
+
+// MARCAR DESCARGA
+async function marcarDescarga(){
+
+if(watchId){
+navigator.geolocation.clearWatch(watchId);
+}
+
+await fetch(`/trips/token/${token}/estado`,{
+method:"PUT",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+estado:"ENTREGADO"
+})
+});
+
+tripActual.estado="ENTREGADO";
+mostrarViaje();
+
+alert("📦 Viaje finalizado");
+
+},
+
+
+// cargar viaje al abrir página
+
+cargarViaje());
+
+// iniciar tracking si ya está en camino
+if(tripActual && tripActual.estado === "EN_CAMINO"){
+iniciarSeguimiento();
+}
+
+// registrar service worker
+if ("serviceWorker" in navigator) {
+
+window.addEventListener("load", () => {
+
+navigator.serviceWorker.register("/sw.js")
+.then(reg => {
+console.log("SW registrado");
+})
+.catch(err => {
+console.log("Error SW", err);
+});
+
+});
+
+}
+
+async function disponible(){
+
+await fetch("/trips/chofer/disponibilidad",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+dni:tripActual.choferDni,
+disponible:true
+})
+});
+
+alert("Estás disponible");
+
+}
+
+async function noDisponible(){
+
+await fetch("/trips/chofer/disponibilidad",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+dni:tripActual.choferDni,
+disponible:false
+})
+});
+
+alert("No disponible");
+
+}
+
+// finalizar viaje
+async function finalizarViaje(){
+
+if(watchId){
+navigator.geolocation.clearWatch(watchId);
+}
+
+await fetch(`/trips/finalizar/${tripActual._id}`,{
+method:"POST"
+});
+
+alert("Viaje finalizado");
+
+location.reload();
+
+}
+
+</script>
+
+</body>
+</html>

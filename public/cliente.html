@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Publicar carga</title>
+
+<style>
+
+body{
+font-family:Arial;
+padding:30px;
+}
+
+input{
+display:block;
+margin-bottom:10px;
+padding:8px;
+width:300px;
+}
+
+button{
+padding:10px 20px;
+background:#3498db;
+color:white;
+border:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h3>Calificar Chofer</h3>
+
+<select id="ratingChofer">
+
+<option value="5">⭐⭐⭐⭐⭐</option>
+<option value="4">⭐⭐⭐⭐</option>
+<option value="3">⭐⭐⭐</option>
+<option value="2">⭐⭐</option>
+<option value="1">⭐</option>
+
+</select>
+
+<br><br>
+
+<textarea id="comentario" placeholder="Comentario"></textarea>
+
+<br><br>
+
+<button onclick="enviarRating()">Enviar calificación</button> 
+
+<h3>⭐ Calificar viaje</h3>
+
+<select id="ratingChofer">
+<option value="5">⭐⭐⭐⭐⭐</option>
+<option value="4">⭐⭐⭐⭐</option>
+<option value="3">⭐⭐⭐</option>
+<option value="2">⭐⭐</option>
+<option value="1">⭐</option>
+</select>
+
+<br><br>
+
+<textarea id="comentario" placeholder="Comentario"></textarea>
+
+<br><br>
+
+<button onclick="calificar()">Enviar calificación</button>
+
+<h2>Publicar carga</h2>
+
+<input id="producto" placeholder="Producto">
+
+<input id="origen" placeholder="Origen">
+
+<input id="destino" placeholder="Destino">
+
+<input id="valor" placeholder="Valor">
+
+<h3>Datos cliente</h3>
+
+<input id="nombre" placeholder="Nombre">
+
+<input id="direccion" placeholder="Dirección">
+
+<input id="cuit" placeholder="CUIT">
+
+<input id="telefono" placeholder="Teléfono">
+
+<button onclick="crear()">Publicar carga</button>
+
+<script>
+
+async function calificar(){
+
+const rating = document.getElementById("ratingChofer").value;
+const comentario = document.getElementById("comentario").value;
+
+await fetch("/trips/calificar/"+tripId,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+ratingChofer:rating,
+comentario:comentario
+})
+});
+
+alert("Calificación enviada");
+
+}    
+
+async function crear(){
+
+const data = {
+
+producto:document.getElementById("producto").value,
+origen:document.getElementById("origen").value,
+destino:document.getElementById("destino").value,
+valor:document.getElementById("valor").value,
+
+clienteNombre:document.getElementById("nombre").value,
+clienteDireccion:document.getElementById("direccion").value,
+clienteCUIT:document.getElementById("cuit").value,
+clienteTelefono:document.getElementById("telefono").value
+
+};
+
+body:JSON.stringify({
+origen:origen,
+destino:destino,
+origenLat:markerOrigen.getLatLng().lat,
+origenLng:markerOrigen.getLatLng().lng
+})
+
+alert("Carga publicada");
+
+}
+
+async function enviarRating(){
+
+const rating = document.getElementById("ratingChofer").value;
+const comentario = document.getElementById("comentario").value;
+
+await fetch(`/trips/rating/${tripId}`,{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+rating,
+comentario
+})
+
+});
+
+alert("Gracias por tu calificación");
+
+}
+
+</script>
+
+</body>
+
+</html>

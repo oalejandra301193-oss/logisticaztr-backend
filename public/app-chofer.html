@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>App Chofer ZTR</title>
+
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
+</head>
+
+<body>
+
+<h2>🚛 App Chofer</h2>
+
+<div id="viajes"></div>
+
+<script>
+
+async function cargarViajes(){
+
+const res = await fetch("/trips");
+const viajes = await res.json();
+
+let html="";
+
+viajes.forEach(v=>{
+
+if(v.estado==="DISPONIBLE"){
+
+html+=`
+
+<div style="border:1px solid #ccc;padding:10px;margin:10px">
+
+📍 ${v.origen} → ${v.destino}
+
+<br>
+
+📦 ${v.producto}
+
+<br>
+
+💰 $${v.valor}
+
+<br><br>
+
+<a href="/chofer.html?token=${v.tokenChofer}">
+
+<button>Tomar viaje</button>
+
+</a>
+
+</div>
+
+`;
+
+}
+
+});
+
+document.getElementById("viajes").innerHTML=html;
+
+}
+
+cargarViajes();
+
+</script>
+
+</body>
+</html>

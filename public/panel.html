@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Panel LogisticaZTR</title>
+</head>
+
+<body>
+
+<h1>Panel Administrador</h1>
+
+<h2>Crear viaje</h2>
+
+<input id="cliente" placeholder="Cliente">
+<br><br>
+
+<input id="origen" placeholder="Origen">
+<br><br>
+
+<input id="destino" placeholder="Destino">
+<br><br>
+
+<button onclick="crearViaje()">Crear Viaje</button>
+
+<hr>
+
+<h2>Viajes</h2>
+
+<div id="listaViajes"></div>
+
+<script>
+
+async function cargarViajes(){
+
+const res = await fetch("/viajes");
+const viajes = await res.json();
+
+let html = "";
+
+viajes.forEach(v => {
+
+html += `
+<div style="border:1px solid black;margin:10px;padding:10px">
+
+<b>Cliente:</b> ${v.cliente}<br>
+<b>Origen:</b> ${v.origen}<br>
+<b>Destino:</b> ${v.destino}<br>
+
+<button onclick="eliminarViaje('${v._id}')">Eliminar</button>
+
+</div>
+`;
+
+});
+
+document.getElementById("listaViajes").innerHTML = html;
+
+}
+
+async function crearViaje(){
+
+const cliente = document.getElementById("cliente").value;
+const origen = document.getElementById("origen").value;
+const destino = document.getElementById("destino").value;
+
+await fetch("/viajes",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+cliente,
+origen,
+destino
+})
+});
+
+cargarViajes();
+
+}
+
+async function eliminarViaje(id){
+
+await fetch("/viajes/"+id,{
+method:"DELETE"
+});
+
+cargarViajes();
+
+}
+
+cargarViajes();
+
+</script>
+
+</body>
+</html>
