@@ -59,7 +59,7 @@ margin-top:10px;
 
 <div class="container">
 
-<div class="card" onclick="window.location='admin-mapa.html'">
+<div class="card" onclick="window.location='mapa.html'">
 📍 Mapa en vivo
 </div>
 
@@ -115,7 +115,7 @@ margin-top:10px;
 
 async function cargar(){
 
-const res = await fetch("/trips/mapa");
+const res = await fetch("/trips");
 
 const viajes = await res.json();
 
@@ -123,10 +123,8 @@ let activos=0;
 
 viajes.forEach(v=>{
 
-if(v.estado==="EN_VIAJE"){
-
+if(v.estado==="EN_CAMINO"){
 activos++;
-
 }
 
 });
