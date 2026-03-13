@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>App Cliente ZTR</title>
+
+</head>
+
+<body>
+
+<h2>📦 App Cliente</h2>
+
+<div id="viaje"></div>
+
+<script>
+
+const viajeId = prompt("ID del viaje");
+
+async function cargar(){
+
+const res = await fetch("/trips/"+viajeId);
+
+const v = await res.json();
+
+document.getElementById("viaje").innerHTML=`
+
+📍 ${v.origen} → ${v.destino}
+
+<br>
+
+Estado: ${v.estado}
+
+<br>
+
+Chofer: ${v.choferNombre}
+
+`;
+
+}
+
+setInterval(cargar,5000);
+
+</script>
+
+</body>
+
+</html>

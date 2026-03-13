@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Portal Cliente - Logistica ZTR</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f4f4;
+padding:30px;
+}
+
+.card{
+background:white;
+padding:20px;
+margin-bottom:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+button{
+padding:10px 20px;
+background:#3498db;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+margin:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Portal Cliente</h2>
+
+<div class="card">
+
+<h3>📦 Publicar carga</h3>
+
+<button onclick="window.location='cliente.html'">
+Publicar nueva carga
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>🚚 Mis viajes</h3>
+
+<div id="misViajes"></div>
+
+</div>
+
+<div class="card">
+
+<h3>💰 Adelantos</h3>
+
+<button onclick="pagarAdelanto()">
+Pagar adelanto
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>📁 Documentación</h3>
+
+<input type="file" id="archivo">
+
+<button onclick="subirDocumento()">
+Subir documento
+</button>
+
+</div>
+
+<script>
+
+async function cargarViajes(){
+
+const res = await fetch("/trips");
+
+const viajes = await res.json();
+
+let html="";
+
+viajes.forEach(v=>{
+
+if(v.clienteNombre){
+
+html+=`
+
+<p>
+
+${v.producto} → ${v.destino}
+
+Estado: ${v.estado}
+
+</p>
+
+`;
+
+}
+
+});
+
+document.getElementById("misViajes").innerHTML=html;
+
+}
+
+async function subirDocumento(){
+
+const file = document.getElementById("archivo").files[0];
+
+const formData = new FormData();
+
+formData.append("archivo",file);
+
+await fetch("/subir-documento",{
+
+method:"POST",
+
+body:formData
+
+});
+
+alert("Documento guardado");
+
+}
+
+cargarViajes();
+
+async function pagarAdelanto(){
+
+const id = prompt("ID del viaje");
+
+const monto = prompt("Monto del adelanto");
+
+await fetch("/trips/adelanto/"+id,{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+monto
+})
+
+});
+
+alert("Adelanto registrado");
+
+}
+
+</script>
+
+</body>
+
+</html>

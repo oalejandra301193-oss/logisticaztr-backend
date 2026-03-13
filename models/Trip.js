@@ -33,6 +33,18 @@ distanciaKm: { type: Number, required: true },
 valor: { type: Number, required: true },
 producto: { type: String, required: true },
 
+// 💳 Adelanto que paga el cliente a la empresa
+adelanto:{
+type:Number,
+default:0
+},
+
+// 💰 comisión de Logistica ZTR
+comision:{
+type:Number,
+default:0
+},
+
   // 📦 Estado del viaje
   estado: {
     type: String,
@@ -96,6 +108,18 @@ producto: { type: String, required: true },
     }
   ],
 
+  cotizaciones:[
+{
+dni:String,
+precio:Number,
+fecha:{
+type:Date,
+default:Date.now
+}
+}
+],
+
+
   // 📏 Distancia recorrida real
   distanciaTotal: {
     type: Number,
@@ -145,9 +169,5 @@ producto: { type: String, required: true },
   } 
 
 }, { timestamps: true });
-
-precioViaje: Number;
-comision: Number
-
 
 module.exports = mongoose.model("Trip", tripSchema);

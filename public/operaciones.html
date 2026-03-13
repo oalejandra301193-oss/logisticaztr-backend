@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Centro de Operaciones - Logistica ZTR</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#f4f4f4;
+}
+
+header{
+background:#111827;
+color:white;
+padding:15px;
+font-size:20px;
+}
+
+.container{
+display:grid;
+grid-template-columns:2fr 1fr;
+height:calc(100vh - 60px);
+}
+
+#map{
+height:100%;
+}
+
+.panel{
+overflow:auto;
+background:white;
+padding:20px;
+}
+
+.card{
+
+border:1px solid #ddd;
+padding:15px;
+margin-bottom:15px;
+border-radius:8px;
+
+}
+
+button{
+
+padding:8px 15px;
+margin:5px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+
+}
+
+.aceptar{
+background:#2ecc71;
+color:white;
+}
+
+.rechazar{
+background:#e74c3c;
+color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+🚚 Centro de Operaciones Logistica ZTR
+</header>
+
+<div class="container">
+
+<div id="map"></div>
+
+<div class="panel">
+
+<h3>📦 Cargas / Viajes</h3>
+
+<div id="viajes"></div>
+
+</div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+const map = L.map("map").setView([-34.6,-58.4],6);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+const camionIcon = L.icon({
+iconUrl:"https://cdn-icons-png.flaticon.com/512/3448/3448339.png",
+iconSize:[35,35]
+});
+
+async function cargarOperaciones(){
+
+const res = await fetch("/trips");
+
+const viajes = await res.json();
+
+let html="";
+
+viajes.forEach(v=>{
+
+if(v.lat && v.lng){
+
+L.marker([v.lat,v.lng],{icon:camionIcon})
+.addTo(map)
+.bindPopup(v.producto+" → "+v.destino);
+
+}
+
+html+=`
+
+<div class="card">
+
+<b>Producto:</b> ${v.producto}<br>
+<b>Origen:</b> ${v.origen}<br>
+<b>Destino:</b> ${v.destino}<br>
+<b>Estado:</b> ${v.estado}<br>
+<b>Valor:</b> $${v.valor}<br>
+
+<div id="postulaciones-${v._id}"></div>
+
+</div>
+
+`;
+
+});
+
+document.getElementById("viajes").innerHTML=html;
+
+cargarPostulaciones(viajes);
+
+}
+
+async function cargarPostulaciones(viajes){
+
+viajes.forEach(v=>{
+
+if(v.postulaciones && v.postulaciones.length){
+
+let html="<h4>Choferes postulados</h4>";
+
+v.postulaciones.forEach(p=>{
+
+html+=`
+
+<div>
+
+${p.nombre} | ${p.telefono}
+
+<br>
+
+<button class="aceptar" onclick="aceptarChofer('${v._id}','${p.dni}')">
+Aceptar
+</button>
+
+<button class="rechazar" onclick="rechazarChofer('${v._id}','${p.dni}')">
+Rechazar
+</button>
+
+</div>
+
+`;
+
+});
+
+document.getElementById("postulaciones-"+v._id).innerHTML=html;
+
+}
+
+});
+
+}
+
+async function aceptarChofer(tripId,dni){
+
+await fetch("/trips/aceptar-chofer",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+tripId,
+dni
+
+})
+
+});
+
+alert("Chofer asignado al viaje");
+
+location.reload();
+
+}
+
+async function rechazarChofer(tripId,dni){
+
+await fetch("/trips/rechazar-chofer",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+tripId,
+dni
+
+})
+
+});
+
+alert("Chofer rechazado");
+
+location.reload();
+
+}
+
+cargarOperaciones();
+
+</script>
+
+</body>
+
+</html>
