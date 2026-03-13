@@ -48,7 +48,7 @@ const res = await fetch("/trips");
 
 const trips = await res.json();
 
-const disponibles = trips.filter(t => t.publicado === true);
+const disponibles = trips.filter(t => t.estado !== "FINALIZADO");
 
 let html = "";
 
@@ -77,12 +77,12 @@ ${trip.comisionPagada ? "✅ Pagada" : "❌ Pendiente"}
 Postularme
 </button>
 
-</div>
-`;
-
-<button onclick="pagarComision('${trip.id}')">
+<button onclick="pagarComision('${trip._id}')">
 💳 Pagar comisión
 </button>
+
+</div>
+`;
 
 });
 
@@ -147,7 +147,7 @@ const data = await res.json();
 
 alert("Comisión pagada. Dirección desbloqueada.");
 
-cargarViajes();
+cargarCargas();
 
 }
 

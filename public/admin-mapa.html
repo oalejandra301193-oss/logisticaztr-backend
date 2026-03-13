@@ -54,11 +54,16 @@ data.forEach(trip=>{
 
 if(!trip.lat || !trip.lng) return;
 
-if(!markers[trip.id]){
+if(!markers[trip.id]){    
 
-markers[trip.id] = L.marker([trip.lat,trip.lng])
-.addTo(map)
-.bindPopup(
+markers[trip.id] = Const; camionIcon = L.icon({
+iconUrl:"https://cdn-icons-png.flaticon.com/512/743/743922.png",
+iconSize:[40,40]
+});
+
+L.marker([trip.lat,trip.lng],{icon:camionIcon}).addTo(map);
+
+bindPopup(
 `🚛 ${trip.producto}<br>
 📍 ${trip.origen} → ${trip.destino}`
 );

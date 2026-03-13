@@ -1,78 +1,19 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <meta charset="UTF-8">
-  <title>Panel Empresa - Seguimiento</title>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
-  <style>
-    #map {
-      height: 90vh;
-      width: 100%;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Empresa</title>
 </head>
+
 <body>
 
-<h2>Seguimiento en tiempo real 🚛</h2>
-<div id="map"></div>
+<h2>Datos de la empresa</h2>
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<script>
-
-const params = new URLSearchParams(window.location.search);
-const token = params.get("token");
-
-if (!token) {
-  document.body.innerHTML = "Token inválido";
-}
-
-const map = L.map('map').setView([-32.89, -68.84], 13);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
-
-let marker = null;
-let polyline = null;
-
-async function actualizarMapa() {
-
-  const res = await fetch(`/trips`);
-  const trips = await res.json();
-
-  const trip = trips.find(t => t.tokenChofer === token);
-
-  if (!trip || !trip.ubicaciones || trip.ubicaciones.length === 0) {
-    return;
-  }
-
-  const puntos = trip.ubicaciones.map(u => [u.lat, u.lng]);
-
-  const ultima = puntos[puntos.length - 1];
-
-  if (!marker) {
-    marker = L.marker(ultima).addTo(map);
-  } else {
-    marker.setLatLng(ultima);
-  }
-
-  if (!polyline) {
-    polyline = L.polyline(puntos, { color: 'blue' }).addTo(map);
-  } else {
-    polyline.setLatLngs(puntos);
-  }
-
-  map.setView(ultima, 14);
-}
-
-setInterval(actualizarMapa, 5000);
-
-</script>
+<p>Nombre: Logistica ZTR</p>
+<p>Tipo: Plataforma de transporte</p>
+<p>Comisión: 5%</p>
 
 </body>
+
 </html>
