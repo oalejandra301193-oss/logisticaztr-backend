@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Viajes activos</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f4f4;
+padding:30px;
+}
+
+.card{
+
+background:white;
+padding:20px;
+margin-bottom:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+
+}
+
+button{
+
+padding:8px 20px;
+background:#3498db;
+color:white;
+border:none;
+border-radius:5px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>🚚 Viajes activos</h2>
+
+<div id="viajes"></div>
+
+<script>
+
+async function cargarViajes(){
+
+const res = await fetch("/trips");
+
+const viajes = await res.json();
+
+let html="";
+
+viajes.forEach(v=>{
+
+html+=`
+
+<div class="card">
+
+<b>Producto:</b> ${v.producto}<br>
+<b>Origen:</b> ${v.origen}<br>
+<b>Destino:</b> ${v.destino}<br>
+<b>Estado:</b> ${v.estado}
+
+<br><br>
+
+<button onclick="verMapa('${v._id}')">
+Ver mapa
+</button>
+
+</div>
+
+`;
+
+});
+
+document.getElementById("viajes").innerHTML=html;
+
+}
+
+function verMapa(id){
+
+window.location="/admin-mapa.html?id="+id;
+
+}
+
+cargarViajes();
+
+</script>
+
+</body>
+
+</html>

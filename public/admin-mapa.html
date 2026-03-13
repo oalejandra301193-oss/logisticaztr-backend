@@ -31,6 +31,9 @@ width:100%;
 
 <div id="map"></div>
 
+const params = new URLSearchParams(window.location.search);
+const viajeId = params.get("id");
+
 <script>
 
 const map = L.map("map").setView([-34.6,-58.38],5);
@@ -51,6 +54,8 @@ const res = await fetch("/trips/mapa");
 const data = await res.json();
 
 data.forEach(trip=>{
+
+if(viajeId && trip._id !== viajeId) return;
 
 if(!trip.lat || !trip.lng) return;
 

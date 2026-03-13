@@ -7,6 +7,31 @@
 <title>Panel LogisticaZTR</title>
 
 <style>
+    .dashboard{
+
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+margin-top:30px;
+
+}
+
+.card{
+
+background:white;
+padding:25px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+text-align:center;
+
+}
+
+.card p{
+
+font-size:30px;
+font-weight:bold;
+
+}
 
 body{
 margin:0;
@@ -109,13 +134,35 @@ margin-top:10px;
 📦 Cargas
 </div>
 
+<div class="dashboard">
+
+<div class="card">
+<h3>📍 Viajes activos</h3>
+<p id="activos">0</p>
+</div>
+
+<div class="card">
+<h3>📦 Cargas publicadas</h3>
+<p id="cargas">0</p>
+</div>
+
+<div class="card">
+<h3>👨‍✈️ Postulaciones</h3>
+<p id="postulaciones">0</p>
+</div>
+
+<div class="card">
+<h3>💰 Comisiones</h3>
+<p id="comisiones">$0</p>
+</div>
+
 </div>
 
 <script>
 
 async function cargar(){
 
-const res = await fetch("/trips");
+const res = await fetch("https://logisticaztr-backend.onrender.com/trips");
 
 const viajes = await res.json();
 
@@ -135,6 +182,50 @@ document.getElementById("cargas").innerText=viajes.length;
 }
 
 cargar()
+
+</script>
+
+<script>
+
+async function cargarDashboard(){
+
+const res = await fetch("/trips");
+
+const viajes = await res.json();
+
+let activos=0;
+let cargas=0;
+let postulaciones=0;
+let comisiones=0;
+
+viajes.forEach(v=>{
+
+if(v.estado==="EN_CAMINO"){
+activos++;
+}
+
+if(v.publicado){
+cargas++;
+}
+
+if(v.postulaciones){
+postulaciones+=v.postulaciones.length;
+}
+
+if(v.valor){
+comisiones+=v.valor*0.05;
+}
+
+});
+
+document.getElementById("activos").innerText=activos;
+document.getElementById("cargas").innerText=cargas;
+document.getElementById("postulaciones").innerText=postulaciones;
+document.getElementById("comisiones").innerText="$"+comisiones;
+
+}
+
+cargarDashboard();
 
 </script>
 
