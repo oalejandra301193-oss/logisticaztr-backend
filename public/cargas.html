@@ -264,23 +264,65 @@ cargarCargas()
 
 async function crearCarga(){
 
-const data = {
+const producto = document.getElementById("producto").value
+const origen = document.getElementById("origen").value
+const destino = document.getElementById("destino").value
+const distancia = document.getElementById("distancia").value
+const valor = document.getElementById("valor").value
+const tipo = document.getElementById("tipoCarga").value
+const cantidad = document.getElementById("cantidad").value
 
-producto:document.getElementById("producto").value,
-origen:document.getElementById("origen").value,
-destino:document.getElementById("destino").value,
-distanciaKm:document.getElementById("distancia").value,
-valor:document.getElementById("valor").value,
-tipoCarga:document.getElementById("tipoCarga").value,
-cantidad:document.getElementById("cantidad").value,
+const nombre = document.getElementById("nombreApellido").value
+const comercio = document.getElementById("comercio").value
+const cuit = document.getElementById("cuit").value
+const telefono = document.getElementById("telefono").value
+const direccion = document.getElementById("direccionDescarga").value
 
-clienteNombre:document.getElementById("nombreApellido").value,
-clienteComercio:document.getElementById("comercio").value,
-clienteCUIT:document.getElementById("cuit").value,
-clienteTelefono:document.getElementById("telefono").value,
-direccionDescarga:document.getElementById("direccionDescarga").value
+
+// VALIDACIÓN
+
+if(!producto ||
+   !origen ||
+   !destino ||
+   !distancia ||
+   !valor ||
+   !tipo ||
+   !cantidad ||
+   !nombre ||
+   !comercio ||
+   !cuit ||
+   !telefono ||
+   !direccion){
+
+alert("⚠ Debe completar todos los datos para publicar la carga")
+
+return
 
 }
+
+
+// CREAR OBJETO
+
+const data = {
+
+producto,
+origen,
+destino,
+distanciaKm:distancia,
+valor,
+tipoCarga:tipo,
+cantidad,
+
+clienteNombre:nombre,
+clienteComercio:comercio,
+clienteCUIT:cuit,
+clienteTelefono:telefono,
+direccionDescarga:direccion
+
+}
+
+
+// ENVIAR AL SERVIDOR
 
 await fetch("/trips",{
 
@@ -294,7 +336,7 @@ body:JSON.stringify(data)
 
 })
 
-alert("Carga enviada para aprobación")
+alert("✅ Carga enviada para aprobación")
 
 cargarCargas()
 
