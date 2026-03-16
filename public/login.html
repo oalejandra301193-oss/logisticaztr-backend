@@ -86,10 +86,15 @@ background:#27ae60;
 
 async function login(){
 
-const email=document.getElementById("email").value
-const password=document.getElementById("password").value
+const email = document.getElementById("email").value
+const password = document.getElementById("password").value
 
-const res=await fetch("/api/auth/admin/login",{
+if(!email || !password){
+alert("Ingrese email y contraseña")
+return
+}
+
+const res = await fetch("/api/auth/admin/login",{
 
 method:"POST",
 
@@ -104,13 +109,28 @@ password
 
 })
 
-const data=await res.json()
+if(!res.ok){
+
+alert("Email o contraseña incorrectos")
+return
+
+}
+
+const data = await res.json()
 
 localStorage.setItem("token",data.token)
 
 window.location="/admin.html"
 
 }
+
+
+const data=await res.json()
+
+localStorage.setItem("token",data.token)
+
+window.location="/admin.html"
+
 
 </script>
 
