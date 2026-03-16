@@ -40,7 +40,7 @@ app.use(express.static("public"));
 app.use("/uploads",express.static("uploads"));
 
 app.get("/", (req,res)=>{
-res.sendFile(__dirname + "/public/inicio-app.html")
+res.redirect("/inicio-app.html")
 })
 
 app.use("/api/auth",authRoutes);
