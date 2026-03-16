@@ -27,7 +27,17 @@ const DriverSchema = new mongoose.Schema({
   ultimaUbicacion:{
   lat:Number,
   lng:Number
-  }
+  },
+
+  ubicacion:{
+  lat:Number,
+  lng:Number
+  },
+
+  disponible:{
+  type:Boolean,
+  default:true
+  },
 
 });
 

@@ -9,4 +9,13 @@ router.get("/all", async (req,res)=>{
 
 });
 
+router.get("/", async (req,res)=>{
+
+const clients = await Client.find()
+
+res.json(clients)
+
+})
+
+
 module.exports = router;

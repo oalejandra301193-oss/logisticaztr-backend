@@ -52,6 +52,63 @@ Viajes finalizados
 
 <div id="lista"></div>
 
+<h2>Comisiones</h2>
+
+<div id="lista"></div>
+
+<h2>Finanzas</h2>
+
+<div id="total"></div>
+<div id="comision"></div>
+<div id="viajes"></div>
+
+
+<script>
+
+const res = await fetch("/finanzas")
+const data = await res.json()
+
+document.getElementById("total").innerText = data.total
+document.getElementById("comision").innerText = data.comisiones
+document.getElementById("viajes").innerText = data.viajes
+
+async function cargar(){
+
+const res = await fetch("/trips")
+const viajes = await res.json()
+
+let html=""
+
+viajes.forEach(v=>{
+
+if(v.comisionPagada){
+
+html+=`
+
+<div>
+
+Viaje: ${v.producto}<br>
+Chofer: ${v.choferNombre}<br>
+Comisión pagada
+
+<hr>
+
+</div>
+
+`
+
+}
+
+})
+
+document.getElementById("lista").innerHTML=html
+
+}
+
+cargar()
+
+</script>
+
 <script>
 
 async function cargarFinanzas(){

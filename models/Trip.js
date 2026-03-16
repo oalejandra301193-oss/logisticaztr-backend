@@ -16,6 +16,27 @@ const tripSchema = new mongoose.Schema({
   default:0
   },
 
+  cargaConfirmadaChofer:{
+type:Boolean,
+default:false
+},
+
+cargaConfirmadaCliente:{
+type:Boolean,
+default:false
+},
+
+descargaConfirmadaChofer:{
+type:Boolean,
+default:false
+},
+
+descargaConfirmadaCliente:{
+type:Boolean,
+default:false
+},
+
+
   comentario:String,
 
   // 📍 Datos del viaje
@@ -169,5 +190,6 @@ default:Date.now
   } 
 
 }, { timestamps: true });
+
 
 module.exports = mongoose.model("Trip", tripSchema);

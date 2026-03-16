@@ -44,6 +44,49 @@ border-radius:5px;
 
 <div id="viajes"></div>
 
+<h2>Viajes activos</h2>
+
+<div id="lista"></div>
+
+<script>
+
+async function cargar(){
+
+const res = await fetch("/trips")
+const viajes = await res.json()
+
+let html=""
+
+viajes.forEach(v=>{
+
+if(v.estado==="ASIGNADO" || v.estado==="EN_VIAJE"){
+
+html+=`
+
+<div>
+
+📦 ${v.producto}<br>
+🚛 Chofer: ${v.choferNombre}<br>
+📍 ${v.origen} → ${v.destino}
+
+<hr>
+
+</div>
+
+`
+
+}
+
+})
+
+document.getElementById("lista").innerHTML=html
+
+}
+
+cargar()
+
+</script>
+
 <script>
 
 async function cargarViajes(){

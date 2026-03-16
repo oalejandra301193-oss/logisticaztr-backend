@@ -89,24 +89,29 @@ margin-top:10px;
 </div>
 
 <div class="card">
+<h3>Viajes activos</h3>
+<div id="viajesActivos">0</div>
 🚚 Viajes activos
-<div class="numero" id="activos">0</div>
 </div>
 
-<div class="card">
-📦 Cargas publicadas
-<div class="numero" id="cargas">0</div>
+<div class="card"></div>
+<h3>📦 Cargas publicadas</h3>
+<div id="cargasPublicadas">0</div>
 </div>
 
 <div class="card" onclick="window.location='postulaciones.html'">
-📋 Postulaciones de choferes
+📋 Choferes postulados
 </div>
 
 <div class="card" onclick="window.location='chofer.html'">
 👨‍✈️ Choferes activos
 </div>
 
-<div class="card" onclick="window.location='cliente.html'">
+<div class="card" onclick="abrir('choferes.html')">
+🚛 Choferes
+</div>
+
+<div class="card" onclick="abrir('clientes-activos.html')">
 👤 Clientes
 </div>
 
@@ -136,17 +141,7 @@ margin-top:10px;
 
 <div class="dashboard">
 
-<div class="card">
-<h3>📍 Viajes activos</h3>
-<p id="activos">0</p>
-</div>
-
-<div class="card">
-<h3>📦 Cargas publicadas</h3>
-<p id="cargas">0</p>
-</div>
-
-<div class="card">
+<div class="card">0</div>
 <h3>👨‍✈️ Postulaciones</h3>
 <p id="postulaciones">0</p>
 </div>
@@ -158,7 +153,115 @@ margin-top:10px;
 
 </div>
 
+<h2>Choferes en viaje</h2>
+
+<div id="lista"></div>
+
 <script>
+
+async function cargar(){
+
+const res = await fetch("/trips")
+const viajes = await res.json()
+
+let html=""
+
+viajes.forEach(v=>{
+
+if(v.estado==="EN_VIAJE"){
+
+html+=`
+
+<div>
+
+👤 ${v.choferNombre}
+<br>
+📦 ${v.producto}
+
+<hr>
+
+</div>
+
+`
+
+}
+
+})
+
+document.getElementById("lista").innerHTML=html
+
+}
+
+cargar()
+
+</script>
+
+<h2>🚚 Panel Logistica ZTR</h2>
+
+<div class="menu">
+
+<button onclick="window.location='choferes.html'">
+Choferes
+</button>
+
+<button onclick="window.location='clientes-activos.html'">
+Clientes
+</button>
+
+<button onclick="abrir('operaciones.html')">
+Centro de Operaciones
+</button>
+
+<div class="card" onclick="abrir('despacho.html')">
+🚚 Panel de despacho
+</div>
+
+<button onclick="window.location='viajes.html'">
+📍Ver viajes
+</button>
+
+
+<button onclick="window.location='cargas.html'">
+<h3>📦Ver Cargas publicadas</h3>
+<p id="cargas">0</p>
+</div>
+</button>
+
+<button onclick="abrir('empresa.html')">
+Empresa
+</button>
+
+</div>
+
+<script>
+
+function abrir(p){
+
+window.location=p
+
+}
+
+</script>
+
+
+<script>
+
+const publicadas = viajes.filter(v => v.publicado === true)
+
+document.getElementById("cargasPublicadas").innerText = publicadas.length
+
+async function cargarPanel(){
+
+const res = await fetch("/trips")
+const viajes = await res.json()
+
+const activos = viajes.filter(v => v.estado === "EN_VIAJE")
+
+document.getElementById("Viajes activos").innerText = activos.length
+
+}
+
+cargarPanel()    
 
 async function cargar(){
 
@@ -226,6 +329,26 @@ document.getElementById("comisiones").innerText="$"+comisiones;
 }
 
 cargarDashboard();
+
+setInterval(notificaciones,5000)
+
+async function notificaciones(){
+
+const res = await fetch("/trips")
+const viajes = await res.json()
+
+viajes.forEach(v=>{
+
+if(v.postulaciones.length>0){
+
+console.log("Nueva postulacion en viaje",v._id)
+
+}
+
+})
+
+}
+
 
 </script>
 

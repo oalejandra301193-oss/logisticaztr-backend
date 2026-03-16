@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Panel de Despacho</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+#mapa{
+height:600px;
+border-radius:10px;
+margin-top:20px;
+}
+
+.panel{
+background:#1e293b;
+padding:15px;
+border-radius:10px;
+margin-bottom:10px;
+}
+
+button{
+padding:8px;
+margin-top:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>🚚 Panel de Despacho LogisticaZTR</h2>
+
+<div id="info"></div>
+
+<div id="mapa"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+let mapa = L.map("mapa").setView([-34.6,-58.4],5)
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+maxZoom:19
+}).addTo(mapa)
+
+let camiones=[]
+let cargas=[]
+
+async function cargar(){
+
+const resTrips = await fetch("/trips")
+const trips = await resTrips.json()
+
+const resDrivers = await fetch("/drivers")
+const drivers = await resDrivers.json()
+
+camiones.forEach(c=>mapa.removeLayer(c))
+cargas.forEach(c=>mapa.removeLayer(c))
+
+camiones=[]
+cargas=[]
+
+let html=""
+
+trips.forEach(t=>{
+
+if(t.estado==="PENDIENTE"){
+
+if(t.origenLat){
+
+const marker = L.marker([t.origenLat,t.origenLng]).addTo(mapa)
+
+marker.bindPopup(
+"📦 "+t.producto+"<br>"+t.origen+" → "+t.destino
+)
+
+cargas.push(marker)
+
+html+=`
+<div class="panel">
+
+📦 ${t.producto}
+
+<br>
+
+📍 ${t.origen}
+
+<br>
+
+<button onclick="sugerir('${t._id}',${t.origenLat},${t.origenLng})">
+Buscar chofer cercano
+</button>
+
+</div>
+`
+
+}
+
+}
+
+})
+
+drivers.forEach(d=>{
+
+if(d.ubicacion){
+
+const marker = L.marker([
+d.ubicacion.lat,
+d.ubicacion.lng
+]).addTo(mapa)
+
+marker.bindPopup("🚛 "+d.nombre)
+
+camiones.push(marker)
+
+}
+
+})
+
+document.getElementById("info").innerHTML=html
+
+}
+
+function distancia(lat1,lng1,lat2,lng2){
+
+const R=6371
+
+const dLat=(lat2-lat1)*Math.PI/180
+const dLng=(lng2-lng1)*Math.PI/180
+
+const a=
+Math.sin(dLat/2)*Math.sin(dLat/2)+
+Math.cos(lat1*Math.PI/180)*
+Math.cos(lat2*Math.PI/180)*
+Math.sin(dLng/2)*Math.sin(dLng/2)
+
+return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+
+}
+
+async function sugerir(tripId,lat,lng){
+
+const res = await fetch("/drivers")
+const drivers = await res.json()
+
+let mejor=null
+let mejorDistancia=99999
+
+drivers.forEach(d=>{
+
+if(d.ubicacion){
+
+const dist=distancia(
+lat,
+lng,
+d.ubicacion.lat,
+d.ubicacion.lng
+)
+
+if(dist<mejorDistancia){
+
+mejorDistancia=dist
+mejor=d
+
+}
+
+}
+
+})
+
+if(mejor){
+
+alert(
+"Chofer sugerido: "+mejor.nombre+
+"\nDistancia: "+mejorDistancia.toFixed(1)+" km"
+)
+
+}
+
+}
+
+setInterval(cargar,5000)
+
+cargar()
+
+</script>
+
+</body>
+
+</html>

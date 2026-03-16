@@ -1,34 +1,66 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta charset="UTF-8">
-<title>Cargas disponibles</title>
+<title>Cargas publicadas</title>
 
 <style>
 
 body{
 font-family:Arial;
-background:#f5f5f5;
-padding:30px;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+h2{
+margin-bottom:20px;
 }
 
 .card{
-background:white;
-padding:20px;
-margin-bottom:20px;
+
+background:#1e293b;
+padding:15px;
+margin-bottom:15px;
 border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
+
 }
 
 button{
-padding:10px 20px;
-background:#2ecc71;
-color:white;
+
+padding:8px 12px;
+margin-top:8px;
+margin-right:5px;
 border:none;
-border-radius:5px;
+border-radius:6px;
 cursor:pointer;
+
 }
+
+.ver{
+background:#2563eb;
+color:white;
+}
+
+.eliminar{
+background:#dc2626;
+color:white;
+}
+
+.estado{
+
+padding:4px 8px;
+border-radius:5px;
+font-size:12px;
+margin-left:10px;
+
+}
+
+.publicado{background:#334155}
+.en_viaje{background:#16a34a}
+.finalizado{background:#64748b}
 
 </style>
 
@@ -36,140 +68,121 @@ cursor:pointer;
 
 <body>
 
-<h2>📦 Cargas disponibles</h2>
+<h2>📦 Cargas publicadas</h2>
 
-<div id="cargas"></div>
+<div id="lista"></div>
 
 <script>
 
 async function cargarCargas(){
 
-const res = await fetch("/trips");
+const res = await fetch("/trips")
+const cargas = await res.json()
 
-const trips = await res.json();
+let html=""
 
-const disponibles = trips.filter(t => t.estado !== "FINALIZADO");
+cargas.forEach(c=>{
 
-let html = "";
+let estadoClass="publicado"
 
-disponibles.forEach(trip=>{
+if(c.estado==="EN_VIAJE"){
+estadoClass="en_viaje"
+}
 
-html += `
+if(c.estado==="FINALIZADO"){
+estadoClass="finalizado"
+}
+
+html+=`
+
 <div class="card">
 
-<b>Producto:</b> ${trip.producto}<br>
-<b>Origen:</b> ${trip.origen}<br>
-<b>Destino:</b> ${trip.destino}<br>
+<b>Producto:</b> ${c.producto}
 
-<p><b>KM recorridos:</b> ${trip.distanciaTotal?.toFixed(2) || 0} km</p>
-<p><b>Dirección:</b> ${trip.clienteDireccion}</p>
+<br>
 
-<p>
-<b>Comisión:</b> 
-${trip.comisionPagada ? "✅ Pagada" : "❌ Pendiente"}
-</p>
+<b>Origen:</b> ${c.origen}
 
-<b>Valor:</b> $${trip.valor}
+<br>
+
+<b>Destino:</b> ${c.destino}
+
+<br>
+
+<b>Distancia:</b> ${c.distanciaKm || "-"} km
+
+<br>
+
+<b>Precio:</b> $${c.valor || "-"}
+
+<br>
+
+<b>Estado:</b>
+<span class="estado ${estadoClass}">
+${c.estado || "PUBLICADO"}
+</span>
 
 <br><br>
 
-<button onclick="postular('${trip._id}')">
-Postularme
+<b>Chofer:</b>
+${c.choferNombre || "Sin asignar"}
+
+<br><br>
+
+<button class="ver" onclick="verPostulaciones('${c._id}')">
+Ver postulaciones
 </button>
 
-<button onclick="pagarComision('${trip._id}')">
-💳 Pagar comisión
+<button class="eliminar" onclick="eliminarCarga('${c._id}')">
+Eliminar carga
 </button>
 
 </div>
-`;
 
-});
-
-document.getElementById("cargas").innerHTML = html;
-
-}
-
-async function postular(id){
-
-const nombre = prompt("Nombre y apellido");
-const telefono = prompt("Teléfono");
-const dni = prompt("DNI");
-
-const patente1 = prompt("Patente camión 1 (OBLIGATORIO)");
-const patente2 = prompt("Patente camión 2 (OBLIGATORIO)");
-const patente3 = prompt("Patente camión 3 (OPCIONAL)");
-
-if(!nombre.includes(" ")){
-alert("Debe ingresar nombre y apellido");
-return;
-}
-
-if(!patente1 || !patente2){
-alert("Debe ingresar al menos 2 patentes");
-return;
-}
-
-await fetch(`/trips/postular/${id}`,{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-nombre,
-telefono,
-dni,
-patente1,
-patente2,
-patente3
+`
 
 })
 
-});
-
-alert("Postulación enviada");
+document.getElementById("lista").innerHTML=html
 
 }
 
-cargarCargas();
+cargarCargas()
 
-async function pagarComision(id){
+async function eliminarCarga(id){
 
-const res = await fetch(`/trips/pagar-comision/${id}`,{
-method:"POST"
-});
+if(!confirm("Eliminar carga?")) return
 
-const data = await res.json();
-
-alert("Comisión pagada. Dirección desbloqueada.");
-
-cargarCargas();
-
-}
-
-</script>
-
-</script>
-
-<script>
-
-if ("serviceWorker" in navigator) {
-
-window.addEventListener("load", () => {
-
-navigator.serviceWorker.register("/sw.js")
-.then(reg => {
-console.log("Service Worker registrado", reg);
+await fetch("/trips/"+id,{
+method:"DELETE"
 })
-.catch(err => {
-console.log("Error registrando Service Worker", err);
-});
 
-});
+cargarCargas()
+
+}
+
+async function verPostulaciones(id){
+
+const res = await fetch("/trips/"+id+"/postulaciones")
+const postulaciones = await res.json()
+
+if(postulaciones.length===0){
+
+alert("No hay choferes postulados")
+
+return
+
+}
+
+let texto="Choferes postulados:\n\n"
+
+postulaciones.forEach(p=>{
+
+texto+=p.nombre+" - "+p.telefono+"\n"
+
+})
+
+alert(texto)
 
 }
 
@@ -177,7 +190,4 @@ console.log("Error registrando Service Worker", err);
 
 </body>
 
-</html>
-
-</body>
 </html>

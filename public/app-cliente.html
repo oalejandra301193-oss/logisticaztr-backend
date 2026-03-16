@@ -4,8 +4,33 @@
 <head>
 
 <meta charset="UTF-8">
-
 <title>App Cliente ZTR</title>
+
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:10px;
+border-radius:10px;
+}
+
+button{
+padding:10px;
+margin-top:10px;
+}
+
+</style>
 
 </head>
 
@@ -13,38 +38,341 @@
 
 <h2>📦 App Cliente</h2>
 
-<div id="viaje"></div>
+<button onclick="mostrarFormulario()">
+Publicar carga
+</button>
+
+<button onclick="verViaje()">
+Ver carga en viaje
+</button>
+
+<div id="contenido"></div>
+
+<h3>Publicar carga</h3>
+
+<div class="card">
+
+<input id="producto" placeholder="Producto"><br><br>
+
+<input id="origen" placeholder="Ciudad de origen"><br><br>
+
+<input id="destino" placeholder="Ciudad de destino"><br><br>
+
+<input id="distancia" placeholder="Distancia KM" readonly><br><br>
+
+<input id="valor" placeholder="Valor del viaje"><br><br>
+
+<select id="tipoCarga">
+
+<option value="granel">Granel</option>
+<option value="bolsas">Mercadería embolsada</option>
+<option value="pallet">Palletizada</option>
+<option value="general">Carga general</option>
+<option value="pie">Tabla por pie</option>
+
+</select>
+
+<br><br>
+
+<input id="cantidad" placeholder="Cantidad (toneladas / bultos / pallets / pies)">
+
+
+<button onclick="calcularDistancia()">Calcular distancia</button>
+
+<button onclick="calcularFlete()">
+Calcular flete
+</button>
+
+<button onclick="crearCarga()">Publicar carga</button>
+
+
+</div>
+
 
 <script>
 
-const viajeId = prompt("ID del viaje");
+let mapa
+let camion
 
-async function cargar(){
+async function verViaje(){
 
-const res = await fetch("/trips/"+viajeId);
+const res=await fetch("/mis-viajes")
+const viajes=await res.json()
 
-const v = await res.json();
+if(viajes.length===0){
 
-document.getElementById("viaje").innerHTML=`
+alert("Todavia no tenes una carga en viaje")
 
-📍 ${v.origen} → ${v.destino}
-
-<br>
-
-Estado: ${v.estado}
-
-<br>
-
-Chofer: ${v.choferNombre}
-
-`;
+return
 
 }
 
-setInterval(cargar,5000);
+mostrarMapa(viajes[0])
+
+}
+
+async function mejorChofer(){
+
+const res=await fetch("/ranking")
+const data=await res.json()
+
+if(data.length){
+
+document.getElementById("ranking").innerHTML=
+
+"🏆 Chofer del mes: "+data[0]._id
+
+}
+
+}
+
+mejorChofer()
+
+
+async function cargar(){
+
+const res = await fetch("/trips/"+id)
+const viaje = await res.json()
+
+document.getElementById("info").innerHTML=`
+
+<div class="card">
+
+Estado: ${viaje.estado}<br><br>
+
+Chofer: ${viaje.choferNombre || "Sin asignar"}
+
+</div>
+
+`
+
+if(!mapa){
+
+mapa = L.map("mapa").setView([-34.6,-58.4],5)
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+maxZoom:19
+}).addTo(mapa)
+
+}
+
+if(viaje.ultimaUbicacion){
+
+if(camion) mapa.removeLayer(camion)
+
+camion = L.marker([
+viaje.ultimaUbicacion.lat,
+viaje.ultimaUbicacion.lng
+]).addTo(mapa)
+
+mapa.setView([
+viaje.ultimaUbicacion.lat,
+viaje.ultimaUbicacion.lng
+],8)
+
+}
+
+if(viaje.estado==="FINALIZADO"){
+
+document.getElementById("rating").innerHTML=`
+
+<h3>Calificar chofer</h3>
+
+<button onclick="puntuar(5)">⭐⭐⭐⭐⭐</button>
+<button onclick="puntuar(4)">⭐⭐⭐⭐</button>
+<button onclick="puntuar(3)">⭐⭐⭐</button>
+<button onclick="puntuar(2)">⭐⭐</button>
+<button onclick="puntuar(1)">⭐</button>
+
+`
+
+}
+
+}
+
+async function ruta(){
+
+const res = await fetch(
+
+"https://router.project-osrm.org/route/v1/driving/"+
+
+coords.origenLng+","+coords.origenLat+";"+
+
+coords.destinoLng+","+coords.destinoLat+
+
+"?overview=full&geometries=geojson"
+
+)
+
+const data=await res.json()
+
+const route=data.routes[0].geometry.coordinates
+
+const latlngs=route.map(c=>[c[1],c[0]])
+
+L.polyline(latlngs,{
+color:"blue"
+}).addTo(mapa)
+
+}
+
+
+async function puntuar(n){
+
+await fetch("/trips/rating-chofer",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+tripId:id,
+rating:n
+
+})
+
+})
+
+alert("Gracias por calificar")
+
+}
+
+setInterval(cargar,5000)
+
+async function crearCarga(){
+
+const producto=document.getElementById("producto").value
+const origen=document.getElementById("origen").value
+const destino=document.getElementById("destino").value
+const distancia=document.getElementById("distancia").value
+const valor=document.getElementById("valor").value
+
+await fetch("/trips/crear",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+producto,
+origen,
+destino,
+distanciaKm:distancia,
+valor,
+
+origenLat:coords.origenLat,
+origenLng:coords.origenLng,
+destinoLat:coords.destinoLat,
+destinoLng:coords.destinoLng
+
+})
+
+})
+
+alert("Carga enviada para aprobación")
+
+}
+
+
+async function geocodificar(lugar){
+
+const res = await fetch(
+"https://nominatim.openstreetmap.org/search?format=json&q="+lugar
+)
+
+const data = await res.json()
+
+return {
+lat:parseFloat(data[0].lat),
+lng:parseFloat(data[0].lon)
+}
+
+}
+
+function distancia(lat1,lng1,lat2,lng2){
+
+const R=6371
+
+const dLat=(lat2-lat1)*Math.PI/180
+const dLng=(lng2-lng1)*Math.PI/180
+
+const a=
+Math.sin(dLat/2)*Math.sin(dLat/2)+
+Math.cos(lat1*Math.PI/180)*
+Math.cos(lat2*Math.PI/180)*
+Math.sin(dLng/2)*Math.sin(dLng/2)
+
+return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+
+}
+
+async function calcularDistancia(){
+
+const origen=document.getElementById("origen").value
+const destino=document.getElementById("destino").value
+
+const o = await geocodificar(origen)
+const d = await geocodificar(destino)
+
+const km = distancia(
+o.lat,
+o.lng,
+d.lat,
+d.lng
+)
+
+document.getElementById("distancia").value = km.toFixed(0)
+
+window.coords={
+origenLat:o.lat,
+origenLng:o.lng,
+destinoLat:d.lat,
+destinoLng:d.lng
+}
+
+}
+
+async function calcularFlete(){
+
+const tipo=document.getElementById("tipoCarga").value
+const cantidad=document.getElementById("cantidad").value
+const km=document.getElementById("distancia").value
+
+let precio=0
+
+if(tipo==="granel"){
+precio=cantidad*3500
+}
+
+if(tipo==="bolsas"){
+precio=cantidad*900
+}
+
+if(tipo==="pallet"){
+precio=cantidad*6000
+}
+
+if(tipo==="general"){
+precio=km*1200
+}
+
+if(tipo==="pie"){
+precio=cantidad*2500
+}
+
+document.getElementById("valor").value=Math.round(precio)
+
+}
+
 
 </script>
 
 </body>
-
 </html>
+

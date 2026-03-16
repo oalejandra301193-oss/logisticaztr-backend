@@ -2,213 +2,91 @@
 <html>
 
 <head>
+
 <meta charset="UTF-8">
-<title>Portal Chofer - Logística ZTR</title>
+<title>Mapa Logístico</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+}
+
+#mapa{
+height:500px;
+width:100%;
+border-radius:10px;
+}
+
+</style>
 
 </head>
 
 <body>
 
-<h2>Portal del Chofer 🚛</h2>
+<h2>Mapa Logístico</h2>
 
-<div id="tripInfo"></div>
-
-<div id="map" style="height:400px;margin-top:20px;"></div>
-
-<br>
-
-<button onclick="marcarCargado()">🚛 YA CARGUÉ</button>
-<button onclick="marcarDescarga()">📦 DESCARGA REALIZADA</button>
+<div id="mapa"></div>
 
 <script>
 
-const params = new URLSearchParams(window.location.search);
-const token = params.get("token");
-
-let tripActual = null;
-let watchId = null;
-
-let map;
-let rutaLayer;
-
-if (!token) {
-  document.body.innerHTML = "❌ Token inválido";
-}
-
-// Cargar viaje
-async function cargarViaje() {
-
-  const res = await fetch("/trips");
-  const trips = await res.json();
-
-  const trip = trips.find(t => t.tokenChofer === token);
-
-  if (!trip) {
-    document.body.innerHTML = "❌ Viaje no encontrado";
-    return;
-  }
-
-  tripActual = trip;
-
-  mostrarViaje();
-  iniciarMapa();
-}
-
-
-// Mostrar datos del viaje
-function mostrarViaje(){
-
-document.getElementById("tripInfo").innerHTML = `
-<p><b>Producto:</b> ${tripActual.producto}</p>
-<p><b>Origen:</b> ${tripActual.origen}</p>
-<p><b>Destino:</b> ${tripActual.destino}</p>
-<p><b>Estado:</b> ${tripActual.estado}</p>
-`;
-
-mostrarRuta(
-tripActual.origenLat,
-tripActual.origenLng,
-tripActual.destinoLat,
-tripActual.destinoLng
-);
-
-}
-
-
-// INICIAR SEGUIMIENTO GPS
-function iniciarSeguimiento(){
-
-if(!navigator.geolocation){
-alert("GPS no soportado en este dispositivo");
-return;
-}
-
-watchId = navigator.geolocation.watchPosition(
-
-async(position)=>{
-
-await fetch(`/trips/token/${token}/ubicacion`,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-lat:position.coords.latitude,
-lng:position.coords.longitude
-})
-});
-
-console.log("📍 Ubicación enviada");
-
-},
-
-(error)=>{
-console.log("Error GPS:",error);
-},
-
-{
-enableHighAccuracy:true,
-maximumAge:0,
-timeout:5000
-}
-
-);
-
-}
-
-
-// MARCAR CARGA
-async function marcarCargado(){
-
-await fetch(`/trips/token/${token}/estado`,{
-method:"PUT",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-estado:"EN_CAMINO"
-})
-});
-
-tripActual.estado="EN_CAMINO";
-mostrarViaje();
-
-iniciarSeguimiento();
-
-alert("🚛 Carga confirmada. Seguimiento activado.");
-
-}
-
-
-// MARCAR DESCARGA
-async function marcarDescarga(){
-
-if(watchId){
-navigator.geolocation.clearWatch(watchId);
-}
-
-await fetch(`/trips/token/${token}/estado`,{
-method:"PUT",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-estado:"ENTREGADO"
-})
-});
-
-tripActual.estado="ENTREGADO";
-mostrarViaje();
-
-alert("📦 Viaje finalizado");
-
-}
-
-
-// cargar viaje al abrir página
-cargarViaje();
-
-function iniciarMapa(){
-
-map = L.map("map").setView([-34.6,-58.38],6);
+let mapa = L.map("mapa").setView([-34.6,-58.4],5)
 
 L.tileLayer(
-"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 {
 maxZoom:19
 }
-).addTo(map);
+).addTo(mapa)
+
+let camiones = {}
+
+const camionIcon = L.icon({
+iconUrl:"https://cdn-icons-png.flaticon.com/512/743/743922.png",
+iconSize:[40,40]
+})
+
+async function cargar(){
+
+const res = await fetch("/trips")
+const viajes = await res.json()
+
+viajes.forEach(v=>{
+
+if(v.ultimaUbicacion){
+
+const lat = v.ultimaUbicacion.lat
+const lng = v.ultimaUbicacion.lng
+
+if(!camiones[v._id]){
+
+camiones[v._id] = L.marker(
+[lat,lng],
+{icon:camionIcon}
+).addTo(mapa)
+
+camiones[v._id].bindPopup(
+"🚛 Chofer: " + (v.choferNombre || "Sin asignar")
+)
+
+}else{
+
+camiones[v._id].setLatLng([lat,lng])
 
 }
 
-async function mostrarRuta(origenLat,origenLng,destinoLat,destinoLng){
-
-const res = await fetch(
-`https://router.project-osrm.org/route/v1/driving/${origenLng},${origenLat};${destinoLng},${destinoLat}?overview=full&geometries=geojson`
-);
-
-const data = await res.json();
-
-const coords = data.routes[0].geometry.coordinates.map(
-c=>[c[1],c[0]]
-);
-
-if(rutaLayer){
-map.removeLayer(rutaLayer);
 }
 
-rutaLayer = L.polyline(coords,{
-color:"blue",
-weight:5
-}).addTo(map);
-
-map.fitBounds(rutaLayer.getBounds());
+})
 
 }
+
+cargar()
+
+setInterval(cargar,2000)
 
 </script>
 

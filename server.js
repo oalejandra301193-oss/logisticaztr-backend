@@ -3,21 +3,49 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
-
 const http = require("http");
+
 const { Server } = require("socket.io");
+
+const Trip = require("./models/Trip");
+const Driver = require("./models/Driver");
+const Client = require("./models/Client");
+const Admin = require("./models/Admin");
+
+const authRoutes = require("./routes/auth");
+const companyRoutes = require("./routes/company");
+
+const bcrypt = require("bcrypt");
+const multer = require("multer");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const authRoutes = require("./routes/auth");
+const rankingRoutes = require("./routes/ranking")
+const driversRoutes = require("./routes/drivers")
 
-function calcularComision(valor){
+app.use("/api/company", companyRoutes)
+app.use("/ranking", rankingRoutes)
+app.use("/drivers", driversRoutes)
 
-return valor * 0.05;
 
-}
+app.set("io", io);
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended:true }));
+
+app.use(express.static("public"));
+app.use("/uploads",express.static("uploads"));
+
+app.get("/", (req,res)=>{
+res.sendFile(__dirname + "/public/inicio-app.html")
+})
+
+app.use("/api/auth",authRoutes);
+app.use("/api/company",companyRoutes);
+app.use("/trips",require("./routes/trips"));
 
 function distancia(lat1,lon1,lat2,lon2){
 
@@ -38,51 +66,79 @@ return R*c;
 
 }
 
-// middlewares
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // 👈 ESTA LÍNEA VA ACÁ
-app.use(express.static("public"));
+app.get("/",(req,res)=>{
+res.sendFile(__dirname+"/public/inicio-app.html")
+})
 
-// rutas
-app.use("/api/auth", authRoutes);
-app.use("/trips", require("./routes/trips"));
-app.use("/uploads", express.static("uploads"));
+app.post("/trips/adelanto/:id",async(req,res)=>{
 
-app.post("/trips/adelanto/:id", async (req,res)=>{
-
-const { monto } = req.body;
+const {monto} = req.body;
 
 const trip = await Trip.findById(req.params.id);
 
 if(!trip){
-
 return res.status(404).json({error:"Viaje no encontrado"});
-
 }
 
 trip.adelanto = monto;
 
 await trip.save();
 
+res.json({ok:true,adelanto:monto});
+
+});
+
+app.get("/finanzas",async(req,res)=>{
+
+const viajes = await Trip.find({estado:"FINALIZADO"});
+
+let total = 0;
+let comisiones = 0;
+
+viajes.forEach(v=>{
+total += v.valor;
+comisiones += v.comision || 0;
+});
+
 res.json({
-
-ok:true,
-adelanto:monto
-
+total,
+comisiones,
+viajes:viajes.length
 });
 
 });
 
-app.get("/choferes-cercanos", async (req,res)=>{
+app.get("/drivers",async(req,res)=>{
 
-const { lat,lng } = req.query;
+const drivers = await Driver.find();
 
-const choferes = await Chofer.find({disponible:true});
+res.json(drivers);
+
+});
+
+app.get("/trips/:id",async(req,res)=>{
+
+const trip = await Trip.findById(req.params.id);
+
+if(!trip){
+return res.status(404).json({error:"Viaje no encontrado"});
+}
+
+res.json(trip);
+
+});
+
+app.get("/choferes-cercanos",async(req,res)=>{
+
+const {lat,lng} = req.query;
+
+const choferes = await Driver.find({disponible:true});
 
 const cercanos = choferes.filter(c=>{
 
-const d = distancia(lat,lng,c.lat,c.lng);
+if(!c.ubicacion) return false;
+
+const d = distancia(lat,lng,c.ubicacion.lat,c.ubicacion.lng);
 
 return d < 100;
 
@@ -92,208 +148,89 @@ res.json(cercanos);
 
 });
 
-const PORT = process.env.PORT || 3000;
+app.get("/ranking",async(req,res)=>{
 
-app.get('/', (req, res) =>{
-res.send('Servidor funcionando correctamente 🚀');
-});
+const top = await Trip.aggregate([
+{
+$group:{
+_id:"$choferDni",
+promedio:{$avg:"$ratingChofer"}
+}
+},
+{$sort:{promedio:-1}},
+{$limit:5}
+]);
 
-const bcrypt = require("bcrypt");
-const Admin = require("./models/Admin");
-
-app.set("io", io);
-
-app.get('/', (req, res) => {
-    res.send('Servidor funcionando correctamente 🚀');
-});
-
-mongoose.connect(process.env.MONGO_URI)
-.then(() => {
-    console.log('✅ Conectado a MongoDB Atlas');
-
-server.listen(3000, ()=>{
-console.log("Servidor corriendo");
-});    
-
-app.get("/crear-admin", async (req, res) => {
-
-    const hashedPassword = await bcrypt.hash("123456", 10);
-
-    const admin = new Admin({
-        email: "admin@logisticaztr.com",
-        password: hashedPassword
-    });
-
-    await admin.save();
-
-    res.send("Admin creado correctamente");
-});
-
-})
-
-.catch((error) => {
-    console.error('❌ Error conectando a MongoDB:', error);
-});
-
-app.post("/trips/postular", async(req,res)=>{
-
-const {tripId,dni} = req.body;
-
-const trip = await Trip.findById(tripId);
-
-trip.postulaciones.push({
-
-dni
+res.json(top);
 
 });
 
-await trip.save();
+app.get("/crear-admin",async(req,res)=>{
 
-res.json({ok:true});
+const hashedPassword = await bcrypt.hash("123456",10);
 
+const admin = new Admin({
+email:"admin@logisticaztr.com",
+password:hashedPassword
 });
 
+await admin.save();
 
-app.post("/trips/aceptar-chofer", async (req,res)=>{
-
-const {tripId,dni} = req.body;
-
-const trip = await Trip.findById(tripId);
-
-const postulacion = trip.postulaciones.find(p=>p.dni===dni);
-
-trip.choferDni = postulacion.dni;
-trip.choferNombre = postulacion.nombre;
-
-trip.estado="ASIGNADO";
-
-// 💰 calcular comisión empresa
-trip.comision = trip.valor * 0.05;
-
-await trip.save();
-
-res.json({ok:true});
+res.send("Admin creado correctamente");
 
 });
-
-
-app.post("/trips/rechazar-chofer", async (req,res)=>{
-
-const {tripId,dni} = req.body;
-
-const trip = await Trip.findById(tripId);
-
-trip.postulaciones = trip.postulaciones.filter(p=>p.dni!==dni);
-
-await trip.save();
-
-res.json({ok:true});
-
-});
-
-const multer = require("multer");
 
 const storage = multer.diskStorage({
 
 destination:(req,file,cb)=>{
 
-if(req.body.tipo === "chofer"){
-
+if(req.body.tipo==="chofer"){
 cb(null,"uploads/choferes");
-
 }
-
-else if(req.body.tipo === "cliente"){
-
+else if(req.body.tipo==="cliente"){
 cb(null,"uploads/clientes");
-
 }
-
-else if(req.body.tipo === "contrato"){
-
+else if(req.body.tipo==="contrato"){
 cb(null,"uploads/contratos");
-
 }
-
 else{
-
 cb(null,"uploads");
-
 }
 
 },
 
 filename:(req,file,cb)=>{
-
 cb(null,Date.now()+"-"+file.originalname);
-
 }
 
 });
 
 const upload = multer({storage});
 
-app.post("/subir-documento", upload.single("archivo"), (req,res)=>{
+app.post("/subir-documento",upload.single("archivo"),(req,res)=>{
 
 res.json({
-
 archivo:req.file.filename
-
 });
 
 });
 
-app.post("/trips/cotizar", async(req,res)=>{
+const PORT = process.env.PORT || 3000;
 
-const {tripId,dni,precio} = req.body;
+mongoose.connect(process.env.MONGO_URI)
+.then(()=>{
 
-const trip = await Trip.findById(tripId);
+console.log("✅ Conectado a MongoDB Atlas");
 
-trip.cotizaciones.push({
-
-dni,
-precio
-
+server.listen(PORT,()=>{
+console.log("Servidor corriendo en puerto "+PORT);
 });
 
-await trip.save();
-
-res.json({ok:true});
-
+})
+.catch(error=>{
+console.error("❌ Error conectando a MongoDB:",error);
 });
 
-app.post("/rating", async(req,res)=>{
-
-const {tripId,rating,comentario} = req.body;
-
-const trip = await Trip.findById(tripId);
-
-trip.ratingChofer = rating;
-trip.comentario = comentario;
-
-await trip.save();
-
-res.json({ok:true});
-
-});
-
-app.get("/ranking-choferes", async(req,res)=>{
-
-const ranking = await Trip.aggregate([
-
-{
-$group:{
-_id:"$choferDni",
-viajes:{$sum:1},
-promedio:{$avg:"$ratingChofer"}
-}
-}
-
-]);
-
-res.json(ranking);
-
-});
 
 
 

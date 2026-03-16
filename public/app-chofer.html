@@ -4,70 +4,239 @@
 <head>
 
 <meta charset="UTF-8">
-
 <title>App Chofer ZTR</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#000000">
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:10px;
+border-radius:10px;
+}
+
+input{
+display:block;
+margin:5px 0;
+padding:8px;
+}
+
+button{
+padding:10px;
+margin-top:10px;
+}
+
+</style>
 
 </head>
 
 <body>
 
-<h2>🚛 App Chofer</h2>
+<h3>Mi perfil</h3>
+
+<input id="nombre" placeholder="Nombre">
+<input id="apellido" placeholder="Apellido">
+<input id="dni" placeholder="DNI">
+<input id="telefono" placeholder="Telefono">
+
+<input id="patente1" placeholder="Patente 1">
+<input id="patente2" placeholder="Patente 2">
+<input id="patente3" placeholder="Patente 3 (opcional)">
+
+<input type="file" id="foto">
+
+<button onclick="guardarPerfil()">Guardar perfil</button>
+
+<div id="empresa"></div>
+
+<div id="ranking"></div>
+
+<h2>🚛 Cargas disponibles</h2>
 
 <div id="viajes"></div>
 
 <script>
 
+async function guardarPerfil(){
+
+const dni=document.getElementById("dni").value
+
+localStorage.setItem("dni",dni)
+
+alert("Perfil guardado")
+
+}
+
+async function empresa(){
+
+const res = await fetch("/api/company")
+const data = await res.json()
+
+document.getElementById("empresa").innerHTML=`
+
+<hr>
+
+<h3>Empresa</h3>
+
+<p>${data.name}</p>
+<p>Tel: ${data.phone}</p>
+<p>Email: ${data.email}</p>
+<p>Soporte: ${data.support}</p>
+
+`
+
+}
+
+empresa()
+
 async function cargarViajes(){
 
-const res = await fetch("/trips");
-const viajes = await res.json();
+const res=await fetch("/trips")
+const viajes=await res.json()
 
-let html="";
+let html=""
 
 viajes.forEach(v=>{
 
-if(v.estado==="DISPONIBLE"){
+if(v.estado==="PENDIENTE"){
 
 html+=`
 
-<div style="border:1px solid #ccc;padding:10px;margin:10px">
+<div class="card">
 
-📍 ${v.origen} → ${v.destino}
-
-<br>
-
-📦 ${v.producto}
-
-<br>
-
+📦 ${v.producto}<br>
+📍 ${v.origen}<br>
 💰 $${v.valor}
 
-<br><br>
+<br>
 
-<a href="/chofer.html?token=${v.tokenChofer}">
-
-<button onclick="iniciarViaje()">Iniciar viaje</button>
-
-<button onclick="finalizarViaje()">Finalizar viaje</button>
-
-</a>
+<button onclick="postular('${v._id}')">
+Postularme
+</button>
 
 </div>
 
-`;
+`
 
 }
 
-});
+})
 
-document.getElementById("viajes").innerHTML=html;
+document.getElementById("viajes").innerHTML=html
 
 }
 
-cargarViajes();
+async function postular(id){
+
+const dni=localStorage.getItem("dni")
+
+await fetch("/trips/postular",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+tripId:id,
+dni
+})
+})
+
+alert("Postulación enviada")
+
+}
+
+async function mejorChofer(){
+
+const res=await fetch("/ranking")
+const data=await res.json()
+
+if(data.length){
+
+document.getElementById("ranking").innerHTML=
+"🏆 Chofer del mes: "+data[0]._id
+
+}
+
+}
+
+mejorChofer()
+
+cargarViajes()
+
+if("Notification" in window){
+Notification.requestPermission()
+}
+
+let aviso=false
+
+setInterval(async()=>{
+
+const res = await fetch("/trips")
+const viajes = await res.json()
+
+if(!aviso){
+
+viajes.forEach(v=>{
+
+if(v.estado==="PENDIENTE"){
+
+nuevaCarga()
+aviso=true
+
+}
+
+})
+
+}
+
+},10000)
+
+function nuevaCarga(){
+
+if(Notification.permission==="granted"){
+
+new Notification("Nueva carga disponible")
+
+}
+
+}
+
+navigator.geolocation.watchPosition(async pos=>{
+
+const lat=pos.coords.latitude
+const lng=pos.coords.longitude
+
+await fetch("/drivers/ubicacion",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+dni:localStorage.getItem("dni"),
+lat,
+lng
+
+})
+
+})
+
+})
 
 </script>
 

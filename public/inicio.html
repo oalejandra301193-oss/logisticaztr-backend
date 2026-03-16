@@ -6,15 +6,18 @@
 <meta charset="UTF-8">
 <title>Logistica ZTR</title>
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+
+<link rel="manifest" href="/manifest.json">
+
 <style>
 
 body{
 margin:0;
 height:100vh;
 font-family:Arial;
-
 background:linear-gradient(120deg,#1f2937,#111827);
-
 display:flex;
 align-items:center;
 justify-content:center;
@@ -35,7 +38,6 @@ margin-bottom:20px;
 }
 
 button{
-
 padding:15px 40px;
 font-size:20px;
 background:#22c55e;
@@ -43,11 +45,15 @@ border:none;
 border-radius:10px;
 color:white;
 cursor:pointer;
-
+margin:10px;
 }
 
 button:hover{
 background:#16a34a;
+}
+
+#instalarApp{
+display:none;
 }
 
 </style>
@@ -68,8 +74,37 @@ background:#16a34a;
 Entrar al panel
 </button>
 
+<button id="instalarApp">
+Instalar App
+</button>
+
 </div>
 
-</body>
+<script>
 
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("/sw.js")
+}
+
+let deferredPrompt
+
+window.addEventListener("beforeinstallprompt",(e)=>{
+
+e.preventDefault()
+
+deferredPrompt=e
+
+document.getElementById("instalarApp").style.display="block"
+
+})
+
+document.getElementById("instalarApp").addEventListener("click",()=>{
+
+deferredPrompt.prompt()
+
+})
+
+</script>
+
+</body>
 </html>

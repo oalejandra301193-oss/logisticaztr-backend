@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Choferes</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+margin:10px;
+border-radius:10px;
+}
+
+img{
+width:80px;
+border-radius:50%;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>🚛 Choferes registrados</h2>
+
+<div id="lista"></div>
+
+<script>
+
+async function cargar(){
+
+const res=await fetch("/drivers")
+const drivers=await res.json()
+
+let html=""
+
+drivers.forEach(d=>{
+
+html+=`
+
+<div class="card">
+
+<img src="${d.foto || ''}">
+
+<br>
+
+Nombre: ${d.nombre} ${d.apellido}
+
+<br>
+
+DNI: ${d.dni}
+
+<br>
+
+Tel: ${d.telefono}
+
+<br>
+
+Patente 1: ${d.patente1}
+
+<br>
+
+Patente 2: ${d.patente2 || "-"}
+
+<br>
+
+Patente 3: ${d.patente3 || "-"}
+
+</div>
+
+`
+
+})
+
+document.getElementById("lista").innerHTML=html
+
+}
+
+cargar()
+
+</script>
+
+</body>
+
+</html>

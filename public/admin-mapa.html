@@ -4,21 +4,23 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Mapa de Camiones - Logística ZTR</title>
+<title>Mapa de Camiones - LogisticaZTR</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
 
 body{
 font-family:Arial;
+margin:0;
+padding:20px;
 }
 
 #map{
 height:600px;
 width:100%;
+border-radius:10px;
 }
 
 </style>
@@ -27,14 +29,14 @@ width:100%;
 
 <body>
 
-<h2>🛰 Mapa de Camiones en Vivo</h2>
+<h2>🛰 Camiones en tiempo real</h2>
 
 <div id="map"></div>
 
+<script>
+
 const params = new URLSearchParams(window.location.search);
 const viajeId = params.get("id");
-
-<script>
 
 const map = L.map("map").setView([-34.6,-58.38],5);
 
@@ -47,10 +49,14 @@ maxZoom:19
 
 let markers = {};
 
+const camionIcon = L.icon({
+iconUrl:"https://cdn-icons-png.flaticon.com/512/743/743922.png",
+iconSize:[40,40]
+});
+
 async function cargarCamiones(){
 
 const res = await fetch("/trips/mapa");
-
 const data = await res.json();
 
 data.forEach(trip=>{
@@ -59,23 +65,22 @@ if(viajeId && trip._id !== viajeId) return;
 
 if(!trip.lat || !trip.lng) return;
 
-if(!markers[trip.id]){    
+if(!markers[trip._id]){
 
-markers[trip.id] = Const; camionIcon = L.icon({
-iconUrl:"https://cdn-icons-png.flaticon.com/512/743/743922.png",
-iconSize:[40,40]
-});
-
-L.marker([trip.lat,trip.lng],{icon:camionIcon}).addTo(map);
-
-bindPopup(
-`🚛 ${trip.producto}<br>
-📍 ${trip.origen} → ${trip.destino}`
+markers[trip._id] = L.marker(
+[trip.lat,trip.lng],
+{icon:camionIcon}
+)
+.addTo(map)
+.bindPopup(
+"🚛 "+trip.producto+
+"<br>📍 "+trip.origen+
+" → "+trip.destino
 );
 
 }else{
 
-markers[trip.id].setLatLng([trip.lat,trip.lng]);
+markers[trip._id].setLatLng([trip.lat,trip.lng]);
 
 }
 
@@ -83,7 +88,6 @@ markers[trip.id].setLatLng([trip.lat,trip.lng]);
 
 }
 
-// actualizar cada 5 segundos
 setInterval(cargarCamiones,5000);
 
 cargarCamiones();

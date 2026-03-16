@@ -1,0 +1,44 @@
+<h2>Login Cliente</h2>
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="login()">Entrar</button>
+
+<p>¿No tenés cuenta?</p>
+
+<button onclick="window.location='/registro-cliente.html'">
+Crear cuenta
+</button>
+
+<script>
+
+async function login(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+
+const res=await fetch("/auth/cliente/login",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+email,
+password
+})
+
+})
+
+const data=await res.json()
+
+localStorage.setItem("token",data.token)
+
+window.location="/app-cliente.html"
+
+}
+
+</script>

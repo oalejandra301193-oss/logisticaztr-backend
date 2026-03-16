@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Clientes activos - LogisticaZTR</title>
+<style>
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+padding:40px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th,td{
+padding:12px;
+border-bottom:1px solid #334155;
+text-align:left;
+}
+
+th{
+background:#1e293b;
+}
+
+tr:hover{
+background:#1e293b;
+}
+</style>
+</head>
+
+<body>
+
+<h1>👤 Clientes activos</h1>
+
+<table id="tablaClientes">
+<thead>
+<tr>
+<th>Nombre</th>
+<th>Email</th>
+<th>Telefono</th>
+<th>Cargas publicadas</th>
+</tr>
+</thead>
+
+<tbody>
+</tbody>
+</table>
+
+<script>
+
+async function cargarClientes(){
+
+const res = await fetch("/api/clients")
+const clientes = await res.json()
+
+const tabla = document.querySelector("#tablaClientes tbody")
+
+tabla.innerHTML=""
+
+clientes.forEach(c=>{
+
+tabla.innerHTML += `
+<tr>
+<td>${c.name}</td>
+<td>${c.email}</td>
+<td>${c.phone}</td>
+<td>${c.trips || 0}</td>
+</tr>
+`
+
+})
+
+}
+
+cargarClientes()
+
+</script>
+
+</body>
+</html>

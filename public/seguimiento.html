@@ -1,0 +1,17 @@
+<h2>Seguimiento de carga</h2>
+
+<input id="id" placeholder="ID del viaje">
+
+<button onclick="ver()">Ver viaje</button>
+
+<script>
+
+async function ver(){
+
+const id=document.getElementById("id").value
+
+window.location="/app-cliente.html?trip="+id
+
+}
+
+</script>

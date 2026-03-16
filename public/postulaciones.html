@@ -8,7 +8,7 @@
 
 <body>
 
-<h2>Postulaciones de choferes</h2>
+<h2>Postulaciones de Choferes</h2>
 
 <div id="lista"></div>
 
@@ -16,23 +16,39 @@
 
 async function cargar(){
 
-const res = await fetch("/trips/postulaciones")
+const res = await fetch("/trips");
+const viajes = await res.json();
 
-const data = await res.json()
+let html="";
 
-let html=""
+viajes.forEach(v=>{
 
-data.forEach(p=>{
+v.postulaciones.forEach(p=>{
 
 html+=`
-<div style="border:1px solid #ccc;margin:10px;padding:10px">
+
+<div>
 
 Chofer: ${p.nombre}<br>
-Camión: ${p.camion}<br>
-Carga: ${p.origen} → ${p.destino}
+DNI: ${p.dni}
+
+<br>
+
+<button onclick="aceptar('${v._id}','${p.dni}')">
+Aceptar
+</button>
+
+<button onclick="rechazar('${v._id}','${p.dni}')">
+Rechazar
+</button>
+
+<hr>
 
 </div>
+
 `
+
+})
 
 })
 
@@ -40,9 +56,34 @@ document.getElementById("lista").innerHTML=html
 
 }
 
+async function aceptar(tripId,dni){
+
+await fetch("/trips/aceptar-chofer",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({tripId,dni})
+})
+
+alert("Chofer asignado")
+
+}
+
+async function rechazar(tripId,dni){
+
+await fetch("/trips/rechazar-chofer",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({tripId,dni})
+})
+
+alert("Postulación eliminada")
+
+}
+
 cargar()
 
 </script>
+
 
 </body>
 </html>

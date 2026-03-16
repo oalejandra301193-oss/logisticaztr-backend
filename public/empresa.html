@@ -1,19 +1,90 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-<meta charset="UTF-8">
 <title>Empresa</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+padding:40px;
+}
+
+input{
+display:block;
+margin-bottom:10px;
+padding:10px;
+width:300px;
+}
+
+button{
+padding:10px;
+background:#22c55e;
+border:none;
+color:white;
+cursor:pointer;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h2>Datos de la empresa</h2>
+<h1>🏢 Información empresa</h1>
 
-<p>Nombre: Logistica ZTR</p>
-<p>Tipo: Plataforma de transporte</p>
-<p>Comisión: 5%</p>
+<input id="name" placeholder="Nombre empresa">
+<input id="phone" placeholder="Telefono">
+<input id="email" placeholder="Email">
+<input id="address" placeholder="Dirección">
+<input id="support" placeholder="Contacto soporte">
+
+<button onclick="guardar()">Guardar</button>
+
+<script>
+
+async function cargar(){
+
+const res = await fetch("/api/company")
+const data = await res.json()
+
+if(!data) return
+
+name.value = data.name || ""
+phone.value = data.phone || ""
+email.value = data.email || ""
+address.value = data.address || ""
+support.value = data.support || ""
+
+}
+
+async function guardar(){
+
+await fetch("/api/company",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+
+name:name.value,
+phone:phone.value,
+email:email.value,
+address:address.value,
+support:support.value
+
+})
+})
+
+alert("Datos guardados")
+
+}
+
+cargar()
+
+</script>
 
 </body>
-
 </html>

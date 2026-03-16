@@ -112,6 +112,21 @@ driverId:tripActual.choferId
 })
 });
 
+let recorrido=[]
+
+navigator.geolocation.watchPosition(pos=>{
+
+const lat=pos.coords.latitude
+const lng=pos.coords.longitude
+
+recorrido.push([lat,lng])
+
+L.polyline(recorrido,{
+color:"red"
+}).addTo(mapa)
+
+})
+
 // guardar ubicación del viaje
 await fetch(`/trips/token/${token}/ubicacion`,{
 method:"POST",
@@ -267,6 +282,32 @@ alert("Viaje finalizado");
 location.reload();
 
 }
+
+navigator.geolocation.watchPosition(async pos=>{
+
+const lat = pos.coords.latitude
+const lng = pos.coords.longitude
+
+await fetch("/trips/ubicacion",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+tripId:tripActual._id,
+lat,
+lng
+
+})
+
+})
+
+})
+
 
 </script>
 

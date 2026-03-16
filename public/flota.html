@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Flota - Logistica ZTR</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:10px;
+border-radius:10px;
+}
+
+#mapa{
+height:500px;
+margin-top:20px;
+border-radius:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Flota</h2>
+
+<div id="flota"></div>
+
+<h2>🚛 Flota de Choferes</h2>
+
+<div id="lista"></div>
+
+<div id="mapa"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+const res = await fetch("/drivers")
+const drivers = await res.json()
+
+
+let mapa = L.map("mapa").setView([-34.6,-58.4],5)
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+maxZoom:19
+}).addTo(mapa)
+
+let marcadores=[]
+
+async function cargar(){
+
+const res = await fetch("/drivers")
+
+const drivers = await res.json()
+
+let html=""
+
+marcadores.forEach(m=>mapa.removeLayer(m))
+marcadores=[]
+
+drivers.forEach(d=>{
+
+html+=`
+
+<div class="card">
+
+👨‍✈️ Chofer: ${d.nombre || "Sin nombre"}
+
+<br>
+
+🪪 DNI: ${d.dni || "-"}
+
+<br>
+
+🟢 Disponible: ${d.disponible ? "SI" : "NO"}
+
+</div>
+
+`
+
+if(d.ubicacion){
+
+const marker = L.marker([
+d.ubicacion.lat,
+d.ubicacion.lng
+]).addTo(mapa)
+
+marker.bindPopup("Chofer: "+(d.nombre || "Chofer"))
+
+marcadores.push(marker)
+
+}
+
+})
+
+document.getElementById("lista").innerHTML=html
+
+}
+
+setInterval(cargar,5000)
+
+cargar()
+
+</script>
+
+</body>
+</html>

@@ -670,7 +670,7 @@ router.get("/mapa", async (req,res)=>{
 try{
 
 const trips = await Trip.find({
-estado:"EN_CAMINO"
+ultimaUbicacion:{$exists:true}
 });
 
 const data = trips.map(trip=>({
