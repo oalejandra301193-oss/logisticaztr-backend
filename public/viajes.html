@@ -2,38 +2,36 @@
 <html>
 
 <head>
-
 <meta charset="UTF-8">
 <title>Viajes activos</title>
 
 <style>
-
 body{
-font-family:Arial;
-background:#f4f4f4;
-padding:30px;
+    font-family: Arial;
+    background: #f4f4f4;
+    padding: 30px;
 }
 
 .card{
-
-background:white;
-padding:20px;
-margin-bottom:20px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
-
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
 button{
-
-padding:8px 20px;
-background:#3498db;
-color:white;
-border:none;
-border-radius:5px;
-
+    padding: 8px 20px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
+button:hover{
+    background: #2980b9;
+}
 </style>
 
 </head>
@@ -41,99 +39,89 @@ border-radius:5px;
 <body>
 
 <h2>🚚 Viajes activos</h2>
-
 <div id="viajes"></div>
 
-<h2>Viajes activos</h2>
-
+<h2>Viajes asignados o en viaje</h2>
 <div id="lista"></div>
 
 <script>
+// Función para cargar viajes ASIGNADO o EN_VIAJE
+async function cargar() {
+    const res = await fetch("/trips");
+    const viajes = await res.json();
 
-async function cargar(){
+    let html = "";
 
-const res = await fetch("/trips")
-const viajes = await res.json()
+    viajes.forEach(v => {
+        if(v.estado === "ASIGNADO" || v.estado === "EN_VIAJE") {
+            html += `
+            <div class="card">
+                📦 ${v.producto}<br>
+                🚛 Chofer: ${v.choferNombre}<br>
+                📍 ${v.origen} → ${v.destino}
+                <hr>
+            </div>
+            `;
+        }
+    });
 
-let html=""
-
-viajes.forEach(v=>{
-
-if(v.estado==="ASIGNADO" || v.estado==="EN_VIAJE"){
-
-html+=`
-
-<div>
-
-📦 ${v.producto}<br>
-🚛 Chofer: ${v.choferNombre}<br>
-📍 ${v.origen} → ${v.destino}
-
-<hr>
-
-</div>
-
-`
-
+    document.getElementById("lista").innerHTML = html;
 }
 
-})
+cargar();
 
-document.getElementById("lista").innerHTML=html
+// Función para cargar todos los viajes y mostrar botón de calificación si FINALIZADO
+async function cargarViajes() {
+    const res = await fetch("/trips");
+    const viajes = await res.json();
 
+    let html = "";
+
+    viajes.forEach(v => {
+        html += `
+        <div class="card">
+            <b>Producto:</b> ${v.producto}<br>
+            <b>Origen:</b> ${v.origen}<br>
+            <b>Destino:</b> ${v.destino}<br>
+            <b>Estado:</b> ${v.estado}<br><br>
+            <button onclick="verMapa('${v._id}')">Ver mapa</button>
+            ${v.estado === "FINALIZADO" ? `<button onclick="calificarChofer('${v._id}')">⭐ Calificar chofer</button>` : ""}
+        </div>
+        `;
+    });
+
+    document.getElementById("viajes").innerHTML = html;
 }
 
-cargar()
-
-</script>
-
-<script>
-
-async function cargarViajes(){
-
-const res = await fetch("/trips");
-
-const viajes = await res.json();
-
-let html="";
-
-viajes.forEach(v=>{
-
-html+=`
-
-<div class="card">
-
-<b>Producto:</b> ${v.producto}<br>
-<b>Origen:</b> ${v.origen}<br>
-<b>Destino:</b> ${v.destino}<br>
-<b>Estado:</b> ${v.estado}
-
-<br><br>
-
-<button onclick="verMapa('${v._id}')">
-Ver mapa
-</button>
-
-</div>
-
-`;
-
-});
-
-document.getElementById("viajes").innerHTML=html;
-
-}
-
-function verMapa(id){
-
-window.location="/admin-mapa.html?id="+id;
-
+function verMapa(id) {
+    window.location = "/admin-mapa.html?id=" + id;
 }
 
 cargarViajes();
 
+// Función para calificar al chofer
+async function calificarChofer(id) {
+    const rating = prompt("Calificación del chofer (1 a 5)");
+    if(!rating || rating < 1 || rating > 5){
+        alert("Calificación inválida. Debe ser un número entre 1 y 5.");
+        return;
+    }
+    const comentario = prompt("Comentario sobre el viaje") || "";
+
+    await fetch("/trips/calificar/" + id, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            ratingChofer: rating,
+            comentario: comentario
+        })
+    });
+
+    alert("Gracias por tu calificación");
+}
 </script>
 
 </body>
-
 </html>
