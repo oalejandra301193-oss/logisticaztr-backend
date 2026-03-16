@@ -117,6 +117,8 @@ Calcular flete
 
 <button onclick="crearCarga()">Publicar carga</button>
 
+<div id="lista"></div>
+
 
 </div>
 
@@ -234,6 +236,38 @@ cargarCargas()
 
 }
 
+async function crearCarga(){
+
+const data = {
+
+producto:document.getElementById("producto").value,
+origen:document.getElementById("origen").value,
+destino:document.getElementById("destino").value,
+distanciaKm:document.getElementById("distancia").value,
+valor:document.getElementById("valor").value,
+tipoCarga:document.getElementById("tipoCarga").value,
+cantidad:document.getElementById("cantidad").value
+
+}
+
+await fetch("/trips",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify(data)
+
+})
+
+alert("Carga publicada")
+
+cargarCargas()
+
+}
+
 async function verPostulaciones(id){
 
 const res = await fetch("/trips/"+id+"/postulaciones")
@@ -256,6 +290,48 @@ texto+=p.nombre+" - "+p.telefono+"\n"
 })
 
 alert(texto)
+
+}
+
+async function calcularDistancia(){
+
+const origen = document.getElementById("origen").value
+const destino = document.getElementById("destino").value
+
+if(!origen || !destino){
+alert("Ingrese origen y destino")
+return
+}
+
+const res = await fetch(`/trips/distancia?origen=${origen}&destino=${destino}`)
+const data = await res.json()
+
+document.getElementById("distancia").value = data.km
+
+}
+
+function calcularFlete(){
+
+const km = parseFloat(document.getElementById("distancia").value)
+const tipo = document.getElementById("tipoCarga").value
+const cantidad = parseFloat(document.getElementById("cantidad").value)
+
+if(!km){
+alert("Primero calcule la distancia")
+return
+}
+
+let tarifa = 0
+
+if(tipo === "granel") tarifa = 120
+if(tipo === "bolsas") tarifa = 140
+if(tipo === "pallet") tarifa = 160
+if(tipo === "general") tarifa = 150
+if(tipo === "pie") tarifa = 20
+
+const precio = km * tarifa * (cantidad || 1)
+
+document.getElementById("valor").value = Math.round(precio)
 
 }
 
