@@ -4,56 +4,92 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Logistica ZTR</title>
+<title>LogisticaZTR</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#000000">
-
-<link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
 
 body{
+
 margin:0;
+font-family:'Poppins',sans-serif;
+
 height:100vh;
-font-family:Arial;
-background:linear-gradient(120deg,#1f2937,#111827);
+
 display:flex;
 align-items:center;
 justify-content:center;
+
+background:
+linear-gradient(rgba(0,0,0,0.75),rgba(0,0,0,0.75)),
+url("https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d");
+
+background-size:cover;
+background-position:center;
+
 color:white;
+
 }
 
-.card{
+.box{
+
 text-align:center;
-padding:60px;
-background:rgba(255,255,255,0.05);
-border-radius:15px;
-backdrop-filter:blur(10px);
+
+background:rgba(0,0,0,0.8);
+
+padding:50px;
+
+border-radius:12px;
+
+width:350px;
+
 }
 
 h1{
-font-size:60px;
-margin-bottom:20px;
+margin-top:0;
 }
 
 button{
-padding:15px 40px;
-font-size:20px;
-background:#22c55e;
+
+width:100%;
+
+padding:15px;
+
+margin-top:15px;
+
+font-size:16px;
+
 border:none;
-border-radius:10px;
-color:white;
+
+border-radius:6px;
+
 cursor:pointer;
-margin:10px;
+
+}
+
+.cliente{
+background:#27ae60;
+color:white;
+}
+
+.chofer{
+background:#2980b9;
+color:white;
+}
+
+.publicar{
+background:#f39c12;
+color:white;
+}
+
+.admin{
+background:#444;
+color:white;
 }
 
 button:hover{
-background:#16a34a;
-}
-
-#instalarApp{
-display:none;
+opacity:0.9;
 }
 
 </style>
@@ -62,49 +98,33 @@ display:none;
 
 <body>
 
-<div class="card">
+<div class="box">
 
-<h1>🚚 Logistica ZTR</h1>
+<h1>🚛 LogisticaZTR</h1>
 
-<p>Sistema de gestión de cargas</p>
+<p>Plataforma logística inteligente</p>
 
-<br>
-
-<button onclick="window.location='/panel.html'">
-Entrar al panel
+<button class="publicar"
+onclick="window.location='/cargas.html'">
+Publicar Carga
 </button>
 
-<button id="instalarApp">
-Instalar App
+<button class="cliente"
+onclick="window.location='/login-cliente.html'">
+Ingreso Cliente
+</button>
+
+<button class="chofer"
+onclick="window.location='/login-chofer.html'">
+Ingreso Chofer
+</button>
+
+<button class="admin"
+onclick="window.location='/login.html'">
+Panel Admin
 </button>
 
 </div>
-
-<script>
-
-if("serviceWorker" in navigator){
-navigator.serviceWorker.register("/sw.js")
-}
-
-let deferredPrompt
-
-window.addEventListener("beforeinstallprompt",(e)=>{
-
-e.preventDefault()
-
-deferredPrompt=e
-
-document.getElementById("instalarApp").style.display="block"
-
-})
-
-document.getElementById("instalarApp").addEventListener("click",()=>{
-
-deferredPrompt.prompt()
-
-})
-
-</script>
 
 </body>
 </html>

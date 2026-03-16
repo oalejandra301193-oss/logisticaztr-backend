@@ -1,15 +1,102 @@
-<h2>Login Cliente</h2>
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>LogisticaZTR - Cliente</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:
+linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)),
+url("https://images.unsplash.com/photo-1601584115197-04ecc0da31d7");
+
+background-size:cover;
+background-position:center;
+color:white;
+}
+
+.login-box{
+
+background:rgba(0,0,0,0.75);
+padding:40px;
+border-radius:10px;
+width:320px;
+text-align:center;
+
+box-shadow:0 0 20px rgba(0,0,0,0.5);
+
+}
+
+h1{
+margin-bottom:20px;
+}
+
+input{
+
+width:100%;
+padding:12px;
+margin:10px 0;
+border:none;
+border-radius:6px;
+
+}
+
+button{
+
+width:100%;
+padding:12px;
+margin-top:10px;
+
+background:#2ecc71;
+border:none;
+color:white;
+font-size:16px;
+border-radius:6px;
+cursor:pointer;
+
+}
+
+button:hover{
+background:#27ae60;
+}
+
+.logo{
+font-size:22px;
+margin-bottom:20px;
+font-weight:600;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="login-box">
+
+<div class="logo">🚛 LogisticaZTR</div>
+
+<h3>Ingreso Cliente</h3>
 
 <input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
 
-<button onclick="login()">Entrar</button>
+<input id="password" type="password" placeholder="Contraseña">
 
-<p>¿No tenés cuenta?</p>
+<button onclick="login()">Ingresar</button>
 
-<button onclick="window.location='/registro-cliente.html'">
-Crear cuenta
-</button>
+</div>
 
 <script>
 
@@ -21,24 +108,24 @@ const password=document.getElementById("password").value
 const res=await fetch("/auth/cliente/login",{
 
 method:"POST",
-
 headers:{
 "Content-Type":"application/json"
 },
 
-body:JSON.stringify({
-email,
-password
-})
+body:JSON.stringify({email,password})
 
 })
 
 const data=await res.json()
 
-localStorage.setItem("token",data.token)
+localStorage.token=data.token
 
 window.location="/app-cliente.html"
 
 }
 
 </script>
+
+</body>
+
+</html>
