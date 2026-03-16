@@ -39,10 +39,6 @@ app.use(express.urlencoded({ extended:true }));
 app.use(express.static("public"));
 app.use("/uploads",express.static("uploads"));
 
-app.get("/", (req,res)=>{
-res.sendFile(__dirname + "/public/inicio.html")
-})
-
 app.use("/api/auth",authRoutes);
 app.use("/api/company",companyRoutes);
 app.use("/trips",require("./routes/trips"));
@@ -67,7 +63,7 @@ return R*c;
 }
 
 app.get("/",(req,res)=>{
-res.sendFile(__dirname+"/public/inicio-app.html")
+res.sendFile(__dirname + "/public/inicio-app.html")
 })
 
 app.post("/trips/adelanto/:id",async(req,res)=>{
