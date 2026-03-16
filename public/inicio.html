@@ -3,93 +3,85 @@
 
 <head>
 
-<meta charset="UTF-8">
-<title>LogisticaZTR</title>
+<title>Logistica ZTR</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
 
 margin:0;
-font-family:'Poppins',sans-serif;
-
+font-family:Arial;
 height:100vh;
+
+background:url("https://images.unsplash.com/photo-1501706362039-c6e80948bb2d");
+background-size:cover;
+background-position:center;
 
 display:flex;
 align-items:center;
 justify-content:center;
-
-background:
-linear-gradient(rgba(0,0,0,0.75),rgba(0,0,0,0.75)),
-url("https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d");
-
-background-size:cover;
-background-position:center;
-
+text-align:center;
 color:white;
 
 }
 
-.box{
+.fondo{
 
-text-align:center;
-
-background:rgba(0,0,0,0.8);
-
-padding:50px;
-
-border-radius:12px;
-
-width:350px;
+background:rgba(0,0,0,0.7);
+padding:60px;
+border-radius:15px;
 
 }
 
-h1{
-margin-top:0;
+.logo{
+
+font-size:55px;
+margin-bottom:10px;
+
+}
+
+.sub{
+
+font-size:18px;
+margin-bottom:40px;
+opacity:0.8;
+
 }
 
 button{
 
-width:100%;
-
-padding:15px;
-
-margin-top:15px;
-
-font-size:16px;
-
+width:260px;
+padding:16px;
+font-size:18px;
+margin:10px;
 border:none;
-
-border-radius:6px;
-
+border-radius:8px;
 cursor:pointer;
 
 }
 
 .cliente{
-background:#27ae60;
+background:#2ecc71;
 color:white;
 }
 
 .chofer{
-background:#2980b9;
-color:white;
-}
-
-.publicar{
-background:#f39c12;
+background:#3498db;
 color:white;
 }
 
 .admin{
-background:#444;
-color:white;
-}
 
-button:hover{
-opacity:0.9;
+position:absolute;
+bottom:15px;
+right:15px;
+background:#333;
+color:white;
+padding:8px 12px;
+font-size:12px;
+
 }
 
 </style>
@@ -98,33 +90,34 @@ opacity:0.9;
 
 <body>
 
-<div class="box">
+<div class="fondo">
 
-<h1>🚛 LogisticaZTR</h1>
+<div class="logo">
+🚚 LOGISTICA ZTR
+</div>
 
-<p>Plataforma logística inteligente</p>
-
-<button class="publicar"
-onclick="window.location='/cargas.html'">
-Publicar Carga
-</button>
+<div class="sub">
+Plataforma logística inteligente
+</div>
 
 <button class="cliente"
 onclick="window.location='/login-cliente.html'">
-Ingreso Cliente
+Ingresar como Cliente
 </button>
+
+<br>
 
 <button class="chofer"
 onclick="window.location='/login-chofer.html'">
-Ingreso Chofer
-</button>
-
-<button class="admin"
-onclick="window.location='/login.html'">
-Panel Admin
+Ingresar como Chofer
 </button>
 
 </div>
+
+<button class="admin"
+onclick="window.location='/login.html'">
+Admin
+</button>
 
 </body>
 </html>
