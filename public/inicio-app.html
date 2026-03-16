@@ -3,31 +3,63 @@
 
 <head>
 
-<title>LogisticaZTR</title>
+<title>Logistica ZTR</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
+
+margin:0;
 font-family:Arial;
+height:100vh;
+
+background:url("https://images.unsplash.com/photo-1501706362039-c6e80948bb2d");
+background-size:cover;
+background-position:center;
+
+display:flex;
+align-items:center;
+justify-content:center;
 text-align:center;
-margin-top:80px;
-background:#f2f2f2;
+color:white;
+
 }
 
-h1{
-font-size:40px;
+.fondo{
+
+background:rgba(0,0,0,0.7);
+padding:60px;
+border-radius:15px;
+
+}
+
+.logo{
+
+font-size:55px;
+margin-bottom:10px;
+
+}
+
+.sub{
+
+font-size:18px;
+margin-bottom:40px;
+opacity:0.8;
+
 }
 
 button{
+
 width:260px;
-padding:18px;
+padding:16px;
 font-size:18px;
-margin:15px;
+margin:10px;
 border:none;
 border-radius:8px;
 cursor:pointer;
+
 }
 
 .cliente{
@@ -41,13 +73,15 @@ color:white;
 }
 
 .admin{
-background:#444;
-color:white;
+
 position:absolute;
-bottom:10px;
-right:10px;
+bottom:15px;
+right:15px;
+background:#333;
+color:white;
 padding:8px 12px;
 font-size:12px;
+
 }
 
 </style>
@@ -56,11 +90,15 @@ font-size:12px;
 
 <body>
 
-<h1>LogisticaZTR</h1>
+<div class="fondo">
 
-<h3>Plataforma logística</h3>
+<div class="logo">
+🚚 LOGISTICA ZTR
+</div>
 
-<br>
+<div class="sub">
+Plataforma logística inteligente
+</div>
 
 <button class="cliente"
 onclick="window.location='/login-cliente.html'">
@@ -73,6 +111,8 @@ Ingresar como Cliente
 onclick="window.location='/login-chofer.html'">
 Ingresar como Chofer
 </button>
+
+</div>
 
 <button class="admin"
 onclick="window.location='/login.html'">
