@@ -68,7 +68,13 @@ margin-left:10px;
 
 <body>
 
-<h2>📦 App Cliente</h2>
+<h2>📦 Cliente</h2>
+
+<br>
+
+<button onclick="window.location='registro-cliente.html'">
+Registarme como cliente
+</button>
 
 <button onclick="mostrarFormulario()">
 Publicar carga
@@ -117,8 +123,28 @@ Calcular flete
 
 <button onclick="crearCarga()">Publicar carga</button>
 
+<button onclick="pagarAdelanto()">
+Pagar adelanto
+</button>
+
 <div id="lista"></div>
 
+
+</div>
+
+<h3>Datos del cliente</h3>
+
+<div class="card">
+
+<input id="nombreApellido" placeholder="Nombre y apellido"><br><br>
+
+<input id="comercio" placeholder="Nombre del comercio"><br><br>
+
+<input id="cuit" placeholder="CUIT"><br><br>
+
+<input id="telefono" placeholder="Teléfono"><br><br>
+
+<input id="direccionDescarga" placeholder="Dirección de descarga"><br><br>
 
 </div>
 
@@ -246,7 +272,13 @@ destino:document.getElementById("destino").value,
 distanciaKm:document.getElementById("distancia").value,
 valor:document.getElementById("valor").value,
 tipoCarga:document.getElementById("tipoCarga").value,
-cantidad:document.getElementById("cantidad").value
+cantidad:document.getElementById("cantidad").value,
+
+clienteNombre:document.getElementById("nombreApellido").value,
+clienteComercio:document.getElementById("comercio").value,
+clienteCUIT:document.getElementById("cuit").value,
+clienteTelefono:document.getElementById("telefono").value,
+direccionDescarga:document.getElementById("direccionDescarga").value
 
 }
 
@@ -262,7 +294,7 @@ body:JSON.stringify(data)
 
 })
 
-alert("Carga publicada")
+alert("Carga enviada para aprobación")
 
 cargarCargas()
 
