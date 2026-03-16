@@ -94,6 +94,8 @@ alert("Ingrese email y contraseña")
 return
 }
 
+try{
+
 const res = await fetch("/api/auth/admin/login",{
 
 method:"POST",
@@ -110,10 +112,8 @@ password
 })
 
 if(!res.ok){
-
 alert("Email o contraseña incorrectos")
 return
-
 }
 
 const data = await res.json()
@@ -122,15 +122,13 @@ localStorage.setItem("token",data.token)
 
 window.location="/admin.html"
 
+}catch(err){
+
+alert("Error conectando con el servidor")
+
 }
 
-
-const data=await res.json()
-
-localStorage.setItem("token",data.token)
-
-window.location="/admin.html"
-
+}
 
 </script>
 
