@@ -68,11 +68,84 @@ margin-left:10px;
 
 <body>
 
-<h2>📦 Cargas publicadas</h2>
+<h2>📦 App Cliente</h2>
 
-<div id="lista"></div>
+<button onclick="mostrarFormulario()">
+Publicar carga
+</button>
+
+<button onclick="verViaje()">
+Ver carga en viaje
+</button>
+
+<div id="contenido"></div>
+
+<h3>Publicar carga</h3>
+
+<div class="card">
+
+<input id="producto" placeholder="Producto"><br><br>
+
+<input id="origen" placeholder="Ciudad de origen"><br><br>
+
+<input id="destino" placeholder="Ciudad de destino"><br><br>
+
+<input id="distancia" placeholder="Distancia KM" readonly><br><br>
+
+<input id="valor" placeholder="Valor del viaje"><br><br>
+
+<select id="tipoCarga">
+
+<option value="granel">Granel</option>
+<option value="bolsas">Mercadería embolsada</option>
+<option value="pallet">Palletizada</option>
+<option value="general">Carga general</option>
+<option value="pie">Tabla por pie</option>
+
+</select>
+
+<br><br>
+
+<input id="cantidad" placeholder="Cantidad (toneladas / bultos / pallets / pies)">
+
+
+<button onclick="calcularDistancia()">Calcular distancia</button>
+
+<button onclick="calcularFlete()">
+Calcular flete
+</button>
+
+<button onclick="crearCarga()">Publicar carga</button>
+
+
+</div>
+
 
 <script>
+
+async function pagarAdelanto(){
+
+const id = prompt("ID del viaje");
+
+const monto = prompt("Monto del adelanto");
+
+await fetch("/trips/adelanto/"+id,{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+monto
+})
+
+});
+
+alert("Adelanto registrado");
+
+}
 
 async function cargarCargas(){
 
