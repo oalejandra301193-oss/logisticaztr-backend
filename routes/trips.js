@@ -649,6 +649,29 @@ console.error(error);
 
 });
 
+router.get("/distancia", async (req,res)=>{
+
+const {origen,destino} = req.query
+
+if(!origen || !destino){
+return res.json({km:0})
+}
+
+// cálculo simple temporal
+const tabla = {
+"buenos aires-cordoba":700,
+"buenos aires-rosario":300,
+"rosario-cordoba":400
+}
+
+const key = (origen+"-"+destino).toLowerCase()
+
+const km = tabla[key] || 500
+
+res.json({km})
+
+})
+
 // 🔹 FINALIZAR VIAJE
 router.post("/finalizar/:id", async (req,res)=>{
 
