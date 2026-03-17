@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Cargas pendientes</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+margin-bottom:15px;
+border-radius:10px;
+}
+
+button{
+padding:8px 12px;
+margin-top:10px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.aprobar{
+background:#16a34a;
+color:white;
+}
+
+.rechazar{
+background:#dc2626;
+color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>📦 Cargas pendientes de aprobación</h2>
+
+<div id="lista"></div>
+
+<script>
+
+async function cargarPendientes(){
+
+const res = await fetch("/trips")
+const cargas = await res.json()
+
+let html=""
+
+cargas.forEach(c=>{
+
+if(c.estado === "PENDIENTE"){
+
+html += `
+
+<div class="card">
+
+<b>Producto:</b> ${c.producto}<br>
+<b>Origen:</b> ${c.origen}<br>
+<b>Destino:</b> ${c.destino}<br>
+<b>Cliente:</b> ${c.clienteNombre}<br>
+<b>Teléfono:</b> ${c.clienteTelefono}<br>
+
+<button class="aprobar" onclick="aprobar('${c._id}')">
+Aprobar
+</button>
+
+<button class="rechazar" onclick="rechazar('${c._id}')">
+Rechazar
+</button>
+
+</div>
+
+`
+
+}
+
+})
+
+document.getElementById("lista").innerHTML = html
+
+}
+
+async function aprobar(id){
+
+await fetch("/trips/"+id+"/aprobar",{
+method:"POST"
+})
+
+alert("Carga aprobada")
+
+cargarPendientes()
+
+}
+
+async function rechazar(id){
+
+await fetch("/trips/"+id,{
+method:"DELETE"
+})
+
+alert("Carga eliminada")
+
+cargarPendientes()
+
+}
+
+cargarPendientes()
+
+</script>
+
+</body>
+
+</html>

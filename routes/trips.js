@@ -259,6 +259,17 @@ div.style.display = "none";
 
 });
 
+router.post("/:id/aprobar", async (req,res)=>{
+
+const id = req.params.id
+
+await Trip.findByIdAndUpdate(id,{
+estado:"PUBLICADO"
+})
+
+res.send("Carga aprobada")
+
+})
 
 // 🔹 CREAR VIAJE
 router.post("/new", async (req, res) => {
