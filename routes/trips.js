@@ -47,17 +47,12 @@ router.get("/", async (req, res) => {
 
 const viajes = trips.map(t=>{
 
-// CREAR CARGA DESDE APP CLIENTE
-router.post("/", async (req,res)=>{
-
 try{
 
 const newTrip = new Trip(req.body);
 
 // asegurar estado pendiente
 newTrip.estado = "PENDIENTE";
-
-await newTrip.save();
 
 res.json({
 ok:true,
@@ -84,17 +79,81 @@ direccion = t.clienteDireccion;
 return {
 ...t._doc,
 clienteDireccion: direccion
-}
-
-});
+},
 
 res.json(viajes);
 
-  } catch (error) {
+} catch (error) {
 
-    res.status(500).json({ error: "Error al obtener viajes" });
+res.status(500).json({ error: "Error al obtener viajes" });
 
-  }
+}
+});
+
+// 🔹 CREAR CARGA DESDE APP CLIENTE
+router.post("/", async (req,res)=>{
+
+try{
+
+const {
+producto,
+origen,
+destino,
+distanciaKm,
+valor,
+tipoCarga,
+cantidad,
+clienteNombre,
+clienteComercio,
+clienteCUIT,
+clienteTelefono,
+direccionDescarga,
+direccionCarga
+} = req.body;
+
+if(!origen || !destino){
+return res.status(400).json({
+error:"Faltan datos de origen o destino"
+});
+}
+
+const newTrip = new Trip({
+
+producto,
+origen,
+destino,
+
+distanciaKm: Number(distanciaKm) || 0,
+valor: Number(valor) || 0,
+
+clienteNombre,
+clienteCUIT,
+clienteTelefono,
+clienteDireccion: direccionDescarga,
+
+estado:"PENDIENTE",
+postulaciones:[],
+ubicaciones:[]
+
+});
+
+await newTrip.save();
+
+res.json({
+ok:true,
+viaje:newTrip
+});
+
+}catch(error){
+
+console.error("ERROR GUARDANDO CARGA:",error);
+
+res.status(500).json({
+error:"Error guardando carga"
+});
+
+}
+
 });
 
 // 🔹 PANEL ADMIN
@@ -353,30 +412,68 @@ client.viajes += 1;
 await client.save();
 
 // 🔹 CREAR VIAJE
-const newTrip = new Trip({
 
+try{
+
+const {
+producto,
 origen,
 destino,
+distanciaKm,
 valor,
+tipoCarga,
+cantidad,
+clienteNombre,
+clienteComercio,
+clienteCUIT,
+clienteTelefono,
+direccionDescarga,
+direccionCarga
+} = req.body;
+
+const newTrip = new Trip({
+
 producto,
+origen,
+destino,
 
-cliente: {
-nombre: clienteNombre,
-direccion: clienteDireccion,
-cuit: clienteCUIT,
-telefono: clienteTelefono
-},
+distanciaKm: Number(distanciaKm),
+valor: Number(valor),
 
-// 🔹 ASIGNAR CHOFER 
-chofer: driverDisponible._id,
-choferDni: driverDisponible.dni,
+clienteNombre,
+clienteCUIT,
+clienteTelefono,
+clienteDireccion: direccionDescarga,
 
-estado: "DISPONIBLE",
-publicado: true,
-postulaciones: [],
-ubicaciones: []
+estado:"PENDIENTE"
 
 });
+
+await newTrip.save();
+
+res.json({
+ok:true,
+viaje:newTrip
+});
+
+}catch(error){
+
+console.error("ERROR CREANDO TRIP:",error);
+
+res.status(500).json({
+error:"Error guardando carga"
+});
+
+}
+
+// 🔹 ASIGNAR CHOFER 
+chofer: driverDisponible._id;
+choferDni: driverDisponible.dni;
+
+estado: "DISPONIBLE";
+publicado: true;
+postulaciones: [];
+ubicaciones: []
 
 await newTrip.save();
 
