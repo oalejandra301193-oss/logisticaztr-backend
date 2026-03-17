@@ -47,6 +47,34 @@ router.get("/", async (req, res) => {
 
 const viajes = trips.map(t=>{
 
+// CREAR CARGA DESDE APP CLIENTE
+router.post("/", async (req,res)=>{
+
+try{
+
+const newTrip = new Trip(req.body);
+
+// asegurar estado pendiente
+newTrip.estado = "PENDIENTE";
+
+await newTrip.save();
+
+res.json({
+ok:true,
+viaje:newTrip
+});
+
+}catch(error){
+
+console.error(error);
+res.status(500).json({
+error:"Error guardando carga"
+});
+
+}
+
+});  
+
 let direccion = "Dirección bloqueada hasta pagar comisión";
 
 if(t.comisionPagada){
