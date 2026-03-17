@@ -146,6 +146,8 @@ Pagar adelanto
 
 <input id="direccionDescarga" placeholder="Dirección de descarga"><br><br>
 
+<input id="direccionCarga" placeholder="Dirección de Carga"><br><br>
+
 </div>
 
 
@@ -276,7 +278,8 @@ const nombre = document.getElementById("nombreApellido").value
 const comercio = document.getElementById("comercio").value
 const cuit = document.getElementById("cuit").value
 const telefono = document.getElementById("telefono").value
-const direccion = document.getElementById("direccionDescarga").value
+const direccionDescarga = document.getElementById("direccionDescarga").value
+const direccionCarga = document.getElementById("direccionCarga").value
 
 
 // VALIDACIÓN
@@ -292,7 +295,8 @@ if(!producto ||
    !comercio ||
    !cuit ||
    !telefono ||
-   !direccion){
+   !direccionCarga ||
+   !direccionDescarga){
 
 alert("⚠ Debe completar todos los datos para publicar la carga")
 
