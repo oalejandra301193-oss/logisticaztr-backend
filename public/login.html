@@ -89,14 +89,7 @@ async function login(){
 const email = document.getElementById("email").value
 const password = document.getElementById("password").value
 
-if(!email || !password){
-alert("Ingrese email y contraseña")
-return
-}
-
-try{
-
-const res = await fetch("/api/auth/admin/login",{
+const res = await fetch("/api/auth/login",{
 
 method:"POST",
 
@@ -121,12 +114,6 @@ const data = await res.json()
 localStorage.setItem("token",data.token)
 
 window.location="/admin.html"
-
-}catch(err){
-
-alert("Error conectando con el servidor")
-
-}
 
 }
 

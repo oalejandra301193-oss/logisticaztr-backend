@@ -125,12 +125,17 @@ Registrarme
 
 <script>
 
-async function login(){
+async function loginChofer(){
 
-const email=document.getElementById("email").value
-const password=document.getElementById("password").value
+const email = document.getElementById("email").value
+const password = document.getElementById("password").value
 
-const res=await fetch("/auth/chofer/login",{
+if(!email || !password){
+alert("Complete email y contraseña")
+return
+}
+
+const res = await fetch("/api/auth/chofer/login",{
 
 method:"POST",
 
@@ -145,7 +150,12 @@ password
 
 })
 
-const data=await res.json()
+if(!res.ok){
+alert("Email o contraseña incorrectos")
+return
+}
+
+const data = await res.json()
 
 localStorage.setItem("token",data.token)
 
