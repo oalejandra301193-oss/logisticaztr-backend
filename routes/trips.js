@@ -588,6 +588,64 @@ console.error(error);
 
 });
 
+// 🔹 OBTENER CARGAS PENDIENTES
+router.get("/pendientes", async (req,res)=>{
+
+try{
+
+const pendientes = await Trip.find({ estado: "PENDIENTE" });
+
+res.json(pendientes);
+
+}catch(error){
+
+console.error("Error obteniendo pendientes:", error);
+
+res.status(500).json({ error: "Error servidor" });
+
+}
+
+});
+
+// ✅ APROBAR CARGA
+router.put("/aprobar/:id", async (req,res)=>{
+
+try{
+
+await Trip.findByIdAndUpdate(req.params.id,{
+estado:"APROBADO"
+});
+
+res.json({ok:true});
+
+}catch(error){
+
+console.error(error);
+res.status(500).json({error:"Error aprobando carga"});
+
+}
+
+});
+
+// ❌ RECHAZAR CARGA
+router.put("/rechazar/:id", async (req,res)=>{
+
+try{
+
+await Trip.findByIdAndUpdate(req.params.id,{
+estado:"RECHAZADO"
+});
+
+res.json({ok:true});
+
+}catch(error){
+
+console.error(error);
+res.status(500).json({error:"Error rechazando carga"});
+
+}
+
+});
 
 // 🔹 ELIMINAR VIAJE
 router.post("/eliminar/:id", async (req, res) => {
