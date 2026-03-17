@@ -76,10 +76,6 @@ margin-left:10px;
 Registarme como cliente
 </button>
 
-<button onclick="mostrarFormulario()">
-Publicar carga
-</button>
-
 <button onclick="verViaje()">
 Ver carga en viaje
 </button>
@@ -321,8 +317,8 @@ clienteNombre:nombre,
 clienteComercio:comercio,
 clienteCUIT:cuit,
 clienteTelefono:telefono,
-direccionDescarga:direccion,
-direccionCarga:direccion
+direccionDescarga:direccionDescarga,
+direccionCarga:direccionCarga
 
 }
 
@@ -382,10 +378,42 @@ alert("Ingrese origen y destino")
 return
 }
 
-const res = await fetch(`/trips/distancia?origen=${origen}&destino=${destino}`)
-const data = await res.json()
+// buscar coordenadas origen
+const res1 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${origen}`)
+const data1 = await res1.json()
 
-document.getElementById("distancia").value = data.km
+// buscar coordenadas destino
+const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${destino}`)
+const data2 = await res2.json()
+
+if(!data1[0] || !data2[0]){
+alert("No se pudo calcular la distancia")
+return
+}
+
+const lat1 = parseFloat(data1[0].lat)
+const lon1 = parseFloat(data1[0].lon)
+
+const lat2 = parseFloat(data2[0].lat)
+const lon2 = parseFloat(data2[0].lon)
+
+// fórmula de distancia
+const R = 6371
+
+const dLat = (lat2-lat1) * Math.PI/180
+const dLon = (lon2-lon1) * Math.PI/180
+
+const a =
+Math.sin(dLat/2) * Math.sin(dLat/2) +
+Math.cos(lat1*Math.PI/180) *
+Math.cos(lat2*Math.PI/180) *
+Math.sin(dLon/2) * Math.sin(dLon/2)
+
+const c = 2 * Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+
+const distancia = R * c
+
+document.getElementById("distancia").value = Math.round(distancia)
 
 }
 
