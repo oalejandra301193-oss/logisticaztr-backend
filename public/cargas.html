@@ -278,30 +278,24 @@ const direccionDescarga = document.getElementById("direccionDescarga").value
 const direccionCarga = document.getElementById("direccionCarga").value
 
 
-// VALIDACIÓN
-
 if(!producto ||
-   !origen ||
-   !destino ||
-   !distancia ||
-   !valor ||
-   !tipo ||
-   !cantidad ||
-   !nombre ||
-   !comercio ||
-   !cuit ||
-   !telefono ||
-   !direccionCarga ||
-   !direccionDescarga){
+!origen ||
+!destino ||
+!distancia ||
+!valor ||
+!tipo ||
+!cantidad ||
+!nombre ||
+!comercio ||
+!cuit ||
+!telefono ||
+!direccionCarga ||
+!direccionDescarga){
 
-alert("⚠ Debe completar todos los datos para publicar la carga")
-
+alert("⚠ Debe completar todos los datos")
 return
 
 }
-
-
-// CREAR OBJETO
 
 const data = {
 
@@ -317,17 +311,14 @@ clienteNombre:nombre,
 clienteComercio:comercio,
 clienteCUIT:cuit,
 clienteTelefono:telefono,
-direccionDescarga:direccionDescarga,
-direccionCarga:direccionCarga,
+direccionDescarga,
+direccionCarga,
 
-estado: "PENDIENTE"
+estado:"PENDIENTE"
 
 }
 
-
-// ENVIAR AL SERVIDOR
-
-await fetch("/trips",{
+const res = await fetch("/trips",{
 
 method:"POST",
 
@@ -338,6 +329,14 @@ headers:{
 body:JSON.stringify(data)
 
 })
+
+if(!res.ok){
+
+alert("❌ Error al guardar la carga")
+
+return
+
+}
 
 alert("✅ Carga enviada para aprobación")
 
