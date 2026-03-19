@@ -172,7 +172,7 @@ window.location = p;
 // 🔥 CARGAR DATOS DEL DASHBOARD
 async function cargarDashboard(){
 
-const res = await fetch("/trips");
+const res = await fetch("https://logisticaztr-backend.onrender.com/trips");
 const viajes = await res.json();
 
 let activos = 0;
