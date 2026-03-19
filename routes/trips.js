@@ -589,11 +589,11 @@ console.error(error);
 });
 
 // 🔹 OBTENER CARGAS PENDIENTES
-router.get("/pendientes", async (req,res)=>{
+router.get("/", async (req,res)=>{
 
 try{
 
-const pendientes = await Trip.find({ estado: "PENDIENTE" });
+const viajes = await Trip.find({ estado: "PENDIENTE" });
 
 res.json(pendientes);
 
