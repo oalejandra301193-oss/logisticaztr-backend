@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Choferes postulados</title>
+<style>
+body{background:#0f172a;color:white;font-family:Arial;padding:20px;}
+.card{background:#1e293b;padding:15px;margin-bottom:10px;border-radius:10px;}
+</style>
+</head>
+
+<body>
+
+<h2>📋 Choferes postulados</h2>
+<div id="lista"></div>
+
+<script>
+
+async function cargar(){
+
+const res = await fetch("/trips")
+const viajes = await res.json()
+
+let html=""
+
+viajes.forEach(v=>{
+
+(v.postulaciones || []).forEach(p=>{
+
+html+=`
+<div class="card">
+🚛 ${v.producto}<br>
+👤 ${p.nombre}<br>
+📞 ${p.telefono}
+</div>
+`
+
+})
+
+})
+
+document.getElementById("lista").innerHTML=html
+
+}
+
+cargar()
+
+</script>
+
+</body>
+</html>

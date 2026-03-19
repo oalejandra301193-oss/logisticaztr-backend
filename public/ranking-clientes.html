@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ranking de Clientes</title>
+
+<style>
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+margin-bottom:10px;
+border-radius:10px;
+}
+
+.top{
+color:#22c55e;
+font-size:18px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>👤 Ranking de Clientes</h2>
+
+<div id="lista"></div>
+
+<script>
+
+async function cargar(){
+
+const res = await fetch("/trips")
+const viajes = await res.json()
+
+let clientes = {}
+
+viajes.forEach(v=>{
+
+if(!v.clienteCUIT) return
+
+if(!clientes[v.clienteCUIT]){
+clientes[v.clienteCUIT] = {
+nombre:v.clienteNombre,
+viajes:0,
+total:0
+}
+}
+
+clientes[v.clienteCUIT].viajes++
+clientes[v.clienteCUIT].total += v.valor || 0
+
+})
+
+// ordenar
+const ranking = Object.values(clientes)
+.sort((a,b)=> b.viajes - a.viajes)
+
+let html=""
+
+ranking.forEach((c,index)=>{
+
+html+=`
+<div class="card">
+<div class="${index===0 ? "top" : ""}">
+#${index+1} 👤 ${c.nombre}
+</div>
+
+<br>
+
+📦 Viajes: ${c.viajes}
+<br>
+💰 Total gastado: $${c.total}
+
+</div>
+`
+
+})
+
+document.getElementById("lista").innerHTML = html
+
+}
+
+cargar()
+
+</script>
+
+</body>
+</html>

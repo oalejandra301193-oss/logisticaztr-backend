@@ -1,37 +1,10 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <meta charset="UTF-8">
 <title>Panel LogisticaZTR</title>
 
 <style>
-    .dashboard{
-
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:20px;
-margin-top:30px;
-
-}
-
-.card{
-
-background:white;
-padding:25px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
-text-align:center;
-
-}
-
-.card p{
-
-font-size:30px;
-font-weight:bold;
-
-}
 
 body{
 margin:0;
@@ -44,18 +17,19 @@ header{
 background:#020617;
 padding:20px;
 font-size:24px;
+text-align:center;
 }
 
 .container{
 display:grid;
-grid-template-columns:repeat(3,1fr);
+grid-template-columns:repeat(4,1fr);
 gap:20px;
 padding:30px;
 }
 
 .card{
 background:#1e293b;
-padding:30px;
+padding:25px;
 border-radius:12px;
 text-align:center;
 cursor:pointer;
@@ -69,7 +43,13 @@ transform:scale(1.05);
 
 .numero{
 font-size:40px;
+font-weight:bold;
 margin-top:10px;
+}
+
+.titulo{
+font-size:14px;
+opacity:0.7;
 }
 
 </style>
@@ -84,278 +64,159 @@ margin-top:10px;
 
 <div class="container">
 
-<div class="card" onclick="window.location='mapa.html'">
+<!-- MAPA -->
+<div class="card" onclick="abrir('mapa.html')">
 📍 Mapa en vivo
 </div>
 
+<!-- CONTADORES -->
 <div class="card">
-<h3>Viajes activos</h3>
-<div id="viajesActivos">0</div>
-🚚 Viajes activos
+<div class="titulo">Viajes activos</div>
+<div id="viajesActivos" class="numero">0</div>
 </div>
 
-<div class="card"></div>
-<h3>📦 Cargas publicadas</h3>
-<div id="cargasPublicadas">0</div>
+<div class="card">
+<div class="titulo">Choferes</div>
+<div id="choferes" class="numero">0</div>
 </div>
 
-<div class="card" onclick="window.location='postulaciones.html'">
+<div class="card">
+<div class="titulo">Clientes</div>
+<div id="clientes" class="numero">0</div>
+</div>
+
+<div class="card">
+<div class="titulo">Cargas publicadas</div>
+<div id="cargasPublicadas" class="numero">0</div>
+</div>
+
+<div class="card">
+<div class="titulo">Pendientes aprobación</div>
+<div id="pendientes" class="numero">0</div>
+</div>
+
+<!-- BOTONES PRINCIPALES -->
+
+<div class="card" onclick="abrir('cargas-publicadas.html')">
+📦 Cargas publicadas
+</div>
+
+<div class="card" onclick="abrir('cargas-pendientes.html')">
+⏳ Cargas pendientes
+</div>
+
+<div class="card" onclick="abrir('viajes-activos.html')">
+🚚 Cargas en viaje
+</div>
+
+<div class="card" onclick="abrir('cargas-finalizadas.html')">
+✅ Cargas finalizadas
+</div>
+
+<div class="card" onclick="abrir('postulaciones-choferes.html')">
 📋 Choferes postulados
 </div>
 
-<div class="card" onclick="window.location='chofer.html'">
-👨‍✈️ Choferes activos
+<div class="card" onclick="abrir('choferes-activos.html')">
+🟢 Choferes activos
 </div>
 
 <div class="card" onclick="abrir('choferes.html')">
-🚛 Choferes
+👨‍✈️ Todos los choferes
 </div>
 
-<div class="card" onclick="abrir('clientes-activos.html')">
+<div class="card" onclick="abrir('clientes.html')">
 👤 Clientes
 </div>
 
-<div class="card" onclick="window.location='ranking.html'">
+<div class="card" onclick="abrir('ranking-choferes.html')">
 🏆 Ranking choferes
 </div>
 
-<div class="card" onclick="window.location='flota.html'">
+<div class="card" onclick="abrir('ranking-clientes.html')">
+🏆 Ranking clientes
+</div>
+
+<div class="card" onclick="abrir('flota.html')">
 🚛 Flota
 </div>
 
-<div class="card" onclick="window.location='finanzas.html'">
+<div class="card" onclick="abrir('finanzas.html')">
 💰 Finanzas
 </div>
 
-<div class="card" onclick="window.location='estadisticas.html'">
+<div class="card" onclick="abrir('estadisticas.html')">
 📊 Estadísticas
 </div>
 
-<div class="card" onclick="window.location='empresa.html'">
+<div class="card" onclick="abrir('empresa.html')">
 🏢 Empresa
 </div>
 
-<div class="card" onclick="window.location='cargas.html'">
-📦 Cargas
+<div class="card" onclick="abrir('postulaciones.html')">
+📨 Postulaciones
 </div>
 
-<div class="dashboard">
-
-<div class="card">0</div>
-<h3>👨‍✈️ Postulaciones</h3>
-<p id="postulaciones">0</p>
+<div class="card" onclick="abrir('comisiones.html')">
+💸 Comisiones
 </div>
-
-<div class="card">
-<h3>💰 Comisiones</h3>
-<p id="comisiones">$0</p>
-</div>
-
-</div>
-
-<h2>Choferes en viaje</h2>
-
-<div id="lista"></div>
-
-<script>
-
-async function cargar(){
-
-const res = await fetch("/trips")
-const viajes = await res.json()
-
-let html=""
-
-viajes.forEach(v=>{
-
-if(v.estado==="EN_VIAJE"){
-
-html+=`
-
-<div>
-
-👤 ${v.choferNombre}
-<br>
-📦 ${v.producto}
-
-<hr>
-
-</div>
-
-`
-
-}
-
-})
-
-document.getElementById("lista").innerHTML=html
-
-}
-
-cargar()
-
-</script>
-
-<h2>🚚 Panel Logistica ZTR</h2>
-
-<div class="menu">
-
-<button onclick="window.location='choferes.html'">
-Choferes
-</button>
-
-<button onclick="window.location='clientes-activos.html'">
-Clientes
-</button>
-
-<button onclick="window.location='cargas-pendientes.html'">
-Cargas pendientes
-</button>
-
-<button onclick="abrir('operaciones.html')">
-Centro de Operaciones
-</button>
-
-<div class="card" onclick="abrir('despacho.html')">
-🚚 Panel de despacho
-</div>
-
-<button onclick="window.location='viajes.html'">
-📍Ver viajes
-</button>
-
-
-<button onclick="window.location='cargas.html'">
-<h3>📦Ver Cargas publicadas</h3>
-<p id="cargas">0</p>
-</div>
-</button>
-
-<button onclick="abrir('empresa.html')">
-Empresa
-</button>
 
 </div>
 
 <script>
 
 function abrir(p){
-
-window.location=p
-
+window.location = p;
 }
 
-</script>
-
-
-<script>
-
-const publicadas = viajes.filter(v => v.publicado === true)
-
-document.getElementById("cargasPublicadas").innerText = publicadas.length
-
-async function cargarPanel(){
-
-const res = await fetch("/trips")
-const viajes = await res.json()
-
-const activos = viajes.filter(v => v.estado === "EN_VIAJE")
-
-document.getElementById("Viajes activos").innerText = activos.length
-
-}
-
-cargarPanel()    
-
-async function cargar(){
-
-const res = await fetch("https://logisticaztr-backend.onrender.com/trips");
-
-const viajes = await res.json();
-
-let activos=0;
-
-viajes.forEach(v=>{
-
-if(v.estado==="EN_CAMINO"){
-activos++;
-}
-
-});
-
-document.getElementById("activos").innerText=activos;
-document.getElementById("cargas").innerText=viajes.length;
-
-}
-
-cargar()
-
-</script>
-
-<script>
-
+// 🔥 CARGAR DATOS DEL DASHBOARD
 async function cargarDashboard(){
 
 const res = await fetch("/trips");
-
 const viajes = await res.json();
 
-let activos=0;
-let cargas=0;
-let postulaciones=0;
-let comisiones=0;
+let activos = 0;
+let pendientes = 0;
+let publicadas = 0;
+
+let choferes = new Set();
+let clientes = new Set();
 
 viajes.forEach(v=>{
 
-if(v.estado==="EN_CAMINO"){
-activos++;
+if(v.estado === "EN_VIAJE") activos++;
+
+if(v.estado === "PENDIENTE") pendientes++;
+
+if(v.estado === "APROBADO" || v.estado === "DISPONIBLE"){
+publicadas++;
 }
 
-if(v.publicado){
-cargas++;
+if(v.chofer?.dni){
+choferes.add(v.chofer.dni);
 }
 
-if(v.postulaciones){
-postulaciones+=v.postulaciones.length;
-}
-
-if(v.valor){
-comisiones+=v.valor*0.05;
+if(v.clienteCUIT){
+clientes.add(v.clienteCUIT);
 }
 
 });
 
-document.getElementById("activos").innerText=activos;
-document.getElementById("cargas").innerText=cargas;
-document.getElementById("postulaciones").innerText=postulaciones;
-document.getElementById("comisiones").innerText="$"+comisiones;
+// actualizar UI
+document.getElementById("viajesActivos").innerText = activos;
+document.getElementById("pendientes").innerText = pendientes;
+document.getElementById("cargasPublicadas").innerText = publicadas;
+
+document.getElementById("choferes").innerText = choferes.size;
+document.getElementById("clientes").innerText = clientes.size;
 
 }
 
 cargarDashboard();
 
-setInterval(notificaciones,5000)
-
-async function notificaciones(){
-
-const res = await fetch("/trips")
-const viajes = await res.json()
-
-viajes.forEach(v=>{
-
-if(v.postulaciones.length>0){
-
-console.log("Nueva postulacion en viaje",v._id)
-
-}
-
-})
-
-}
-
+setInterval(cargarDashboard, 5000);
 
 </script>
 
 </body>
-
 </html>

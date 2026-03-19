@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ranking de Choferes</title>
+
+<style>
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+margin-bottom:10px;
+border-radius:10px;
+}
+
+.top{
+color:#22c55e;
+font-size:18px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>🏆 Ranking de Choferes</h2>
+
+<div id="lista"></div>
+
+<script>
+
+async function cargar(){
+
+const res = await fetch("/trips/ranking-choferes")
+const ranking = await res.json()
+
+let html=""
+
+ranking.forEach((r,index)=>{
+
+html+=`
+<div class="card">
+<div class="${index===0 ? "top" : ""}">
+#${index+1} 👨‍✈️ ${r._id || "Sin nombre"}
+</div>
+
+<br>
+
+🚚 Viajes: ${r.viajes}
+<br>
+📏 Km recorridos: ${Math.round(r.km || 0)}
+<br>
+⭐ Rating: ${r.rating ? r.rating.toFixed(1) : "Sin datos"}
+
+</div>
+`
+
+})
+
+document.getElementById("lista").innerHTML = html
+
+}
+
+cargar()
+
+</script>
+
+</body>
+</html>

@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Postulaciones</title>
+<title>Viajes activos</title>
 
 <style>
 body{
@@ -24,7 +24,7 @@ border-radius:10px;
 
 <body>
 
-<h2>📋 Postulaciones</h2>
+<h2>🚛 Viajes activos</h2>
 
 <div id="lista"></div>
 
@@ -39,26 +39,24 @@ let html=""
 
 viajes.forEach(v=>{
 
-if(v.postulaciones && v.postulaciones.length > 0){
-
-v.postulaciones.forEach(p=>{
+if(v.estado === "EN_VIAJE"){
 
 html += `
 <div class="card">
 
-🚛 ${v.producto}<br>
-${v.origen} → ${v.destino}
+<b>${v.producto}</b><br>
+${v.origen} → ${v.destino}<br>
+
+👨‍✈️ ${v.chofer?.nombre || "-"}
 
 <br><br>
 
-👤 ${p.nombre}<br>
-📞 ${p.telefono}<br>
+<button onclick="window.location='mapa.html'">
+Ver en mapa
+</button>
 
 </div>
 `
-
-})
-
 }
 
 })

@@ -1,51 +1,40 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <meta charset="UTF-8">
 <title>Cargas pendientes</title>
 
 <style>
-
 body{
-font-family:Arial;
 background:#0f172a;
 color:white;
+font-family:Arial;
 padding:20px;
 }
 
 .card{
 background:#1e293b;
 padding:15px;
-margin-bottom:15px;
+margin-bottom:10px;
 border-radius:10px;
 }
 
 button{
-padding:8px 12px;
+padding:6px 10px;
 margin-top:10px;
+margin-right:5px;
 border:none;
 border-radius:6px;
 cursor:pointer;
 }
 
-.aprobar{
-background:#16a34a;
-color:white;
-}
-
-.rechazar{
-background:#dc2626;
-color:white;
-}
-
+.aprobar{background:#16a34a;color:white;}
+.rechazar{background:#dc2626;color:white;}
 </style>
 
 </head>
 
 <body>
-
-<h3>Cargas pendientes: <span id="contador"></span></h3>   
 
 <h2>📦 Cargas pendientes de aprobación</h2>
 
@@ -53,113 +42,63 @@ color:white;
 
 <script>
 
-async function cargarPendientes(){
+async function cargar(){
 
-const res = await fetch("/trips/pendientes");
-const cargas = await res.json();
-
-console.log(cargas);
+const res = await fetch("/trips")
+const viajes = await res.json()
 
 let html=""
 
-cargas.forEach(c => {
+viajes.forEach(v=>{
+
+if(v.estado === "PENDIENTE"){
 
 html += `
-<div style="border:1px solid #ccc; margin:10px; padding:10px">
-
-<p><b>${c.producto}</b></p>
-<p>${c.origen} → ${c.destino}</p>
-<p>$${c.valor}</p>
-
-<button onclick="aprobar('${c._id}')">✅ Aprobar</button>
-<button onclick="rechazar('${c._id}')">❌ Rechazar</button>
-
-</div>
-`;
-
-});
-
-if(c.estado === "PENDIENTE"){
-
-html += `
-
 <div class="card">
 
-<b>Producto:</b> ${c.producto}<br>
-<b>Origen:</b> ${c.origen}<br>
-<b>Destino:</b> ${c.destino}<br>
-<b>Cliente:</b> ${c.clienteNombre}<br>
-<b>Teléfono:</b> ${c.clienteTelefono}<br>
+<b>${v.producto}</b><br>
+${v.origen} → ${v.destino}<br>
+💰 $${v.valor}<br>
 
-<button class="aprobar" onclick="aprobar('${c._id}')">
+👤 ${v.clienteNombre || "-"}
+
+<br>
+
+<button class="aprobar" onclick="aprobar('${v._id}')">
 Aprobar
 </button>
 
-<button class="rechazar" onclick="rechazar('${c._id}')">
+<button class="rechazar" onclick="rechazar('${v._id}')">
 Rechazar
 </button>
 
 </div>
-
 `
-
 }
 
-}
+})
 
 document.getElementById("lista").innerHTML = html
-document.getElementById("contador").innerText = cargas.length;
 
-
+}
 
 async function aprobar(id){
 
-await fetch("/trips/"+id+"/aprobar",{
-method:"POST"
-})
-
-alert("Carga aprobada")
-
-cargarPendientes()
+await fetch("/trips/"+id+"/aprobar",{method:"POST"})
+cargar()
 
 }
 
 async function rechazar(id){
 
-await fetch("/trips/"+id,{
-method:"DELETE"
-})
-
-alert("Carga eliminada")
-
-cargarPendientes()
+await fetch("/trips/eliminar/"+id,{method:"POST"})
+cargar()
 
 }
 
-cargarPendientes()
-
-async function aprobar(id){
-
-await fetch("/trips/aprobar/" + id,{
-method:"PUT"
-});
-
-location.reload();
-
-}
-
-async function rechazar(id){
-
-await fetch("/trips/rechazar/" + id,{
-method:"PUT"
-});
-
-location.reload();
-
-}
+cargar()
 
 </script>
 
 </body>
-
 </html>
