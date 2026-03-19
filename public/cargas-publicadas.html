@@ -32,7 +32,13 @@ border-radius:10px;
 
 async function cargar(){
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/trips")
+const res = await fetch("https://TU-BACKEND.onrender.com/trips")
+.then(res => res.json())
+.then(viajes => {
+  console.log(viajes);
+
+  // acá renderizás en pantalla
+});
 const viajes = await res.json()
 
 let html=""

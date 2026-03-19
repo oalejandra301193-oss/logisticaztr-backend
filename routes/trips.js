@@ -65,6 +65,23 @@ error:"Faltan datos de origen o destino"
 });
 }
 
+// 🔹 GUARDAR / ACTUALIZAR CLIENTE
+let client = await Client.findOne({ cuit: clienteCUIT });
+
+if (!client) {
+  client = new Client({
+    nombre: clienteNombre,
+    cuit: clienteCUIT,
+    telefono: clienteTelefono,
+    direccion: direccionDescarga,
+    viajes: 1
+  });
+} else {
+  client.viajes += 1;
+}
+
+await client.save();
+
 const newTrip = new Trip({
 
 producto,
@@ -294,18 +311,6 @@ div.style.display = "none";
 
 });
 
-router.post("/:id/aprobar", async (req,res)=>{
-
-const id = req.params.id
-
-await Trip.findByIdAndUpdate(id,{
-estado:"PUBLICADO"
-})
-
-res.send("Carga aprobada")
-
-})
-
 // 🔹 OBTENER CARGAS PENDIENTES
 router.get("/", async (req, res) => {
   try {
@@ -318,6 +323,22 @@ router.get("/", async (req, res) => {
 
     console.error(error);
     res.status(500).json({ error: "Error al obtener viajes" });
+
+  }
+});
+
+// 🔹 OBTENER CARGAS PUBLICADAS
+router.get("/publicados", async (req, res) => {
+  try {
+
+    const viajes = await Trip.find({ estado: "PUBLICADO" });
+
+    res.json(viajes);
+
+  } catch (error) {
+
+    console.error(error);
+    res.status(500).json({ error: "Error obteniendo publicados" });
 
   }
 });
@@ -558,7 +579,7 @@ router.put("/aprobar/:id", async (req,res)=>{
 try{
 
 await Trip.findByIdAndUpdate(req.params.id,{
-estado:"APROBADO"
+estado:"PUBLICADO"
 });
 
 res.json({ok:true});
