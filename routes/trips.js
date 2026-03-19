@@ -38,58 +38,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-
-// 🔹 OBTENER TODOS LOS VIAJES (API)
-router.get("/", async (req, res) => {
-  try {
-
-    const trips = await Trip.find();
-
-const viajes = trips.map(t=>{
-
-try{
-
-const newTrip = new Trip(req.body);
-
-// asegurar estado pendiente
-newTrip.estado = "PENDIENTE";
-
-res.json({
-ok:true,
-viaje:newTrip
-});
-
-}catch(error){
-
-console.error(error);
-res.status(500).json({
-error:"Error guardando carga"
-});
-
-}
-
-});  
-
-let direccion = "Dirección bloqueada hasta pagar comisión";
-
-if(t.comisionPagada){
-direccion = t.clienteDireccion;
-}
-
-return {
-...t._doc,
-clienteDireccion: direccion
-},
-
-res.json(viajes);
-
-} catch (error) {
-
-res.status(500).json({ error: "Error al obtener viajes" });
-
-}
-});
-
 // 🔹 CREAR CARGA DESDE APP CLIENTE
 router.post("/", async (req,res)=>{
 
@@ -358,6 +306,22 @@ res.send("Carga aprobada")
 
 })
 
+// 🔹 OBTENER CARGAS PENDIENTES
+router.get("/", async (req, res) => {
+  try {
+
+    const viajes = await Trip.find({ estado: "PENDIENTE" });
+
+    res.json(viajes);
+
+  } catch (error) {
+
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener viajes" });
+
+  }
+});
+
 // 🔹 CREAR VIAJE
 router.post("/new", async (req, res) => {
 
@@ -583,25 +547,6 @@ res.json(trip.postulaciones || []);
 
 console.error(error);
   res.status(500).send("Error obteniendo postulaciones");
-
-}
-
-});
-
-// 🔹 OBTENER CARGAS PENDIENTES
-router.get("/", async (req,res)=>{
-
-try{
-
-const viajes = await Trip.find({ estado: "PENDIENTE" });
-
-res.json(pendientes);
-
-}catch(error){
-
-console.error("Error obteniendo pendientes:", error);
-
-res.status(500).json({ error: "Error servidor" });
 
 }
 
