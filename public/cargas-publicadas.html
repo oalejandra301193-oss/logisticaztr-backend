@@ -1,56 +1,35 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Cargas publicadas</title>
-
-<style>
-body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:20px;
-}
-
-.card{
-background:#1e293b;
-padding:15px;
-margin-bottom:10px;
-border-radius:10px;
-}
-</style>
-
-</head>
-
-<body>
-
-<h2>📦 Cargas publicadas</h2>
-
-<div id="lista"></div>
-
 <script>
 
 async function cargar(){
 
-const res = await fetch("https://TU-BACKEND.onrender.com/trips")
-.then(res => res.json())
-.then(viajes => {
-  console.log(viajes);
+try{
 
-  // acá renderizás en pantalla
+const res = await fetch("https://logisticaztr-backend.onrender.com/trips");
+
+const viajes = await res.json();
+
+const publicadas = viajes.filter(v => v.estado === "PUBLICADO");
+
+console.log(viajes);
+
+let html="";
+
+publicadas.forEach(v => {
+  html += `
+    <div class="card">
+      📦 ${v.producto}<br>
+      📍 ${v.origen} → ${v.destino}<br>
+      💰 $${v.valor}
+    </div>
+  `;
 });
-const viajes = await res.json()
-
-let html=""
 
 viajes.forEach(v=>{
-
-if(v.estado === "PUBLICADO"){
 
 html += `
 <div class="card">
 
-<b>${v.producto}</b><br>
+<b>${v.producto || "-"}</b><br>
 ${v.origen} → ${v.destino}<br>
 💰 $${v.valor}<br>
 
@@ -61,18 +40,20 @@ ${v.origen} → ${v.destino}<br>
 📨 Postulaciones: ${v.postulaciones?.length || 0}
 
 </div>
-`
+`;
+
+});
+
+document.getElementById("lista").innerHTML = html;
+
+}catch(error){
+
+console.error("Error cargando publicados:", error);
+
 }
 
-})
-
-document.getElementById("lista").innerHTML = html
-
 }
 
-cargar()
+cargar();
 
 </script>
-
-</body>
-</html>

@@ -328,7 +328,7 @@ router.get("/", async (req, res) => {
 });
 
 // 🔹 OBTENER CARGAS PUBLICADAS
-router.get("/publicados", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
 
     const viajes = await Trip.find({ estado: "PUBLICADO" });
