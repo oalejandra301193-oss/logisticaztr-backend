@@ -100,5 +100,52 @@ cargar()
 
 </script>
 
+<script>
+
+const API = "https://logisticaztr-backend.onrender.com";
+
+async function aprobar(id){
+
+try{
+
+const res = await fetch(API + "/trips/aprobar/" + id, {
+method:"POST"
+});
+
+const data = await res.json();
+
+console.log(data);
+
+alert("✅ Carga aprobada");
+
+location.reload();
+
+}catch(error){
+console.error("Error:", error);
+alert("❌ Error al aprobar");
+}
+
+}
+
+async function rechazar(id){
+
+try{
+
+await fetch(API + "/trips/eliminar/" + id, {
+method:"POST"
+});
+
+alert("❌ Carga rechazada");
+
+location.reload();
+
+}catch(error){
+console.error(error);
+}
+
+}
+
+</script>
+
 </body>
 </html>

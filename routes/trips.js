@@ -550,6 +550,27 @@ await newTrip.save();
 
 });
 
+// ✅ APROBAR CARGA
+router.post("/:id/aprobar", async (req,res)=>{
+try{
+
+const trip = await Trip.findById(req.params.id);
+
+if(!trip){
+return res.status(404).json({error:"Viaje no encontrado"});
+}
+
+trip.estado = "PUBLICADO";
+
+await trip.save();
+
+res.json({ok:true});
+
+}catch(error){
+console.error(error);
+res.status(500).json({error:"Error aprobando carga"});
+}
+});
 
 // 🔹 VER POSTULACIONES
 router.get("/postulaciones/:id", async (req, res) => {
@@ -568,26 +589,6 @@ res.json(trip.postulaciones || []);
 
 console.error(error);
   res.status(500).send("Error obteniendo postulaciones");
-
-}
-
-});
-
-// ✅ APROBAR CARGA
-router.put("/aprobar/:id", async (req,res)=>{
-
-try{
-
-await Trip.findByIdAndUpdate(req.params.id,{
-estado:"PUBLICADO"
-});
-
-res.json({ok:true});
-
-}catch(error){
-
-console.error(error);
-res.status(500).json({error:"Error aprobando carga"});
 
 }
 
