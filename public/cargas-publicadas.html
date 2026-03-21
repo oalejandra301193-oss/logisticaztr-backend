@@ -1,45 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Cargas publicadas</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+padding:20px;
+}
+
+h2{
+margin-bottom:20px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+margin-bottom:15px;
+border-radius:10px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.card:hover{
+background:#334155;
+}
+
+.detalle{
+margin-top:10px;
+padding:10px;
+background:#020617;
+border-radius:8px;
+display:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>📦 Cargas publicadas</h2>
+
+<div id="lista"></div>
+
 <script>
+
+const API = "https://logisticaztr-backend.onrender.com";
 
 async function cargar(){
 
 try{
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/trips");
-
+const res = await fetch(API + "/trips");
 const viajes = await res.json();
+
+console.log("VIAJES:", viajes);
+
+let html = "";
 
 const publicadas = viajes.filter(v => v.estado === "PUBLICADO");
 
-console.log(viajes);
+if(publicadas.length === 0){
+html = "<p>No hay cargas publicadas</p>";
+}
 
-let html="";
-
-publicadas.forEach(v => {
-  html += `
-    <div class="card">
-      📦 ${v.producto}<br>
-      📍 ${v.origen} → ${v.destino}<br>
-      💰 $${v.valor}
-    </div>
-  `;
-});
-
-viajes.forEach(v=>{
+publicadas.forEach(v=>{
 
 html += `
-<div class="card">
 
-<b>${v.producto || "-"}</b><br>
-${v.origen} → ${v.destino}<br>
-💰 $${v.valor}<br>
+<div class="card" onclick="toggle('${v._id}')">
 
-👤 ${v.clienteNombre || "-"}
+<b>📦 ${v.producto || "-"}</b><br>
+📍 ${v.origen} → ${v.destino}<br>
+📏 ${v.distanciaKm || "-"} km<br>
+💰 $${v.valor || "-"}
 
-<br><br>
+<div id="det-${v._id}" class="detalle">
 
-📨 Postulaciones: ${v.postulaciones?.length || 0}
+<hr>
+
+<b>👤 Cliente</b><br>
+Nombre: ${v.clienteNombre || "-"}<br>
+Teléfono: ${v.clienteTelefono || "-"}<br>
+CUIT: ${v.clienteCUIT || "-"}<br>
+Dirección: ${v.clienteDireccion || "-"}
 
 </div>
+
+</div>
+
 `;
 
 });
@@ -48,8 +103,21 @@ document.getElementById("lista").innerHTML = html;
 
 }catch(error){
 
-console.error("Error cargando publicados:", error);
+console.error("ERROR:", error);
+document.getElementById("lista").innerHTML = "❌ Error cargando datos";
 
+}
+
+}
+
+function toggle(id){
+
+const div = document.getElementById("det-"+id);
+
+if(div.style.display === "none" || div.style.display === ""){
+div.style.display = "block";
+}else{
+div.style.display = "none";
 }
 
 }
@@ -57,3 +125,7 @@ console.error("Error cargando publicados:", error);
 cargar();
 
 </script>
+
+</body>
+
+</html>
