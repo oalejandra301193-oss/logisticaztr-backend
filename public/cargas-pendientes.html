@@ -102,13 +102,13 @@ cargar()
 
 <script>
 
-const API = "https://logisticaztr-backend.onrender.com";
+const res = "https://logisticaztr-backend.onrender.com";
 
 async function aprobar(id){
 
 try{
 
-const res = await fetch(API + "/trips/aprobar/" + id, {
+const res = await fetch("/trips/aprobar/" + id, {
 method:"POST"
 });
 
@@ -131,7 +131,7 @@ async function rechazar(id){
 
 try{
 
-await fetch(API + "/trips/eliminar/" + id, {
+await fetch("/trips/eliminar/" + id, {
 method:"POST"
 });
 
