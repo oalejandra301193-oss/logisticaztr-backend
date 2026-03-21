@@ -51,18 +51,13 @@ display:none;
 
 <script>
 
-const API = "https://logisticaztr-backend.onrender.com";
-
 async function cargar(){
 
 try{
 
-const res = await fetch(API + "/trips");
+const res = await fetch("/trips");
 const viajes = await res.json();
 
-console.log("TODOS:", viajes);
-
-// ✅ FILTRO CORRECTO
 const publicadas = viajes.filter(v => v.estado === "PUBLICADO");
 
 let html = "";
@@ -71,7 +66,6 @@ if(publicadas.length === 0){
 html = "<p>No hay cargas publicadas</p>";
 }
 
-// ✅ RECORRER SOLO PUBLICADAS
 publicadas.forEach(v => {
 
 html += `
