@@ -57,20 +57,22 @@ async function cargar(){
 
 try{
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/trips");
+const res = await fetch(API + "/trips");
 const viajes = await res.json();
 
-console.log("VIAJES:", viajes);
+console.log("TODOS:", viajes);
+
+// ✅ FILTRO CORRECTO
+const publicadas = viajes.filter(v => v.estado === "PUBLICADO");
 
 let html = "";
-
-const publicadas = viajes.filter(v => v.estado === "PUBLICADO");
 
 if(publicadas.length === 0){
 html = "<p>No hay cargas publicadas</p>";
 }
 
-publicadas.forEach(v=>{
+// ✅ RECORRER SOLO PUBLICADAS
+publicadas.forEach(v => {
 
 html += `
 
@@ -90,6 +92,22 @@ Nombre: ${v.clienteNombre || "-"}<br>
 Teléfono: ${v.clienteTelefono || "-"}<br>
 CUIT: ${v.clienteCUIT || "-"}<br>
 Dirección: ${v.clienteDireccion || "-"}
+
+<br><br>
+
+<b>🚛 Postulaciones</b><br>
+
+${
+v.postulaciones && v.postulaciones.length > 0
+? v.postulaciones.map(p => `
+<div style="border:1px solid #334155; padding:5px; margin-top:5px; border-radius:5px;">
+👤 ${p.nombre}<br>
+📞 ${p.telefono}<br>
+🚛 ${p.patente1}
+</div>
+`).join("")
+: "Sin postulaciones"
+}
 
 </div>
 
@@ -123,6 +141,8 @@ div.style.display = "none";
 }
 
 cargar();
+
+</script>
 
 </script>
 
