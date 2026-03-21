@@ -551,7 +551,7 @@ await newTrip.save();
 });
 
 // ✅ APROBAR CARGA
-router.post("/:id/aprobar", async (req,res)=>{
+router.post("/:id/", async (req,res)=>{
 try{
 
 const trip = await Trip.findById(req.params.id);
@@ -560,7 +560,7 @@ if(!trip){
 return res.status(404).json({error:"Viaje no encontrado"});
 }
 
-trip.estado = "PUBLICADO";
+trip.estado = " PUBLICADO ";
 
 await trip.save();
 
