@@ -57,7 +57,7 @@ async function cargar(){
 
 try{
 
-const res = await fetch(API + "/trips");
+const res = await fetch("https://logisticaztr-backend.onrender.com/trips");
 const viajes = await res.json();
 
 console.log("VIAJES:", viajes);
