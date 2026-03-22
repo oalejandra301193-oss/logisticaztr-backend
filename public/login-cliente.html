@@ -94,7 +94,7 @@ font-weight:600;
 
 <input id="password" type="password" placeholder="Contraseña">
 
-<button onclick="loginCliente()">
+<button onclick="loginCliente()">Ingresar</button>
 
 <p>No tenés cuenta?</p>
 
@@ -113,20 +113,21 @@ async function loginCliente(){
 const email = document.getElementById("email").value
 const password = document.getElementById("password").value
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/cliente/login")
+if(!email || !password){
+alert("Completá los datos")
+return
+}
 
-method:"POST";
-
+const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/cliente/login",{
+method:"POST",
 headers:{
-"Content-Type","application/json"
-};
-
+"Content-Type":"application/json"
+},
 body:JSON.stringify({
 email,
 password
 })
-
-}
+})
 
 if(!res.ok){
 alert("Datos incorrectos")
@@ -138,6 +139,8 @@ const data = await res.json()
 localStorage.setItem("token",data.token)
 
 window.location="/app-cliente.html"
+
+}
 
 </script>
 

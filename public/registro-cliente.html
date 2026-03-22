@@ -65,17 +65,18 @@ password:document.getElementById("password").value
 
 };
 
-await fetch("/api/auth/register-client",{
-
+const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/cliente/register",{
 method:"POST",
-
 headers:{
 "Content-Type":"application/json"
 },
-
 body:JSON.stringify(data)
-
 });
+
+if(!res.ok){
+alert("Error al registrar");
+return;
+}
 
 alert("Cliente registrado correctamente");
 
