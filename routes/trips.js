@@ -311,11 +311,11 @@ div.style.display = "none";
 
 });
 
-// 🔹 OBTENER CARGAS PENDIENTES
+// 🔹 OBTENER TODOS LOS VIAJES
 router.get("/", async (req, res) => {
   try {
 
-    const viajes = await Trip.find({ estado: "PENDIENTE" });
+    const viajes = await Trip.find();
 
     res.json(viajes);
 
@@ -323,22 +323,6 @@ router.get("/", async (req, res) => {
 
     console.error(error);
     res.status(500).json({ error: "Error al obtener viajes" });
-
-  }
-});
-
-// 🔹 OBTENER CARGAS PUBLICADAS
-router.get("/", async (req, res) => {
-  try {
-
-    const viajes = await Trip.find({ estado: "PUBLICADO" });
-
-    res.json(viajes);
-
-  } catch (error) {
-
-    console.error(error);
-    res.status(500).json({ error: "Error obteniendo publicados" });
 
   }
 });
@@ -551,7 +535,7 @@ await newTrip.save();
 });
 
 // ✅ APROBAR CARGA
-router.post("/:id/", async (req,res)=>{
+router.post("/:id/aprobar", async (req,res)=>{
 try{
 
 const trip = await Trip.findById(req.params.id);
@@ -560,7 +544,7 @@ if(!trip){
 return res.status(404).json({error:"Viaje no encontrado"});
 }
 
-trip.estado = " PUBLICADO ";
+trip.estado = "PUBLICADO";
 
 await trip.save();
 
@@ -848,7 +832,7 @@ res.json({ok:true});
 
 });
 
-// 🗺️ API MAPA ADMIN
+// 🗺️ MAPA ADMIN
 router.get("/mapa", async (req,res)=>{
 
 try{

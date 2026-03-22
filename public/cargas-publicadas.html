@@ -55,7 +55,7 @@ async function cargar(){
 
 try{
 
-const res = await fetch("/trips");
+const res = await fetch("https://logisticaztr-backend.onrender.com/trips")
 const viajes = await res.json();
 
 const publicadas = viajes.filter(v => v.estado === "PUBLICADO");

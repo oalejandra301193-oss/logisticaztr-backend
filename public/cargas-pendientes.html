@@ -44,7 +44,7 @@ cursor:pointer;
 
 async function cargar(){
 
-const res = await fetch("/trips")
+const res = await fetch("https://logisticaztr-backend.onrender.com/trips")
 const viajes = await res.json()
 
 let html=""
@@ -84,66 +84,19 @@ document.getElementById("lista").innerHTML = html
 
 async function aprobar(id){
 
-await fetch("/trips/"+id+"/aprobar",{method:"POST"})
+await fetch("https://logisticaztr-backend.onrender.com/trips/"+id+"/aprobar",{method:"POST"})
 cargar()
 
 }
 
 async function rechazar(id){
 
-await fetch("/trips/eliminar/"+id,{method:"POST"})
+await fetch("https://logisticaztr-backend.onrender.com/trips/rechazar/"+id,{method:"PUT"})
 cargar()
 
 }
 
 cargar()
-
-</script>
-
-<script>
-
-const res = "https://logisticaztr-backend.onrender.com";
-
-async function aprobar(id){
-
-try{
-
-const res = await fetch("/trips/aprobar/" + id, {
-method:"POST"
-});
-
-const data = await res.json();
-
-console.log(data);
-
-alert("✅ Carga aprobada");
-
-location.reload();
-
-}catch(error){
-console.error("Error:", error);
-alert("❌ Error al aprobar");
-}
-
-}
-
-async function rechazar(id){
-
-try{
-
-await fetch("/trips/eliminar/" + id, {
-method:"POST"
-});
-
-alert("❌ Carga rechazada");
-
-location.reload();
-
-}catch(error){
-console.error(error);
-}
-
-}
 
 </script>
 
