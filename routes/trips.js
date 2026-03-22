@@ -988,19 +988,6 @@ viajes:trips.length
 
 });
 
-router.get("/clientes", async (req,res)=>{
-  try{
-
-    const clientes = await Client.find().sort({ viajes:-1 });
-
-    res.json(clientes);
-
-  }catch(err){
-    console.error(err);
-    res.status(500).json({error:"Error obteniendo clientes"});
-  }
-});
-
 router.post("/location", async (req,res)=>{
 
 try{
@@ -1029,6 +1016,17 @@ res.status(500).json({error:"Error guardando ubicación"});
 
 }
 
+});
+
+// 🔹 OBTENER CLIENTES
+router.get("/clientes", async (req,res)=>{
+  try{
+    const clientes = await Client.find().sort({ viajes:-1 });
+    res.json(clientes);
+  }catch(err){
+    console.error(err);
+    res.status(500).json({error:"Error obteniendo clientes"});
+  }
 });
 
 module.exports = router;
