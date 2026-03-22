@@ -3,15 +3,16 @@ const mongoose = require("mongoose");
 const DriverSchema = new mongoose.Schema({
 
   nombre: String,
+  apellido: String,
   dni: String,
+  telefono: String,
 
-  patente1: String,
-  patente2: String,
-  patente3: String,
+  email: String,
+  password: String,
 
-  viajes: {
-    type: Number,
-    default: 0
+  disponible: {
+    type: Boolean,
+    default: false
   },
 
   verificado: {
@@ -19,25 +20,10 @@ const DriverSchema = new mongoose.Schema({
     default: false
   },
 
-  disponible:{
-  type:Boolean,
-  default:true
-  },
-
-  ultimaUbicacion:{
-  lat:Number,
-  lng:Number
-  },
-
-  ubicacion:{
-  lat:Number,
-  lng:Number
-  },
-
-  disponible:{
-  type:Boolean,
-  default:true
-  },
+  viajes: {
+    type: Number,
+    default: 0
+  }
 
 });
 
