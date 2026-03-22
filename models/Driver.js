@@ -26,7 +26,14 @@ const DriverSchema = new mongoose.Schema({
   viajes: {
     type: Number,
     default: 0
-  }
+  },
+
+  foto: String,
+
+archivos: {
+  type: [String],
+  default: []
+}
 
 });
 

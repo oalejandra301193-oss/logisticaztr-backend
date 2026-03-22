@@ -19,7 +19,12 @@ const ClientSchema = new mongoose.Schema({
   creado: {
     type: Date,
     default: Date.now
-  }
+  },
+
+  archivos: {
+  type: [String],
+  default: []
+}
 
 });
 

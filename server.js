@@ -227,6 +227,72 @@ console.log("Servidor corriendo en puerto "+PORT);
 console.error("❌ Error conectando a MongoDB:",error);
 });
 
+app.post("/clientes/:id/archivo", upload.single("archivo"), async (req,res)=>{
+
+try{
+
+const cliente = await Client.findById(req.params.id);
+
+if(!cliente){
+return res.status(404).send("Cliente no encontrado");
+}
+
+if(!cliente.archivos){
+cliente.archivos = [];
+}
+
+cliente.archivos.push(req.file.filename);
+
+await cliente.save();
+
+res.json({ok:true});
+
+}catch(err){
+console.error(err);
+res.status(500).send("Error subiendo archivo");
+}
+
+});
+
+app.post("/choferes/:id/archivo", upload.single("archivo"), async (req,res)=>{
+
+try{
+
+const chofer = await Driver.findById(req.params.id);
+
+if(!chofer){
+return res.status(404).send("Chofer no encontrado");
+}
+
+if(!chofer.archivos){
+chofer.archivos = [];
+}
+
+chofer.archivos.push(req.file.filename);
+
+await chofer.save();
+
+res.json({ok:true});
+
+}catch(err){
+console.error(err);
+res.status(500).send("Error subiendo archivo");
+}
+
+});
+
+app.post("/choferes/:id/foto", upload.single("archivo"), async (req,res)=>{
+
+const chofer = await Driver.findById(req.params.id);
+
+chofer.foto = req.file.filename;
+
+await chofer.save();
+
+res.json({ok:true});
+
+});
+
 
 
 

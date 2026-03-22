@@ -363,19 +363,14 @@ clienteTelefono
 let client = await Client.findOne({ cuit: clienteCUIT });
 
 if (!client) {
-
-client = new Client({
-nombre: clienteNombre,
-cuit: clienteCUIT,
-telefono: clienteTelefono,
-direccion: clienteDireccion,
-viajes: 1
-});
-
+  client = new Client({
+    nombre: clienteNombre || "",
+    cuit: clienteCUIT || "",
+    telefono: clienteTelefono || "",
+    direccion: direccionDescarga || ""
+  });
 } else {
-
-client.viajes += 1;
-
+  client.viajes += 1;
 }
 
 await client.save();
