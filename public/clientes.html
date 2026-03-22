@@ -36,7 +36,7 @@ border-radius:10px;
 
 async function cargar(){
 
-const res=await fetch("/clientes")
+const res=await fetch("https://logisticaztr-backend.onrender.com/clientes")
 const clientes=await res.json()
 
 let html=""
@@ -47,19 +47,23 @@ html+=`
 
 <div class="card">
 
-Nombre: ${c.nombre} ${c.apellido}
+Nombre: ${c.nombre || "-"}
 
 <br>
 
-DNI: ${c.dni}
+CUIT: ${c.cuit || "-"}
 
 <br>
 
-Telefono: ${c.telefono}
+Telefono: ${c.telefono || "-"}
 
 <br>
 
-Direccion comercial: ${c.direccion}
+Direccion comercial: ${c.direccion || "-"}
+
+<br>
+
+Viajes: ${c.viajes || 0}
 
 </div>
 
