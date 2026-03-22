@@ -47,8 +47,6 @@ app.use("/api/auth",authRoutes);
 app.use("/api/company",companyRoutes);
 app.use("/trips",require("./routes/trips"));
 
-app.use("/", require("./routes/clientes"));
-
 function distancia(lat1,lon1,lat2,lon2){
 
 const R = 6371;
