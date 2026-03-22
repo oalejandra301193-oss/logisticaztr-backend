@@ -109,10 +109,9 @@ background:#27ae60;
 <h2>🚚 Ingreso Chofer</h2>
 
 <input id="email" placeholder="Email">
-
 <input id="password" type="password" placeholder="Password">
 
-<button onclick="login()">Entrar</button>
+<button onclick="loginChofer()">Ingresar</button>
 
 <p>No tenés cuenta?</p>
 
@@ -135,7 +134,7 @@ alert("Complete email y contraseña")
 return
 }
 
-const res = await fetch("/api/auth/chofer/login",{
+const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/chofer/login",{
 
 method:"POST",
 

@@ -89,5 +89,71 @@ res.json({token});
 
 });
 
+// REGISTRO CLIENTE
+router.post("/cliente/register", async (req,res)=>{
+
+try{
+
+const {nombre,email,password,telefono} = req.body;
+
+const existe = await Cliente.findOne({email});
+
+if(existe){
+return res.status(400).send("Cliente ya existe");
+}
+
+const hash = await bcrypt.hash(password,10);
+
+const nuevo = new Cliente({
+nombre,
+email,
+password:hash,
+telefono
+});
+
+await nuevo.save();
+
+res.json({ok:true});
+
+}catch(err){
+console.error(err);
+res.status(500).send("Error registrando cliente");
+}
+
+});
+
+router.post("/chofer/register", async (req,res)=>{
+
+try{
+
+const {nombre,email,password,telefono} = req.body;
+
+const existe = await Chofer.findOne({email});
+
+if(existe){
+return res.status(400).send("Chofer ya existe");
+}
+
+const hash = await bcrypt.hash(password,10);
+
+const nuevo = new Chofer({
+nombre,
+email,
+password:hash,
+telefono,
+disponible:false
+});
+
+await nuevo.save();
+
+res.json({ok:true});
+
+}catch(err){
+console.error(err);
+res.status(500).send("Error registrando chofer");
+}
+
+});
+
 
 module.exports = router;

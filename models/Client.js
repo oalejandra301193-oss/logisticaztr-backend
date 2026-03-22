@@ -7,9 +7,13 @@ const ClientSchema = new mongoose.Schema({
   direccion: String,
   cuit: String,
 
+  // 🔥 LOGIN
+  email: String,
+  password: String,
+
   viajes: {
     type: Number,
-    default: 1
+    default: 0
   },
 
   creado: {
