@@ -7,6 +7,11 @@ const ClientSchema = new mongoose.Schema({
   direccion: String,
   cuit: String,
 
+  viajes: {
+    type: Number,
+    default: 1
+  },
+
   creado: {
     type: Date,
     default: Date.now

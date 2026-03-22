@@ -227,15 +227,6 @@ console.log("Servidor corriendo en puerto "+PORT);
 console.error("❌ Error conectando a MongoDB:",error);
 });
 
-router.get("/clientes", async (req,res)=>{
-  try{
-    const clientes = await Client.find();
-    res.json(clientes);
-  }catch(err){
-    console.error(err);
-    res.status(500).json({error:"Error obteniendo clientes"});
-  }
-});
 
 
 
