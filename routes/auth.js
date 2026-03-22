@@ -126,7 +126,7 @@ router.post("/chofer/register", async (req,res)=>{
 
 try{
 
-const {nombre,email,password,telefono} = req.body;
+const {nombre,apellido,email,password,telefono} = req.body;
 
 const existe = await Chofer.findOne({email});
 
@@ -138,6 +138,7 @@ const hash = await bcrypt.hash(password,10);
 
 const nuevo = new Chofer({
 nombre,
+apellido,
 email,
 password:hash,
 telefono,
