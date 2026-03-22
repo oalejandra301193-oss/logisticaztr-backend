@@ -47,6 +47,8 @@ app.use("/api/auth",authRoutes);
 app.use("/api/company",companyRoutes);
 app.use("/trips",require("./routes/trips"));
 
+app.use("/", require("./routes/clientes"));
+
 function distancia(lat1,lon1,lat2,lon2){
 
 const R = 6371;
@@ -225,6 +227,16 @@ console.log("Servidor corriendo en puerto "+PORT);
 })
 .catch(error=>{
 console.error("❌ Error conectando a MongoDB:",error);
+});
+
+router.get("/clientes", async (req,res)=>{
+  try{
+    const clientes = await Client.find();
+    res.json(clientes);
+  }catch(err){
+    console.error(err);
+    res.status(500).json({error:"Error obteniendo clientes"});
+  }
 });
 
 
