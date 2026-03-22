@@ -6,6 +6,9 @@ const DriverSchema = new mongoose.Schema({
   apellido: String,
   dni: String,
   telefono: String,
+  patente1: String,
+  patente2: String,
+  patente3: String,
 
   email: String,
   password: String,
