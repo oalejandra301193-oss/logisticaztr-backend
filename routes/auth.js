@@ -94,7 +94,7 @@ router.post("/cliente/register", async (req,res)=>{
 
 try{
 
-const {nombre,email,password,telefono} = req.body;
+const {nombre,cuit,email,password,telefono,direccioncomercial} = req.body;
 
 const existe = await Cliente.findOne({email});
 
@@ -106,9 +106,11 @@ const hash = await bcrypt.hash(password,10);
 
 const nuevo = new Cliente({
 nombre,
+cuit,
 email,
 password:hash,
-telefono
+telefono,
+direccioncomercial
 });
 
 await nuevo.save();
@@ -126,7 +128,7 @@ router.post("/chofer/register", async (req,res)=>{
 
 try{
 
-const {nombre,apellido,email,password,telefono} = req.body;
+const {nombre,apellido,dni,email,password,telefono,patente1,patente2,patente3} = req.body;
 
 const existe = await Chofer.findOne({email});
 
@@ -139,9 +141,13 @@ const hash = await bcrypt.hash(password,10);
 const nuevo = new Chofer({
 nombre,
 apellido,
+dni,
 email,
 password:hash,
 telefono,
+patente1,
+patente2,
+patente3,
 disponible:false
 });
 
