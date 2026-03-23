@@ -84,6 +84,16 @@ res.json({ok:true,adelanto:monto});
 
 });
 
+app.get("/clientes", async (req,res)=>{
+  try{
+    const clientes = await Client.find();
+    res.json(clientes);
+  }catch(err){
+    console.error(err);
+    res.status(500).json({error:"Error obteniendo clientes"});
+  }
+});
+
 app.get("/finanzas",async(req,res)=>{
 
 const viajes = await Trip.find({estado:"FINALIZADO"});

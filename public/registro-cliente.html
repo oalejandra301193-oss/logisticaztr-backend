@@ -9,33 +9,59 @@
 <style>
 
 body{
+margin:0;
 font-family:Arial;
-background:#f2f2f2;
-text-align:center;
-margin-top:60px;
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+background:#0f172a;
+color:white;
+}
+
+.container{
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+width:90%;
+max-width:400px;
+box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+h2{
+margin-bottom:20px;
 }
 
 input{
-display:block;
-margin:10px auto;
-padding:10px;
-width:250px;
+width:100%;
+padding:14px;
+margin:10px 0;
+border:none;
+border-radius:6px;
+font-size:16px;
 }
 
 button{
-padding:12px 20px;
+width:100%;
+padding:14px;
 background:#2ecc71;
 color:white;
 border:none;
 border-radius:6px;
+font-size:16px;
 cursor:pointer;
 }
 
+button:hover{
+background:#27ae60;
+}
 </style>
 
 </head>
 
 <body>
+
+<div class="container">
 
 <h2>Registro de Cliente</h2>
 
@@ -50,6 +76,8 @@ cursor:pointer;
 <input id="password" type="password" placeholder="Contraseña">
 
 <button onclick="registrar()">Crear cuenta</button>
+
+</div>
 
 <script>
 
