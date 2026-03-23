@@ -5,7 +5,7 @@ const ClientSchema = new mongoose.Schema({
   nombre: String,
   telefono: String,
   Direccioncomercial: String,
-  cuit: String,
+  CUIT: String,
 
   // 🔥 LOGIN
   email: String,
