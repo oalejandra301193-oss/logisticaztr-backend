@@ -64,7 +64,7 @@ Apellido: ${d.apellido}
 
 <br>
 
-DNI: ${d.dni}
+DNI: ${d.dni || "-"}
 
 <br>
 
@@ -72,7 +72,7 @@ Tel: ${d.telefono}
 
 <br>
 
-Patente 1: ${d.patente1}
+Patente 1: ${d.patente1 || "-"}
 
 <br>
 
@@ -81,6 +81,28 @@ Patente 2: ${d.patente2 || "-"}
 <br>
 
 Patente 3: ${d.patente3 || "-"}
+
+<br><br>
+
+<input type="file" id="file-${d._id}">
+<button onclick="subirArchivo('${d._id}')">Subir archivo</button>
+
+<br><br>
+
+<div>
+${
+  d.archivos && d.archivos.length > 0
+  ? d.archivos.map(a =>
+    `<a href="/uploads/${a}" target="_blank">📄 Ver archivo</a><br>`
+  ).join("")
+  : "Sin archivos"
+}
+</div>
+
+<br><br>
+
+<input type="file" id="foto-${d._id}">
+<button onclick="subirFoto('${d._id}')">Subir foto</button>
 
 </div>
 
@@ -93,6 +115,58 @@ document.getElementById("lista").innerHTML=html
 }
 
 cargar()
+
+async function subirArchivo(id){
+
+const input = document.getElementById("file-"+id);
+
+if(!input.files[0]){
+alert("Seleccioná un archivo");
+return;
+}
+
+const formData = new FormData();
+formData.append("archivo", input.files[0]);
+
+const res = await fetch("/choferes/"+id+"/archivo",{
+method:"POST",
+body:formData
+});
+
+if(res.ok){
+alert("Archivo subido");
+cargar();
+}else{
+alert("Error al subir archivo");
+}
+
+}
+
+async function subirFoto(id){
+
+const input = document.getElementById("foto-"+id);
+
+if(!input.files[0]){
+alert("Seleccioná una foto");
+return;
+}
+
+const formData = new FormData();
+formData.append("archivo", input.files[0]);
+
+const res = await fetch("/choferes/"+id+"/foto",{
+method:"POST",
+body:formData
+});
+
+if(res.ok){
+alert("Foto subida");
+cargar();
+}else{
+alert("Error al subir foto");
+}
+
+}
 
 </script>
 
