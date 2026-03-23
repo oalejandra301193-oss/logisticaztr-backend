@@ -69,6 +69,45 @@ Viajes: ${c.viajes || 0}
 
 `
 
+html+=`
+
+<div class="card">
+
+Nombre: ${c.nombre || "-"}
+
+<br>
+CUIT: ${c.cuit || "-"}
+
+<br>
+Telefono: ${c.telefono || "-"}
+
+<br>
+Direccion comercial: ${c.direccion || "-"}
+
+<br>
+Viajes: ${c.viajes || 0}
+
+<br><br>
+
+<input type="file" id="file-${c._id}">
+<button onclick="subirArchivo('${c._id}')">Subir archivo</button>
+
+<br><br>
+
+<div id="archivos-${c._id}">
+${
+  c.archivos && c.archivos.length > 0
+  ? c.archivos.map(a =>
+    `<a href="https://logisticaztr-backend.onrender.com/uploads/clientes/${a}" target="_blank">📄 Ver archivo</a><br>`
+  ).join("")
+  : "Sin archivos"
+}
+</div>
+
+</div>
+
+`
+
 })
 
 document.getElementById("lista").innerHTML=html
@@ -76,6 +115,32 @@ document.getElementById("lista").innerHTML=html
 }
 
 cargar()
+
+async function subirArchivo(id){
+
+const input = document.getElementById("file-"+id);
+
+if(!input.files[0]){
+alert("Seleccioná un archivo");
+return;
+}
+
+const formData = new FormData();
+formData.append("archivo", input.files[0]);
+
+const res = await fetch("https://logisticaztr-backend.onrender.com/clientes/"+id+"/archivo",{
+method:"POST",
+body:formData
+});
+
+if(res.ok){
+alert("Archivo subido");
+cargar();
+}else{
+alert("Error al subir archivo");
+}
+
+}
 
 </script>
 
