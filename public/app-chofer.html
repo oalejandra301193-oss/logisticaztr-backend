@@ -59,6 +59,11 @@ margin-top:10px;
 
 <button onclick="guardarPerfil()">Guardar perfil</button>
 
+<h3>Foto de perfil</h3>
+
+<input type="file" id="foto">
+<button onclick="subirMiFoto()">Subir foto</button>
+
 <div id="empresa"></div>
 
 <div id="ranking"></div>
@@ -237,6 +242,35 @@ lng
 })
 
 })
+
+async function subirMiFoto(){
+
+const input = document.getElementById("foto");
+
+if(!input.files[0]){
+alert("Seleccioná una foto");
+return;
+}
+
+const formData = new FormData();
+formData.append("archivo", input.files[0]);
+
+// ⚠️ necesitás el ID del chofer logueado
+const choferId = localStorage.getItem("choferId");
+
+const res = await fetch("/choferes/"+choferId+"/foto",{
+method:"POST",
+body:formData
+});
+
+if(res.ok){
+alert("Foto actualizada");
+location.reload();
+}else{
+alert("Error al subir foto");
+}
+
+}
 
 </script>
 

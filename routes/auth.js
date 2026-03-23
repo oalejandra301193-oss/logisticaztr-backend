@@ -58,7 +58,10 @@ const token = jwt.sign(
 process.env.JWT_SECRET
 );
 
-res.json({token});
+res.json({
+  token,
+  id: chofer._id
+});
 
 });
 
