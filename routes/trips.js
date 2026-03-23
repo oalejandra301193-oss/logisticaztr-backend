@@ -55,6 +55,7 @@ clienteNombre,
 clienteComercio,
 clienteCUIT,
 clienteTelefono,
+clienteDireccionComercial,
 direccionDescarga,
 direccionCarga
 } = req.body;
@@ -73,7 +74,9 @@ if (!client) {
     nombre: clienteNombre,
     cuit: clienteCUIT,
     telefono: clienteTelefono,
+    direccion: direccionCarga,
     direccion: direccionDescarga,
+    direccion: direccionComercial,
     viajes: 1
   });
 } else {
@@ -94,6 +97,8 @@ valor: Number(valor) || 0,
 clienteNombre,
 clienteCUIT,
 clienteTelefono,
+clienteDireccionComercial,
+clienteDireccion: direccionCarga,
 clienteDireccion: direccionDescarga,
 
 estado:"PENDIENTE",
@@ -367,7 +372,7 @@ if (!client) {
     nombre: clienteNombre || "",
     cuit: clienteCUIT || "",
     telefono: clienteTelefono || "",
-    direccion: direccionDescarga || ""
+    direccion: clienteDireccionComercial || ""
   });
 } else {
   client.viajes += 1;
@@ -407,6 +412,8 @@ valor: Number(valor),
 clienteNombre,
 clienteCUIT,
 clienteTelefono,
+clienteDireccionComercial,
+clienteDireccion: direccionCarga,
 clienteDireccion: direccionDescarga,
 
 estado:"PENDIENTE"
