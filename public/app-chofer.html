@@ -272,9 +272,9 @@ lng
 
 async function subirMiFoto(){
 
-const input = document.getElementById("foto");  // 👈 ACÁ VA
+const input = document.getElementById("foto");  
 
-console.log(input.files);  // 👈 Y ESTO VA JUSTO DEBAJO
+console.log(input.files);  
 
 if(!input || !input.files || input.files.length === 0){
 alert("Seleccioná una foto primero");
@@ -283,6 +283,7 @@ return;
 
 const formData = new FormData();
 formData.append("archivo", input.files[0]);
+formData.append("tipo", "chofer");  
 
 const choferId = localStorage.getItem("choferId");
 

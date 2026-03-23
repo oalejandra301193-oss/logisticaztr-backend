@@ -293,13 +293,28 @@ res.status(500).send("Error subiendo archivo");
 
 app.post("/choferes/:id/foto", upload.single("archivo"), async (req,res)=>{
 
+try{
+
 const chofer = await Driver.findById(req.params.id);
+
+if(!chofer){
+return res.status(404).send("Chofer no encontrado");
+}
+
+if(!req.file){
+return res.status(400).send("No se subió archivo");
+}
 
 chofer.foto = req.file.filename;
 
 await chofer.save();
 
 res.json({ok:true});
+
+}catch(err){
+console.error(err);
+res.status(500).send("Error subiendo foto");
+}
 
 });
 
