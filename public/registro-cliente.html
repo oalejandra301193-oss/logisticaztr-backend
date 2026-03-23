@@ -66,15 +66,10 @@ background:#27ae60;
 <h2>Registro de Cliente</h2>
 
 <input id="nombre" placeholder="Nombre o empresa">
-
-<input id="CUIT" placeholder="CUIT">
-
+<input id="cuit" placeholder="CUIT">
 <input id="telefono" placeholder="Teléfono">
-
 <input id="email" placeholder="Email">
-
-<input id="direccion comercial" placeholder="direccion comercial">
-
+<input id="direccion" placeholder="Dirección comercial">
 <input id="password" type="password" placeholder="Contraseña">
 
 <button onclick="registrar()">Crear cuenta</button>
@@ -86,14 +81,12 @@ background:#27ae60;
 async function registrar(){
 
 const data = {
-
-nombre:document.getElementById("nombre").value,
-cuit:document.getElementById("cuit").value,
-telefono:document.getElementById("telefono").value,
-direccioncomercial:document.getElementById("direccioncomercial").value,
-email:document.getElementById("email").value,
-password:document.getElementById("password").value
-
+  nombre: document.getElementById("nombre").value,
+  cuit: document.getElementById("cuit").value,
+  telefono: document.getElementById("telefono").value,
+  direccion: document.getElementById("direccion").value,
+  email: document.getElementById("email").value,
+  password: document.getElementById("password").value
 };
 
 const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/cliente/register",{
@@ -116,7 +109,6 @@ window.location="login-cliente.html";
 }
 
 </script>
-
 </body>
 
 </html>

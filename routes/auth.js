@@ -94,7 +94,7 @@ router.post("/cliente/register", async (req,res)=>{
 
 try{
 
-const {nombre,cuit,email,password,telefono,direccioncomercial} = req.body;
+const {nombre,cuit,email,password,telefono,direccion} = req.body;
 
 const existe = await Cliente.findOne({email});
 
@@ -105,12 +105,12 @@ return res.status(400).send("Cliente ya existe");
 const hash = await bcrypt.hash(password,10);
 
 const nuevo = new Cliente({
-nombre,
-cuit,
-email,
-password:hash,
-telefono,
-direccioncomercial
+  nombre,
+  cuit,
+  email,
+  password:hash,
+  telefono,
+  direccion
 });
 
 await nuevo.save();
