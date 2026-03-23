@@ -55,8 +55,6 @@ margin-top:10px;
 <input id="patente2" placeholder="Patente 2">
 <input id="patente3" placeholder="Patente 3 (opcional)">
 
-<input type="file" id="foto">
-
 <button onclick="guardarPerfil()">Guardar perfil</button>
 
 <h3>Foto de perfil</h3>
@@ -72,6 +70,14 @@ margin-top:10px;
 
 <div id="viajes"></div>
 
+<div id="formPerfil">
+  <!-- formulario -->
+</div>
+
+<div id="panelCargas" style="display:none;">
+  <!-- cargas disponibles -->
+</div>
+
 <script>
 
 async function guardarPerfil(){
@@ -83,6 +89,27 @@ localStorage.setItem("dni",dni)
 alert("Perfil guardado")
 
 }
+
+async function verificarPerfil(){
+
+const choferId = localStorage.getItem("choferId");
+
+const res = await fetch("/drivers");
+const drivers = await res.json();
+
+const yo = drivers.find(d => d._id === choferId);
+
+if(yo && yo.dni && yo.patente1){
+  document.getElementById("formPerfil").style.display = "none";
+  document.getElementById("panelCargas").style.display = "block";
+}else{
+  document.getElementById("formPerfil").style.display = "block";
+  document.getElementById("panelCargas").style.display = "none";
+}
+
+}
+
+verificarPerfil();
 
 async function empresa(){
 
@@ -245,18 +272,24 @@ lng
 
 async function subirMiFoto(){
 
-const input = document.getElementById("foto");
+const input = document.getElementById("foto");  // 👈 ACÁ VA
 
-if(!input.files[0]){
-alert("Seleccioná una foto");
+console.log(input.files);  // 👈 Y ESTO VA JUSTO DEBAJO
+
+if(!input || !input.files || input.files.length === 0){
+alert("Seleccioná una foto primero");
 return;
 }
 
 const formData = new FormData();
 formData.append("archivo", input.files[0]);
 
-// ⚠️ necesitás el ID del chofer logueado
 const choferId = localStorage.getItem("choferId");
+
+if(!choferId){
+alert("Error: no estás logueado correctamente");
+return;
+}
 
 const res = await fetch("/choferes/"+choferId+"/foto",{
 method:"POST",
@@ -264,7 +297,7 @@ body:formData
 });
 
 if(res.ok){
-alert("Foto actualizada");
+alert("Foto subida");
 location.reload();
 }else{
 alert("Error al subir foto");
