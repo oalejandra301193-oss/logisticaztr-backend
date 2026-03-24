@@ -213,6 +213,25 @@ cb(null,Date.now()+"-"+file.originalname);
 
 const upload = multer({storage});
 
+app.get("/choferes/:id", async (req,res)=>{
+
+try{
+
+const chofer = await Driver.findById(req.params.id);
+
+if(!chofer){
+return res.status(404).send("Chofer no encontrado");
+}
+
+res.json(chofer);
+
+}catch(err){
+console.error(err);
+res.status(500).send("Error obteniendo chofer");
+}
+
+});
+
 app.post("/subir-documento",upload.single("archivo"),(req,res)=>{
 
 res.json({

@@ -148,7 +148,9 @@ async function postular(id){
 
 // Subir foto de perfil
 async function subirMiFoto(){
-  const input = document.getElementById("foto");  
+
+  const input = document.getElementById("foto");
+
   if(!input.files || input.files.length===0){
     alert("Seleccioná una foto primero");
     return;
@@ -156,19 +158,27 @@ async function subirMiFoto(){
 
   const formData = new FormData();
   formData.append("archivo", input.files[0]);
-  formData.append("tipo","chofer"); // 🔥 CLAVE
+  formData.append("tipo","chofer"); // 🔥 ESTO ES CLAVE
 
   const choferId = localStorage.getItem("choferId");
+
   if(!choferId){
     alert("Error: no estás logueado correctamente");
     return;
   }
 
-  const res = await fetch("/choferes/"+choferId+"/foto",{ method:"POST", body:formData });
+  const res = await fetch("/choferes/"+choferId+"/foto",{
+    method:"POST",
+    body:formData
+  });
+
   if(res.ok){
     alert("Foto subida");
     location.reload();
-  } else alert("Error al subir foto");
+  }else{
+    alert("Error al subir foto");
+  }
+
 }
 
 // Empresa y ranking
