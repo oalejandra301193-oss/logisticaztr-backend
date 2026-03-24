@@ -7,53 +7,88 @@
 <title>Registro Chofer</title>
 
 <style>
-
-body{
-margin:0;
-font-family:Arial;
-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
-background:#0f172a;
-color:white;
+/* Body oscuro y centrado */
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  color: #ffffff;
 }
 
-.container{
-background:#1e293b;
-padding:30px;
-border-radius:12px;
-width:90%;
-max-width:400px;
-box-shadow:0 0 20px rgba(0,0,0,0.5);
+/* Contenedor centrado con sombra y bordes suaves */
+.container {
+  background: #1e293b;
+  padding: 40px 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-h2{
-margin-bottom:20px;
+/* Título grande y centrado */
+h2 {
+  margin-bottom: 30px;
+  font-size: 26px;
+  text-align: center;
+  font-weight: 600;
 }
 
-input{
-width:100%;
-padding:14px;
-margin:10px 0;
-border:none;
-border-radius:6px;
-font-size:16px;
+/* Inputs grandes y cómodos para celular */
+input {
+  width: 100%;
+  padding: 16px 14px;
+  margin: 12px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  background: #0f172a;
+  color: #ffffff;
+  box-sizing: border-box;
 }
 
-button{
-width:100%;
-padding:14px;
-background:#2ecc71;
-color:white;
-border:none;
-border-radius:6px;
-font-size:16px;
-cursor:pointer;
+/* Placeholder más claro */
+input::placeholder {
+  color: #a1a1aa;
 }
 
-button:hover{
-background:#27ae60;
+/* Botón destacado y grande */
+button {
+  width: 100%;
+  padding: 16px;
+  margin-top: 16px;
+  background: #2ecc71;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: #27ae60;
+}
+
+/* Ajustes responsivos adicionales */
+@media (max-width: 400px) {
+  .container {
+    padding: 30px 20px;
+  }
+  h2 {
+    font-size: 24px;
+  }
+  input, button {
+    font-size: 16px;
+    padding: 14px;
+  }
 }
 </style>
 
