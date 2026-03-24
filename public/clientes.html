@@ -34,95 +34,111 @@ border-radius:10px;
 
 <script>
 
+const token = localStorage.getItem("token");
+
+// 🔒 VALIDACIÓN ADMIN
+if(!token){
+  alert("No autorizado");
+  window.location = "/login-admin.html";
+}
+
+// =======================
+// CARGAR CLIENTES
+// =======================
+
 async function cargar(){
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/clientes")
-const clientes=await res.json()
+  try{
 
-let html=""
+    const res = await fetch("/clientes");
+    const clientes = await res.json();
 
-clientes.forEach(c=>{
+    let html = "";
 
-html+=`
+    clientes.forEach(c=>{
 
-<div class="card">
+      html+=`
 
-Nombre: ${c.nombre || "-"}
+      <div class="card">
 
-<br>
-CUIT: ${c.cuit || "-"}
+      Nombre: ${c.nombre || "-"}
 
-<br>
-Telefono: ${c.telefono || "-"}
+      <br>
+      CUIT: ${c.cuit || "-"}
 
-<br>
-Direccion comercial: ${c.direccion || "-"}
+      <br>
+      Telefono: ${c.telefono || "-"}
 
-<br>
-Viajes: ${c.viajes || 0}
+      <br>
+      Direccion comercial: ${c.direccion || "-"}
 
-<br><br>
+      <br>
+      Viajes: ${c.viajes || 0}
 
-<input type="file" id="file-${c._id}">
-<button onclick="subirArchivo('${c._id}')">Subir archivo</button>
+      <br><br>
 
-<br><br>
+      <input type="file" id="file-${c._id}">
+      <button onclick="subirArchivo('${c._id}')">Subir archivo</button>
 
-<div id="archivos-${c._id}">
-${
-  c.archivos && c.archivos.length > 0
-  ? c.archivos.map(a =>
-    `<a href="https://logisticaztr-backend.onrender.com/uploads/clientes/${a}" target="_blank">📄 Ver archivo</a><br>`
-  ).join("")
-  : "Sin archivos"
+      <br><br>
+
+      <div>
+      ${
+        c.archivos && c.archivos.length > 0
+        ? c.archivos.map(a =>
+          `<a href="/uploads/clientes/${a}" target="_blank">📄 Ver archivo</a><br>`
+        ).join("")
+        : "Sin archivos"
+      }
+      </div>
+
+      </div>
+
+      `;
+
+    });
+
+    document.getElementById("lista").innerHTML = html;
+
+  }catch(err){
+    console.error(err);
+    document.getElementById("lista").innerHTML = "Error cargando clientes";
+  }
+
 }
-</div>
 
-</div>
+cargar();
 
-`
-
-})
-
-document.getElementById("lista").innerHTML=html
-
-}
-
-const esAdmin = true; // o validar token
-
-if(!esAdmin){
-document.getElementById("lista").innerHTML = "No autorizado";
-return;
-}
-
-cargar()
+// =======================
+// SUBIR ARCHIVO (ADMIN)
+// =======================
 
 async function subirArchivo(id){
 
-const input = document.getElementById("file-"+id);
+  const input = document.getElementById("file-"+id);
 
-if(!input.files[0]){
-alert("Seleccioná un archivo");
-return;
-}
+  if(!input.files[0]){
+    alert("Seleccioná un archivo");
+    return;
+  }
 
-const formData = new FormData();
-formData.append("archivo", input.files[0]);
+  const formData = new FormData();
+  formData.append("archivo", input.files[0]);
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/clientes/"+id+"/archivo",{
-method:"POST",
-headers:{
-"Authorization": "Bearer " + localStorage.getItem("token")
-},
-body:formData
-});
+  const res = await fetch("/clientes/"+id+"/archivo",{
+    method:"POST",
+    headers:{
+      "Authorization": "Bearer " + token
+    },
+    body:formData
+  });
 
-if(res.ok){
-alert("Archivo subido");
-cargar();
-}else{
-alert("Error al subir archivo");
-}
+  if(res.ok){
+    alert("Archivo subido");
+    cargar();
+  }else{
+    alert("Error al subir archivo");
+  }
 
 }
 

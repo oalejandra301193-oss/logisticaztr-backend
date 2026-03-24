@@ -41,142 +41,118 @@ border-radius:50%;
 
 const token = localStorage.getItem("token");
 
+// 🔒 VALIDACIÓN ADMIN
 if(!token){
   alert("No autorizado");
   window.location = "/login-admin.html";
-}  
+}
+
+// =======================
+// CARGAR CHOFERES
+// =======================
 
 async function cargar(){
 
-const res=await fetch("/drivers")
-const drivers=await res.json()
+  const res = await fetch("/drivers");
+  const drivers = await res.json();
 
-let html=""
+  let html = "";
 
-drivers.forEach(d=>{
+  drivers.forEach(d=>{
 
-html+=`
+    html+=`
 
-<div class="card">
+    <div class="card">
 
-<img src="/uploads/choferes/${d.foto || 'default.png'}">
+    <img src="/uploads/choferes/${d.foto || 'default.png'}">
 
-<br>
+    <br>
 
-Nombre: ${d.nombre} 
+    Nombre: ${d.nombre} 
 
-<br>
+    <br>
 
-Apellido: ${d.apellido}
+    Apellido: ${d.apellido}
 
-<br>
+    <br>
 
-DNI: ${d.dni || "-"}
+    DNI: ${d.dni || "-"}
 
-<br>
+    <br>
 
-Tel: ${d.telefono}
+    Tel: ${d.telefono}
 
-<br>
+    <br>
 
-Patente 1: ${d.patente1 || "-"}
+    Patente 1: ${d.patente1 || "-"}
 
-<br>
+    <br>
 
-Patente 2: ${d.patente2 || "-"}
+    Patente 2: ${d.patente2 || "-"}
 
-<br>
+    <br>
 
-Patente 3: ${d.patente3 || "-"}
+    Patente 3: ${d.patente3 || "-"}
 
-<br><br>
+    <br><br>
 
-<input type="file" id="file-${d._id}">
-<button onclick="subirArchivo('${d._id}')">Subir archivo</button>
+    <input type="file" id="file-${d._id}">
+    <button onclick="subirArchivo('${d._id}')">Subir archivo</button>
 
-<br><br>
+    <br><br>
 
-<div>
-${
-  d.archivos && d.archivos.length > 0
-  ? d.archivos.map(a =>
-    `<a href="/uploads/choferes/${a}" target="_blank">📄 Ver archivo</a><br>`
-  ).join("")
-  : "Sin archivos"
-}
-</div>
+    <div>
+    ${
+      d.archivos && d.archivos.length > 0
+      ? d.archivos.map(a =>
+        `<a href="/uploads/choferes/${a}" target="_blank">📄 Ver archivo</a><br>`
+      ).join("")
+      : "Sin archivos"
+    }
+    </div>
 
-</div>
+    </div>
 
-`
+    `;
 
-})
+  });
 
-document.getElementById("lista").innerHTML=html
+  document.getElementById("lista").innerHTML = html;
 
-}
-
-const esAdmin = true; // o validar token
-
-if(!esAdmin){
-document.getElementById("lista").innerHTML = "No autorizado";
-return;
 }
 
-cargar()
+cargar();
+
+// =======================
+// SUBIR ARCHIVO (ADMIN)
+// =======================
 
 async function subirArchivo(id){
 
-const input = document.getElementById("file-"+id);
+  const input = document.getElementById("file-"+id);
 
-if(!input.files[0]){
-alert("Seleccioná un archivo");
-return;
-}
+  if(!input.files[0]){
+    alert("Seleccioná un archivo");
+    return;
+  }
 
-const formData = new FormData();
-formData.append("archivo", input.files[0]);
+  const formData = new FormData();
+  formData.append("archivo", input.files[0]);
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/choferes/"+id+"/archivo",{
-method:"POST",
-headers:{
-"Authorization": "Bearer " + localStorage.getItem("token")
-},
-body:formData
-});
+  const res = await fetch("/choferes/"+id+"/archivo",{
+    method:"POST",
+    headers:{
+      "Authorization": "Bearer " + token
+    },
+    body:formData
+  });
 
-if(res.ok){
-alert("Archivo subido");
-cargar();
-}else{
-alert("Error al subir archivo");
-}
-
-}
-
-async function subirFoto(id){
-
-const input = document.getElementById("foto-"+id);
-
-if(!input.files[0]){
-alert("Seleccioná una foto");
-return;
-}
-
-const formData = new FormData();
-formData.append("archivo", input.files[0]);
-
-const res = await fetch("/choferes/"+id+"/foto",{
-method:"POST",
-body:formData
-});
-
-if(res.ok){
-alert("Foto subida");
-cargar();
-}else{
-alert("Error al subir foto");
-}
+  if(res.ok){
+    alert("Archivo subido");
+    cargar();
+  }else{
+    alert("Error al subir archivo");
+  }
 
 }
 
