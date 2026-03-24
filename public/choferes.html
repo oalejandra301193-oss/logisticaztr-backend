@@ -39,6 +39,13 @@ border-radius:50%;
 
 <script>
 
+const token = localStorage.getItem("token");
+
+if(!token){
+  alert("No autorizado");
+  window.location = "/login-admin.html";
+}  
+
 async function cargar(){
 
 const res=await fetch("/drivers")
@@ -52,7 +59,7 @@ html+=`
 
 <div class="card">
 
-<img src="/uploads/${d.foto || 'default.png'}">
+<img src="/uploads/choferes/${d.foto || 'default.png'}">
 
 <br>
 
@@ -93,7 +100,7 @@ Patente 3: ${d.patente3 || "-"}
 ${
   d.archivos && d.archivos.length > 0
   ? d.archivos.map(a =>
-    `<a href="/uploads/${a}" target="_blank">📄 Ver archivo</a><br>`
+    `<a href="/uploads/choferes/${a}" target="_blank">📄 Ver archivo</a><br>`
   ).join("")
   : "Sin archivos"
 }
@@ -107,6 +114,13 @@ ${
 
 document.getElementById("lista").innerHTML=html
 
+}
+
+const esAdmin = true; // o validar token
+
+if(!esAdmin){
+document.getElementById("lista").innerHTML = "No autorizado";
+return;
 }
 
 cargar()
@@ -123,8 +137,11 @@ return;
 const formData = new FormData();
 formData.append("archivo", input.files[0]);
 
-const res = await fetch("/choferes/"+id+"/archivo",{
+const res = await fetch("https://logisticaztr-backend.onrender.com/choferes/"+id+"/archivo",{
 method:"POST",
+headers:{
+"Authorization": "Bearer " + localStorage.getItem("token")
+},
 body:formData
 });
 

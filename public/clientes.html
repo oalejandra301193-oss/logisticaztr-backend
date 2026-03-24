@@ -88,6 +88,13 @@ document.getElementById("lista").innerHTML=html
 
 }
 
+const esAdmin = true; // o validar token
+
+if(!esAdmin){
+document.getElementById("lista").innerHTML = "No autorizado";
+return;
+}
+
 cargar()
 
 async function subirArchivo(id){
@@ -104,6 +111,9 @@ formData.append("archivo", input.files[0]);
 
 const res = await fetch("https://logisticaztr-backend.onrender.com/clientes/"+id+"/archivo",{
 method:"POST",
+headers:{
+"Authorization": "Bearer " + localStorage.getItem("token")
+},
 body:formData
 });
 

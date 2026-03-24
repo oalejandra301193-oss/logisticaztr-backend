@@ -156,7 +156,7 @@ async function subirMiFoto(){
 
   const formData = new FormData();
   formData.append("archivo", input.files[0]);
-  formData.append("tipo", "chofer");  
+  formData.append("tipo","chofer"); // 🔥 CLAVE
 
   const choferId = localStorage.getItem("choferId");
   if(!choferId){

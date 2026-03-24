@@ -237,7 +237,7 @@ console.log("Servidor corriendo en puerto "+PORT);
 console.error("❌ Error conectando a MongoDB:",error);
 });
 
-app.post("/clientes/:id/archivo", upload.single("archivo"), async (req,res)=>{
+app.post("/clientes/:id/archivo", verificarAdmin, upload.single("archivo"), async (req,res)=>{
 
 try{
 
@@ -264,7 +264,7 @@ res.status(500).send("Error subiendo archivo");
 
 });
 
-app.post("/choferes/:id/archivo", upload.single("archivo"), async (req,res)=>{
+app.post("/choferes/:id/archivo", verificarAdmin, upload.single("archivo"), async (req,res)=>{
 
 try{
 
@@ -317,6 +317,73 @@ res.status(500).send("Error subiendo foto");
 }
 
 });
+
+app.post("/choferes/:id/perfil", async (req,res)=>{
+
+try{
+
+const chofer = await Driver.findById(req.params.id);
+
+if(!chofer){
+return res.status(404).send("Chofer no encontrado");
+}
+
+const {
+nombre,
+apellido,
+dni,
+telefono,
+patente1,
+patente2,
+patente3
+} = req.body;
+
+chofer.nombre = nombre;
+chofer.apellido = apellido;
+chofer.dni = dni;
+chofer.telefono = telefono;
+chofer.patente1 = patente1;
+chofer.patente2 = patente2;
+chofer.patente3 = patente3;
+
+await chofer.save();
+
+res.json({ok:true});
+
+}catch(err){
+console.error(err);
+res.status(500).send("Error guardando perfil");
+}
+
+});
+
+const jwt = require("jsonwebtoken");
+
+function verificarAdmin(req,res,next){
+
+const auth = req.headers.authorization;
+
+if(!auth){
+return res.status(401).send("No autorizado");
+}
+
+const token = auth.split(" ")[1];
+
+try{
+
+const data = jwt.verify(token, process.env.JWT_SECRET);
+
+if(data.tipo !== "admin"){
+return res.status(403).send("No sos admin");
+}
+
+next();
+
+}catch(err){
+return res.status(401).send("Token inválido");
+}
+
+}
 
 
 
