@@ -267,20 +267,22 @@ alert("No disponible");
 }
 
 // finalizar viaje
-async function finalizarViaje(){
+async function finalizarViaje(idViaje) {
+    if(!idViaje){
+        alert("Error: no se recibió el ID del viaje");
+        return;
+    }
 
-if(watchId){
-navigator.geolocation.clearWatch(watchId);
-}
+    if(watchId){
+        navigator.geolocation.clearWatch(watchId);
+    }
 
-await fetch(`/trips/finalizar/${tripActual._id}`,{
-method:"POST"
-});
+    await fetch(`/trips/finalizar/${idViaje}`, {
+        method: "POST"
+    });
 
-alert("Viaje finalizado");
-
-location.reload();
-
+    alert("Viaje finalizado");
+    location.reload();
 }
 
 navigator.geolocation.watchPosition(async pos=>{
