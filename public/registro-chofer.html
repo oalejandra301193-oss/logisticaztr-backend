@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 
 <head>
-
 <meta charset="UTF-8">
 <title>Registro Chofer</title>
 
@@ -92,7 +91,6 @@ button:hover {
   }
 }
 </style>
-
 </head>
 
 <body>
@@ -108,60 +106,34 @@ button:hover {
   <input id="password" type="password" placeholder="Contraseña">
 
   <button onclick="registrar()">Crear cuenta</button>
-</div>    
-
-<h2>Registro de Chofer</h2>
-
-<input id="nombre" placeholder="Nombre">
-
-<input id="apellido" placeholder="Apellido">
-
-<input id="dni" placeholder="DNI">
-
-<input id="telefono" placeholder="Teléfono">
-
-<input id="email" placeholder="Email">
-
-<input id="password" type="password" placeholder="Contraseña">
-
-<button onclick="registrar()">Crear cuenta</button>
+</div>
 
 <script>
-
 async function registrar(){
+  const data = {
+    nombre: document.getElementById("nombre").value,
+    apellido: document.getElementById("apellido").value,
+    dni: document.getElementById("dni").value,
+    telefono: document.getElementById("telefono").value,
+    email: document.getElementById("email").value,
+    password: document.getElementById("password").value
+  };
 
-const data = {
+  const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/chofer/register", {
+    method:"POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(data)
+  });
 
-nombre:document.getElementById("nombre").value,
-apellido:document.getElementById("apellido").value,
-dni:document.getElementById("dni").value,
-telefono:document.getElementById("telefono").value,
-email:document.getElementById("email").value,
-password:document.getElementById("password").value
+  if(!res.ok){
+    alert("Error al registrar");
+    return;
+  }
 
-};
-
-const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/chofer/register",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify(data)
-});
-
-if(!res.ok){
-alert("Error al registrar");
-return;
+  alert("Chofer registrado correctamente");
+  window.location="login-chofer.html";
 }
-
-alert("Chofer registrado correctamente");
-
-window.location="login-chofer.html";
-
-}
-
 </script>
 
 </body>
-
 </html>
