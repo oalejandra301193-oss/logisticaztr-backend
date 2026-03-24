@@ -70,11 +70,12 @@ button {
   font-size: 18px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.3s, transform 0.2s;
 }
 
 button:hover {
   background: #27ae60;
+  transform: translateY(-2px);
 }
 
 /* Ajustes responsivos adicionales */
@@ -95,6 +96,19 @@ button:hover {
 </head>
 
 <body>
+
+<div class="container">
+  <h2>Registro de Chofer</h2>
+
+  <input id="nombre" placeholder="Nombre">
+  <input id="apellido" placeholder="Apellido">
+  <input id="dni" placeholder="DNI">
+  <input id="telefono" placeholder="Teléfono">
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Contraseña">
+
+  <button onclick="registrar()">Crear cuenta</button>
+</div>    
 
 <h2>Registro de Chofer</h2>
 
