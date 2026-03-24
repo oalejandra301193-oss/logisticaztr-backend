@@ -190,17 +190,14 @@ const storage = multer.diskStorage({
 
 destination:(req,file,cb)=>{
 
-if(req.body.tipo==="chofer"){
-cb(null,"uploads/choferes");
+if(req.originalUrl.includes("choferes")){
+  cb(null,"uploads/choferes");
 }
-else if(req.body.tipo==="cliente"){
-cb(null,"uploads/clientes");
-}
-else if(req.body.tipo==="contrato"){
-cb(null,"uploads/contratos");
+else if(req.originalUrl.includes("clientes")){
+  cb(null,"uploads/clientes");
 }
 else{
-cb(null,"uploads");
+  cb(null,"uploads");
 }
 
 },
@@ -320,9 +317,13 @@ if(!chofer){
 return res.status(404).send("Chofer no encontrado");
 }
 
+// 🔴 VALIDACIÓN CLAVE
 if(!req.file){
+console.log("❌ req.file undefined");
 return res.status(400).send("No se subió archivo");
 }
+
+console.log("📸 Archivo recibido:", req.file);
 
 chofer.foto = req.file.filename;
 
@@ -331,7 +332,7 @@ await chofer.save();
 res.json({ok:true});
 
 }catch(err){
-console.error(err);
+console.error("❌ ERROR SUBIENDO FOTO:", err);
 res.status(500).send("Error subiendo foto");
 }
 
