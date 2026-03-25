@@ -1,5 +1,19 @@
 require('dotenv').config();
 
+const fs = require("fs");
+
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
+
+if (!fs.existsSync("uploads/choferes")) {
+  fs.mkdirSync("uploads/choferes");
+}
+
+if (!fs.existsSync("uploads/clientes")) {
+  fs.mkdirSync("uploads/clientes");
+}
+
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
@@ -311,19 +325,18 @@ app.post("/choferes/:id/foto", upload.single("archivo"), async (req,res)=>{
 
 try{
 
+console.log("📥 ID:", req.params.id);
+console.log("📁 FILE:", req.file);
+
 const chofer = await Driver.findById(req.params.id);
 
 if(!chofer){
 return res.status(404).send("Chofer no encontrado");
 }
 
-// 🔴 VALIDACIÓN CLAVE
 if(!req.file){
-console.log("❌ req.file undefined");
 return res.status(400).send("No se subió archivo");
 }
-
-console.log("📸 Archivo recibido:", req.file);
 
 chofer.foto = req.file.filename;
 
@@ -332,7 +345,7 @@ await chofer.save();
 res.json({ok:true});
 
 }catch(err){
-console.error("❌ ERROR SUBIENDO FOTO:", err);
+console.error("❌ ERROR REAL:", err);
 res.status(500).send("Error subiendo foto");
 }
 
