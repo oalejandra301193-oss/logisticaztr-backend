@@ -58,12 +58,45 @@ button{
 <div id="empresa"></div>
 <div id="ranking"></div>
 
+<button onclick="cargarViajes()">📦 Ver cargas publicadas</button>
+
 <h2>🚛 Cargas disponibles</h2>
 <div id="viajes"></div>
 
 <div id="panelCargas" style="display:none;"></div>
 
+<div id="miPerfil"></div>
+
 <script>
+async function mostrarMiPerfil(){
+
+const choferId = localStorage.getItem("choferId");
+
+if(!choferId) return;
+
+const res = await fetch("/choferes/"+choferId);
+const data = await res.json();
+
+let html = `
+<div class="card">
+
+<img src="/uploads/choferes/${data.foto || 'default.png'}" width="100"><br><br>
+
+<b>${data.nombre || ""} ${data.apellido || ""}</b><br>
+DNI: ${data.dni || "-"}<br>
+Tel: ${data.telefono || "-"}<br>
+Patente 1: ${data.patente1 || "-"}<br>
+Patente 2: ${data.patente2 || "-"}<br>
+Patente 3: ${data.patente3 || "-"}<br>
+
+</div>
+`;
+
+document.getElementById("miPerfil").innerHTML = html;
+
+}
+mostrarMiPerfil();
+
 async function guardarPerfil(){
   const choferId = localStorage.getItem("choferId");
   if(!choferId){
@@ -89,6 +122,7 @@ async function guardarPerfil(){
 
   if(res.ok){
     alert("Perfil guardado correctamente");
+    localStorage.setItem("dni", perfil.dni);
     document.getElementById("formPerfil").style.display="none";
     document.getElementById("panelCargas").style.display="block";
     cargarViajes();
@@ -136,14 +170,23 @@ async function cargarViajes(){
 }
 
 async function postular(id){
-  const dni=localStorage.getItem("dni");
-  const res = await fetch("/trips/postular",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({tripId:id,dni})
-  });
-  if(res.ok) alert("Postulación enviada");
-  else alert("Error al postularte");
+
+const dni=localStorage.getItem("dni");
+
+if(!dni){
+alert("Primero completá tu perfil");
+return;
+}
+
+const res = await fetch("/trips/postular",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body: JSON.stringify({tripId:id,dni})
+});
+
+if(res.ok) alert("Postulación enviada");
+else alert("Error al postularte");
+
 }
 
 // Subir foto de perfil
