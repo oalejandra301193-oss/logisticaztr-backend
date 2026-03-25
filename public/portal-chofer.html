@@ -1,26 +1,24 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <meta charset="UTF-8">
 <title>Portal Chofer</title>
 
 <style>
 body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:20px;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  padding:20px;
 }
 
 .card{
-background:#1e293b;
-padding:15px;
-margin:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin:10px;
+  border-radius:10px;
 }
 </style>
-
 </head>
 
 <body>
@@ -31,40 +29,61 @@ border-radius:10px;
 
 <script>
 
-const token = localStorage.getItem("token");
-
-if(!token){
-alert("No autorizado");
-window.location = "/login-chofer.html";
-}
-
-// 🔥 CARGAR VIAJES
-async function cargar(){
+async function cargarCargas(){
 
 const res = await fetch("/trips");
 const viajes = await res.json();
 
-let html = "";
+const lat = localStorage.getItem("lat");
+const lng = localStorage.getItem("lng");
 
+let lista = [];
+
+// 🔥 calcular distancia
 viajes.forEach(v=>{
 
 if(v.estado === "PENDIENTE"){
 
-html += `
-<div class="card">
+let distancia = 9999;
 
+if(lat && lng && v.lat && v.lng){
+distancia = Math.sqrt(
+Math.pow(lat - v.lat,2) +
+Math.pow(lng - v.lng,2)
+);
+}
+
+lista.push({...v,distancia});
+
+}
+
+});
+
+// 🔥 ordenar por cercanía
+lista.sort((a,b)=> a.distancia - b.distancia);
+
+// 🔥 pintar
+let html="";
+
+lista.forEach(v=>{
+
+html+=`
+<div class="card">
 📦 ${v.producto}<br>
-📍 ${v.origen} → ${v.destino}<br>
-💰 $${v.valor}<br><br>
+📍 ${v.origen}<br>
+💰 $${v.valor}<br>
+📏 Distancia: ${v.distancia.toFixed(2)}<br>
 
 <button onclick="postular('${v._id}')">
 Postularme
 </button>
 
+<button onclick="verMapa(${v.lat},${v.lng})">
+Ver en mapa
+</button>
+
 </div>
 `;
-
-}
 
 });
 
@@ -72,37 +91,37 @@ document.getElementById("lista").innerHTML = html;
 
 }
 
-cargar();
+cargarCargas();
 
-// 🔥 POSTULARSE
+
+// POSTULAR
 async function postular(id){
 
 const dni = localStorage.getItem("dni");
 
-if(!dni){
-alert("Primero completá tu perfil");
-return;
-}
-
 const res = await fetch("/trips/postular",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body: JSON.stringify({
-tripId:id,
-dni
-})
+body: JSON.stringify({tripId:id,dni})
 });
 
 if(res.ok){
 alert("Postulación enviada");
 }else{
-alert("Error al postularte");
+alert("Error al postular");
 }
+
+}
+
+
+// MAPA (sin dirección exacta)
+function verMapa(lat,lng){
+
+window.open(`https://www.google.com/maps?q=${lat},${lng}`);
 
 }
 
 </script>
 
 </body>
-
 </html>
