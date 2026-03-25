@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Portal Chofer</title>
+
+<style>
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+margin:10px;
+border-radius:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>🚛 Cargas disponibles</h2>
+
+<div id="lista"></div>
+
+<script>
+
+const token = localStorage.getItem("token");
+
+if(!token){
+alert("No autorizado");
+window.location = "/login-chofer.html";
+}
+
+// 🔥 CARGAR VIAJES
+async function cargar(){
+
+const res = await fetch("/trips");
+const viajes = await res.json();
+
+let html = "";
+
+viajes.forEach(v=>{
+
+if(v.estado === "PENDIENTE"){
+
+html += `
+<div class="card">
+
+📦 ${v.producto}<br>
+📍 ${v.origen} → ${v.destino}<br>
+💰 $${v.valor}<br><br>
+
+<button onclick="postular('${v._id}')">
+Postularme
+</button>
+
+</div>
+`;
+
+}
+
+});
+
+document.getElementById("lista").innerHTML = html;
+
+}
+
+cargar();
+
+// 🔥 POSTULARSE
+async function postular(id){
+
+const dni = localStorage.getItem("dni");
+
+if(!dni){
+alert("Primero completá tu perfil");
+return;
+}
+
+const res = await fetch("/trips/postular",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body: JSON.stringify({
+tripId:id,
+dni
+})
+});
+
+if(res.ok){
+alert("Postulación enviada");
+}else{
+alert("Error al postularte");
+}
+
+}
+
+</script>
+
+</body>
+
+</html>
