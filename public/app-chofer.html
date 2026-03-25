@@ -7,6 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#000000">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
 body{
@@ -66,9 +68,47 @@ Ver cargas publicadas
 <h2>🚛 Cargas disponibles</h2>
 <div id="viajes" style="display:none;"></div>
 
+<div id="mapa" style="height:300px; margin-bottom:20px;"></div>
+
 <div id="empresa"></div>
 
 <script>
+
+navigator.geolocation.getCurrentPosition(pos=>{
+localStorage.setItem("lat", pos.coords.latitude);
+localStorage.setItem("lng", pos.coords.longitude);
+});
+
+function verMapa(lat,lng){
+window.open(`https://www.google.com/maps?q=${lat},${lng}`);
+}
+
+function iniciarMapa(viajes){
+
+const lat = localStorage.getItem("lat") || -34.6;
+const lng = localStorage.getItem("lng") || -58.4;
+
+const map = L.map('mapa').setView([lat,lng], 10);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// 📍 marcador chofer
+L.marker([lat,lng]).addTo(map)
+.bindPopup("Tu ubicación");
+
+// 📦 cargas
+viajes.forEach(v=>{
+
+if(v.lat && v.lng && v.estado==="APROBADO"){
+
+L.marker([v.lat,v.lng]).addTo(map)
+.bindPopup(`📦 ${v.producto}`);
+
+}
+
+});
+
+}
 
 function mostrarCargas(){
   document.getElementById("viajes").style.display = "block";
@@ -159,21 +199,67 @@ async function verificarPerfil(){
 verificarPerfil();
 
 async function cargarViajes(){
-  const res=await fetch("/trips");
-  const viajes=await res.json();
-  let html="";
-  viajes.forEach(v=>{
-    if(v.estado==="PENDIENTE"){
-      html+=`
-      <div class="card">
-        📦 ${v.producto}<br>
-        📍 ${v.origen}<br>
-        💰 $${v.valor}<br>
-        <button onclick="postular('${v._id}')">Postularme</button>
-      </div>`;
-    }
-  });
-  document.getElementById("viajes").innerHTML=html;
+
+const res = await fetch("/trips");
+const viajes = await res.json();
+
+const lat = localStorage.getItem("lat");
+const lng = localStorage.getItem("lng");
+
+let lista = [];
+
+// 🔥 FILTRAR SOLO PUBLICADAS (IMPORTANTÍSIMO)
+viajes.forEach(v=>{
+
+if(v.estado === "APROBADO"){ // 👈 CLAVE
+
+let distancia = 9999;
+
+if(lat && lng && v.lat && v.lng){
+distancia = Math.sqrt(
+Math.pow(lat - v.lat,2) +
+Math.pow(lng - v.lng,2)
+);
+}
+
+lista.push({...v,distancia});
+
+}
+
+});
+
+// 🔥 ORDENAR POR DISTANCIA
+lista.sort((a,b)=> a.distancia - b.distancia);
+
+// 🔥 MOSTRAR
+let html="";
+
+lista.forEach(v=>{
+
+html+=`
+<div class="card">
+📦 ${v.producto}<br>
+📍 ${v.origen}<br>
+💰 $${v.valor}<br>
+📏 Distancia: ${v.distancia.toFixed(2)} km<br>
+
+<button onclick="postular('${v._id}')">
+Postularme
+</button>
+
+<button onclick="verMapa(${v.lat},${v.lng})">
+Ver en mapa
+</button>
+
+</div>
+`;
+
+});
+
+iniciarMapa(lista);
+
+document.getElementById("viajes").innerHTML = html;
+
 }
 
 async function postular(id){
