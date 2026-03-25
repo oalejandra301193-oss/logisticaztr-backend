@@ -59,14 +59,20 @@ button{
 <div id="panelCargas" style="display:none;"></div>
 <div id="ranking"></div>
 
-<button onclick="cargarViajes()">📦 Ver cargas publicadas</button>
+<button onclick="mostrarCargas()">📦 Ver cargas publicadas</button>
 
 <h2>🚛 Cargas disponibles</h2>
-<div id="viajes"></div>
+<div id="viajes" style="display:none;"></div>
 
 <div id="empresa"></div>
 
 <script>
+
+function mostrarCargas(){
+  document.getElementById("viajes").style.display = "block";
+  cargarViajes();
+}
+
 async function mostrarMiPerfil(){
 
 const choferId = localStorage.getItem("choferId");
