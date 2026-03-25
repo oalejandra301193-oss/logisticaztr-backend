@@ -250,14 +250,26 @@ const destino=document.getElementById("destino").value
 const distancia=document.getElementById("distancia").value
 const valor=document.getElementById("valor").value
 
-await fetch("/trips/crear",{
+// 🔥 VALIDACIÓN CLAVE
+if(!window.coords){
+alert("Primero calculá la distancia");
+return;
+}
 
+// 🔥 GEOLOCALIZACIÓN (opcional pero suma)
+navigator.geolocation.getCurrentPosition(async (pos)=>{
+
+try{
+
+const lat = pos.coords.latitude;
+const lng = pos.coords.longitude;
+
+// 🔥 FETCH CORREGIDO
+const res = await fetch("/trips",{
 method:"POST",
-
 headers:{
 "Content-Type":"application/json"
 },
-
 body:JSON.stringify({
 
 producto,
@@ -266,16 +278,27 @@ destino,
 distanciaKm:distancia,
 valor,
 
-origenLat:coords.origenLat,
-origenLng:coords.origenLng,
-destinoLat:coords.destinoLat,
-destinoLng:coords.destinoLng
+// 🔥 COORDENADAS REALES
+origenLat: window.coords.origenLat,
+origenLng: window.coords.origenLng,
+destinoLat: window.coords.destinoLat,
+destinoLng: window.coords.destinoLng
 
 })
+});
 
-})
+if(res.ok){
+alert("Carga enviada para aprobación");
+}else{
+alert("Error al crear carga");
+}
 
-alert("Carga enviada para aprobación")
+}catch(err){
+console.error(err);
+alert("Error");
+}
+
+});
 
 }
 

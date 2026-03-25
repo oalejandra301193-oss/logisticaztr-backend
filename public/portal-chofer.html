@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 <meta charset="UTF-8">
 <title>Portal Chofer</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
 body{
@@ -12,74 +15,121 @@ body{
   padding:20px;
 }
 
+#map{
+  height:300px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+
 .card{
   background:#1e293b;
   padding:15px;
-  margin:10px;
+  margin:10px 0;
   border-radius:10px;
 }
+
+button{
+  padding:8px;
+  margin-top:10px;
+}
 </style>
+
 </head>
 
 <body>
 
-<h2>🚛 Cargas disponibles</h2>
+<h2>🚛 Portal Chofer</h2>
 
+<div id="map"></div>
+
+<h3>📦 Cargas cercanas</h3>
 <div id="lista"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 
-async function cargarCargas(){
+let map;
+let miMarker;
 
-const res = await fetch("/trips");
-const viajes = await res.json();
+// 🔥 INICIALIZAR MAPA
+function iniciarMapa(lat,lng){
 
-const lat = localStorage.getItem("lat");
-const lng = localStorage.getItem("lng");
+map = L.map('map').setView([lat,lng],10);
 
-let lista = [];
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+maxZoom:19
+}).addTo(map);
 
-// 🔥 calcular distancia
-viajes.forEach(v=>{
-
-if(v.estado === "PENDIENTE"){
-
-let distancia = 9999;
-
-if(lat && lng && v.lat && v.lng){
-distancia = Math.sqrt(
-Math.pow(lat - v.lat,2) +
-Math.pow(lng - v.lng,2)
-);
-}
-
-lista.push({...v,distancia});
+miMarker = L.marker([lat,lng]).addTo(map)
+.bindPopup("🚛 Tu ubicación")
+.openPopup();
 
 }
+
+// 🔥 OBTENER UBICACIÓN DEL CHOFER
+navigator.geolocation.getCurrentPosition(async (pos)=>{
+
+const lat = pos.coords.latitude;
+const lng = pos.coords.longitude;
+
+iniciarMapa(lat,lng);
+
+// 🔥 GUARDAR UBICACIÓN EN BACKEND
+const choferId = localStorage.getItem("choferId");
+
+await fetch("/trips/location",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+lat,
+lng,
+driverId:choferId
+})
+});
+
+// 🔥 CARGAR CARGAS ORDENADAS
+cargarCargas(choferId);
 
 });
 
-// 🔥 ordenar por cercanía
-lista.sort((a,b)=> a.distancia - b.distancia);
 
-// 🔥 pintar
-let html="";
+// 🔥 CARGAR CARGAS CERCANAS
+async function cargarCargas(choferId){
 
-lista.forEach(v=>{
+const res = await fetch("/trips/cargas-cercanas/"+choferId);
+const viajes = await res.json();
 
-html+=`
+let html = "";
+
+// limpiar marcadores anteriores (opcional simple)
+if(window.markers){
+window.markers.forEach(m=>map.removeLayer(m));
+}
+window.markers = [];
+
+viajes.forEach(v=>{
+
+// 🔥 MARCAR EN MAPA (SIN DIRECCIÓN EXACTA)
+const marker = L.marker([v.origenLat, v.origenLng])
+.addTo(map)
+.bindPopup("📦 Carga disponible");
+
+window.markers.push(marker);
+
+// 🔥 LISTADO
+html += `
 <div class="card">
-📦 ${v.producto}<br>
-📍 ${v.origen}<br>
-💰 $${v.valor}<br>
-📏 Distancia: ${v.distancia.toFixed(2)}<br>
+
+📦 ${v.producto || "-" } <br>
+📍 Zona aproximada <br>
+💰 $${v.valor} <br>
+📏 ${v.distancia.toFixed(1)} km <br>
 
 <button onclick="postular('${v._id}')">
 Postularme
-</button>
-
-<button onclick="verMapa(${v.lat},${v.lng})">
-Ver en mapa
 </button>
 
 </div>
@@ -91,33 +141,28 @@ document.getElementById("lista").innerHTML = html;
 
 }
 
-cargarCargas();
 
-
-// POSTULAR
+// 🔥 POSTULARSE (CORREGIDO)
 async function postular(id){
 
-const dni = localStorage.getItem("dni");
-
-const res = await fetch("/trips/postular",{
+const res = await fetch("/trips/postular/"+id,{
 method:"POST",
-headers:{"Content-Type":"application/json"},
-body: JSON.stringify({tripId:id,dni})
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+nombre: localStorage.getItem("nombre"),
+telefono: localStorage.getItem("telefono"),
+dni: localStorage.getItem("dni"),
+patente1: localStorage.getItem("patente1")
+})
 });
 
 if(res.ok){
 alert("Postulación enviada");
 }else{
-alert("Error al postular");
+alert("Error al postularte");
 }
-
-}
-
-
-// MAPA (sin dirección exacta)
-function verMapa(lat,lng){
-
-window.open(`https://www.google.com/maps?q=${lat},${lng}`);
 
 }
 

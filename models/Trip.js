@@ -46,7 +46,6 @@ destino: { type: String, required: true },
 // 🌍 Coordenadas para mapa
 origenLat: Number,
 origenLng: Number,
-
 destinoLat: Number,
 destinoLng: Number,
 

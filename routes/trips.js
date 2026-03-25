@@ -74,9 +74,9 @@ if (!client) {
     nombre: clienteNombre,
     cuit: clienteCUIT,
     telefono: clienteTelefono,
-    direccion: direccionCarga,
-    direccion: direccionDescarga,
-    direccion: direccionComercial,
+    direccionCarga: direccionCarga,
+    direccionDescarga: direccionDescarga,
+    direccionComercial: direccionComercial,
     viajes: 1
   });
 } else {
@@ -98,8 +98,8 @@ clienteNombre,
 clienteCUIT,
 clienteTelefono,
 clienteDireccionComercial,
-clienteDireccion: direccionCarga,
-clienteDireccion: direccionDescarga,
+clienteDireccionCarga: direccionCarga,
+clienteDireccionDescarga: direccionDescarga,
 
 estado:"PENDIENTE",
 postulaciones:[],
@@ -397,7 +397,14 @@ clienteComercio,
 clienteCUIT,
 clienteTelefono,
 direccionDescarga,
-direccionCarga
+direccionCarga,
+
+// 🔥 AGREGÁ ESTO
+origenLat,
+origenLng,
+destinoLat,
+destinoLng
+
 } = req.body;
 
 const newTrip = new Trip({
@@ -413,8 +420,14 @@ clienteNombre,
 clienteCUIT,
 clienteTelefono,
 clienteDireccionComercial,
-clienteDireccion: direccionCarga,
-clienteDireccion: direccionDescarga,
+clienteDireccionCarga: direccionCarga,
+clienteDireccionDescarga: direccionDescarga,
+
+// 🔥 ACA VA ESTO
+origenLat: origenLat || -34.6,
+origenLng: origenLng || -58.4,
+destinoLat: destinoLat || -34.6,
+destinoLng: destinoLng || -58.4,
 
 estado:"PENDIENTE"
 

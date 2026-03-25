@@ -99,7 +99,7 @@ L.marker([lat,lng]).addTo(map)
 // 📦 cargas
 viajes.forEach(v=>{
 
-if(v.lat && v.lng && v.estado==="APROBADO"){
+if(v.lat && v.lng && v.estado==="PUBLICADO"){
 
 L.marker([v.lat,v.lng]).addTo(map)
 .bindPopup(`📦 ${v.producto}`);
@@ -264,21 +264,27 @@ document.getElementById("viajes").innerHTML = html;
 
 async function postular(id){
 
-const dni=localStorage.getItem("dni");
+const nombre = localStorage.getItem("nombre");
+const telefono = localStorage.getItem("telefono");
+const dni = localStorage.getItem("dni");
+const patente1 = localStorage.getItem("patente1");
 
-if(!dni){
-alert("Primero completá tu perfil");
-return;
-}
-
-const res = await fetch("/trips/postular",{
+const res = await fetch("/trips/postular/"+id,{
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body: JSON.stringify({tripId:id,dni})
+body: JSON.stringify({
+nombre,
+telefono,
+dni,
+patente1
+})
 });
 
-if(res.ok) alert("Postulación enviada");
-else alert("Error al postularte");
+if(res.ok){
+alert("Postulación enviada");
+}else{
+alert("Error al postular");
+}
 
 }
 
