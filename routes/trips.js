@@ -91,8 +91,14 @@ producto,
 origen,
 destino,
 
-distanciaKm: Number(distanciaKm) || 0,
-valor: Number(valor) || 0,
+// 🔥 AGREGAR ESTO
+origenLat: req.body.origenLat,
+origenLng: req.body.origenLng,
+destinoLat: req.body.destinoLat,
+destinoLng: req.body.destinoLng,
+
+distanciaKm: Number(distanciaKm),
+valor: Number(valor),
 
 clienteNombre,
 clienteCUIT,
@@ -102,6 +108,7 @@ clienteDireccionCarga: direccionCarga,
 clienteDireccionDescarga: direccionDescarga,
 
 estado:"PENDIENTE",
+
 postulaciones:[],
 ubicaciones:[]
 
@@ -441,6 +448,12 @@ producto,
 origen,
 destino,
 
+// 🔥 AGREGAR ESTO
+origenLat: req.body.origenLat,
+origenLng: req.body.origenLng,
+destinoLat: req.body.destinoLat,
+destinoLng: req.body.destinoLng,
+
 distanciaKm: Number(distanciaKm),
 valor: Number(valor),
 
@@ -450,12 +463,6 @@ clienteTelefono,
 clienteDireccionComercial,
 clienteDireccionCarga: direccionCarga,
 clienteDireccionDescarga: direccionDescarga,
-
-// 🔥 ACA VA ESTO
-origenLat: origenLat || -34.6,
-origenLng: origenLng || -58.4,
-destinoLat: destinoLat || -34.6,
-destinoLng: destinoLng || -58.4,
 
 estado:"PENDIENTE"
 
