@@ -126,6 +126,34 @@ error:"Error guardando carga"
 
 });
 
+router.get("/mapa-cargas", async (req,res)=>{
+
+try{
+
+const trips = await Trip.find({
+estado:"PUBLICADO",
+origenLat:{$exists:true}
+});
+
+const data = trips.map(t=>({
+
+id: t._id,
+producto: t.producto,
+lat: t.origenLat,
+lng: t.origenLng,
+valor: t.valor
+
+}));
+
+res.json(data);
+
+}catch(err){
+console.error(err);
+res.status(500).send("Error mapa cargas");
+}
+
+});
+
 // 🔹 PANEL ADMIN
 router.get('/all', async (req, res) => {
 

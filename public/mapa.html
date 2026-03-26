@@ -33,60 +33,88 @@ border-radius:10px;
 
 <script>
 
-let mapa = L.map("mapa").setView([-34.6,-58.4],5)
+// 🔹 CREAR MAPA (UNO SOLO)
+let mapa = L.map("mapa").setView([-34.6,-58.4],5);
 
 L.tileLayer(
 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-{
-maxZoom:19
-}
-).addTo(mapa)
+{ maxZoom:19 }
+).addTo(mapa);
 
-let camiones = {}
-
+// 🔹 ICONO CAMION
 const camionIcon = L.icon({
 iconUrl:"https://cdn-icons-png.flaticon.com/512/743/743922.png",
 iconSize:[40,40]
-})
+});
 
-async function cargar(){
+let camiones = {};
 
-const res = await fetch("/trips")
-const viajes = await res.json()
+// 🔹 MOSTRAR CARGAS PUBLICADAS
+async function cargarMapaCargas(){
+
+const res = await fetch("/trips"); // 🔥 usamos la ruta correcta
+const viajes = await res.json();
+
+viajes.forEach(v=>{
+
+// SOLO LAS PUBLICADAS
+if(v.estado === "PUBLICADO" && v.origenLat && v.origenLng){
+
+L.marker([v.origenLat, v.origenLng])
+.addTo(mapa)
+.bindPopup(`
+📦 ${v.producto} <br>
+💰 $${v.valor}
+`);
+
+}
+
+});
+
+}
+
+// 🔹 MOSTRAR CAMIONES EN TIEMPO REAL
+async function cargarCamiones(){
+
+const res = await fetch("/trips");
+const viajes = await res.json();
 
 viajes.forEach(v=>{
 
 if(v.ultimaUbicacion){
 
-const lat = v.ultimaUbicacion.lat
-const lng = v.ultimaUbicacion.lng
+const lat = v.ultimaUbicacion.lat;
+const lng = v.ultimaUbicacion.lng;
 
 if(!camiones[v._id]){
 
 camiones[v._id] = L.marker(
 [lat,lng],
 {icon:camionIcon}
-).addTo(mapa)
+).addTo(mapa);
 
 camiones[v._id].bindPopup(
-"🚛 Chofer: " + (v.choferNombre || "Sin asignar")
-)
+"🚛 Chofer: " + (v.chofer?.nombre || "Sin asignar")
+);
 
 }else{
 
-camiones[v._id].setLatLng([lat,lng])
+camiones[v._id].setLatLng([lat,lng]);
 
 }
 
 }
 
-})
+});
 
 }
 
-cargar()
+// 🔹 INICIAR TODO
+cargarMapaCargas();
+cargarCamiones();
 
-setInterval(cargar,2000)
+// 🔁 ACTUALIZAR SOLO CAMIONES
+setInterval(cargarCamiones,2000);
 
 </script>
 
