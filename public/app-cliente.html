@@ -131,7 +131,6 @@ mejorChofer()
 
 async function cargar(){
 
-const res = await fetch("/trips/"+id)
 const viaje = await res.json()
 
 document.getElementById("info").innerHTML=`

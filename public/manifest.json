@@ -8,12 +8,13 @@
 "theme_color":"#000000",
 "orientation":"portrait",
 "scope":"/",
-"icons":[
-{
-"src":"/camion.png",
-"sizes":"192x192",
-"type":"image/png"
-},
+"icons": [
+    {
+      "src": "/camion.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+
 {
 "src":"/camion.png",
 "sizes":"512x512",
