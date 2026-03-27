@@ -1,59 +1,53 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <meta charset="UTF-8">
 <title>Clientes - Logistica ZTR</title>
-
 <style>
-
 body{
-font-family:Arial;
-background:#f2f2f2;
-padding:30px;
+  font-family:Arial;
+  background:#f2f2f2;
+  padding:30px;
 }
 
 .caja{
-background:white;
-padding:30px;
-border-radius:10px;
-width:400px;
-margin:auto;
+  background:white;
+  padding:30px;
+  border-radius:10px;
+  width:400px;
+  margin:auto;
 }
 
 h2{
-text-align:center;
+  text-align:center;
 }
 
 input{
-display:block;
-margin-bottom:10px;
-padding:10px;
-width:100%;
+  display:block;
+  margin-bottom:10px;
+  padding:10px;
+  width:100%;
 }
 
 button{
-padding:12px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-width:100%;
-margin-top:5px;
+  padding:12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  width:100%;
+  margin-top:5px;
 }
 
 .publicar{
-background:#2ecc71;
-color:white;
+  background:#2ecc71;
+  color:white;
 }
 
 .login{
-background:#3498db;
-color:white;
+  background:#3498db;
+  color:white;
 }
-
 </style>
-
 </head>
 
 <body>
@@ -64,73 +58,76 @@ color:white;
 
 <p>Podés publicar una carga sin crear cuenta o ingresar con tu usuario.</p>
 
-<button class="login"
-onclick="window.location='/login-cliente.html'">
-Ingresar con usuario
-</button>
+<button class="login" onclick="window.location='/login-cliente.html'">Ingresar con usuario</button>
 
 <br><br>
 
 <h3>Publicar carga</h3>
 
 <input id="producto" placeholder="Producto">
-
 <input id="origen" placeholder="Origen">
-
 <input id="destino" placeholder="Destino">
-
 <input id="valor" placeholder="Valor del viaje">
 
 <h3>Datos del cliente</h3>
 
 <input id="nombre" placeholder="Nombre o empresa">
-
 <input id="direccion" placeholder="Dirección">
-
 <input id="cuit" placeholder="CUIT">
-
 <input id="telefono" placeholder="Teléfono">
 
-<button class="publicar" onclick="crear()">
-Publicar carga
-</button>
+<button class="publicar" onclick="crear()">Publicar carga</button>
 
 </div>
 
 <script>
+const API = "https://logisticaztr-backend.onrender.com";
 
 async function crear(){
+  const producto = document.getElementById("producto").value;
+  const origen = document.getElementById("origen").value;
+  const destino = document.getElementById("destino").value;
+  const valor = document.getElementById("valor").value;
+  const nombre = document.getElementById("nombre").value;
+  const direccion = document.getElementById("direccion").value;
+  const cuit = document.getElementById("cuit").value;
+  const telefono = document.getElementById("telefono").value;
 
-const data = {
+  if(!producto || !origen || !destino || !valor || !nombre || !direccion || !cuit || !telefono){
+    alert("⚠ Todos los campos son obligatorios");
+    return;
+  }
 
-producto:document.getElementById("producto").value,
-origen:document.getElementById("origen").value,
-destino:document.getElementById("destino").value,
-valor:document.getElementById("valor").value,
+  const data = {
+    producto,
+    origen,
+    destino,
+    valor,
+    clienteNombre: nombre,
+    clienteDireccion: direccion,
+    clienteCUIT: cuit,
+    clienteTelefono: telefono,
+    estado: "PENDIENTE"
+  };
 
-clienteNombre:document.getElementById("nombre").value,
-clienteDireccion:document.getElementById("direccion").value,
-clienteCUIT:document.getElementById("cuit").value,
-clienteTelefono:document.getElementById("telefono").value
+  try{
+    const res = await fetch(`${API}/trips`,{
+      method:"POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(data)
+    });
 
-};
+    if(!res.ok) throw new Error("Error al enviar la carga");
 
-await fetch("/trips",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify(data)
-
-});
-
-alert("✅ Carga enviada correctamente.\n\nNuestro equipo revisará los datos y aprobará la publicación antes de que los choferes puedan verla.");
-
+    alert("✅ Carga enviada correctamente.\nNuestro equipo revisará los datos y aprobará la publicación antes de que los choferes puedan verla.");
+    
+    // Limpiar campos
+    document.querySelectorAll("input").forEach(input => input.value = "");
+  }catch(err){
+    console.error(err);
+    alert("❌ Error al enviar la carga");
+  }
 }
-
 </script>
 
 </body>

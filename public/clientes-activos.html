@@ -4,30 +4,30 @@
 <title>Clientes activos - LogisticaZTR</title>
 <style>
 body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:40px;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:40px;
 }
 
 table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
 }
 
 th,td{
-padding:12px;
-border-bottom:1px solid #334155;
-text-align:left;
+  padding:12px;
+  border-bottom:1px solid #334155;
+  text-align:left;
 }
 
 th{
-background:#1e293b;
+  background:#1e293b;
 }
 
 tr:hover{
-background:#1e293b;
+  background:#334155;
 }
 </style>
 </head>
@@ -41,7 +41,7 @@ background:#1e293b;
 <tr>
 <th>Nombre</th>
 <th>Email</th>
-<th>Telefono</th>
+<th>Teléfono</th>
 <th>Cargas publicadas</th>
 </tr>
 </thead>
@@ -51,33 +51,34 @@ background:#1e293b;
 </table>
 
 <script>
+const API = "https://logisticaztr-backend.onrender.com";
 
 async function cargarClientes(){
+  try{
+    const res = await fetch(`${API}/api/clients`);
+    if(!res.ok) throw new Error("Error al cargar clientes");
 
-const res = await fetch("/api/clients")
-const clientes = await res.json()
+    const clientes = await res.json();
+    const tabla = document.querySelector("#tablaClientes tbody");
+    tabla.innerHTML="";
 
-const tabla = document.querySelector("#tablaClientes tbody")
-
-tabla.innerHTML=""
-
-clientes.forEach(c=>{
-
-tabla.innerHTML += `
-<tr>
-<td>${c.name}</td>
-<td>${c.email}</td>
-<td>${c.phone}</td>
-<td>${c.trips || 0}</td>
-</tr>
-`
-
-})
-
+    clientes.forEach(c=>{
+      tabla.innerHTML += `
+      <tr>
+        <td>${c.name || "-"}</td>
+        <td>${c.email || "-"}</td>
+        <td>${c.phone || "-"}</td>
+        <td>${c.trips || 0}</td>
+      </tr>
+      `;
+    });
+  }catch(err){
+    console.error(err);
+    document.querySelector("#tablaClientes tbody").innerHTML = `<tr><td colspan="4">❌ Error cargando clientes</td></tr>`;
+  }
 }
 
-cargarClientes()
-
+cargarClientes();
 </script>
 
 </body>

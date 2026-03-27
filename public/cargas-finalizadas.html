@@ -2,24 +2,22 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Cargas finalizados</title>
+<title>Cargas finalizadas - ZTR</title>
 
 <style>
 body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:20px;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
 }
-
 .card{
-background:#1e293b;
-padding:15px;
-margin-bottom:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:10px;
 }
 </style>
-
 </head>
 
 <body>
@@ -29,45 +27,38 @@ border-radius:10px;
 <div id="lista"></div>
 
 <script>
-
+// Cargar viajes finalizados
 async function cargar(){
+  try{
+    const res = await fetch("/trips");
+    const viajes = await res.json();
 
-const res = await fetch("/trips")
-const viajes = await res.json()
+    let html = "";
 
-let html=""
+    viajes.forEach(v => {
+      if(v.estado === "FINALIZADO"){
+        html += `
+          <div class="card">
+            <b>${v.producto}</b><br>
+            ${v.origen} → ${v.destino}<br><br>
+            👤 Cliente: ${v.clienteNombre || "-"}<br>
+            🚛 Chofer: ${v.chofer?.nombre || "-"}<br><br>
+            ⭐ Calificación Chofer: ${v.ratingChofer || 0}<br>
+            ⭐ Calificación Cliente: ${v.ratingCliente || 0}
+          </div>
+        `;
+      }
+    });
 
-viajes.forEach(v=>{
-
-if(v.estado === "FINALIZADO"){
-
-html += `
-<div class="card">
-
-<b>${v.producto}</b><br>
-${v.origen} → ${v.destino}<br>
-
-👤 Cliente: ${v.clienteNombre}<br>
-🚛 Chofer: ${v.chofer?.nombre || "-"}
-
-<br><br>
-
-⭐ Chofer: ${v.ratingChofer || 0}
-<br>
-⭐ Cliente: ${v.ratingCliente || 0}
-
-</div>
-`
+    document.getElementById("lista").innerHTML = html;
+  }catch(err){
+    console.error("Error cargando viajes:", err);
+    document.getElementById("lista").innerHTML = "<p>❌ Error al cargar viajes finalizados.</p>";
+  }
 }
 
-})
-
-document.getElementById("lista").innerHTML = html
-
-}
-
-cargar()
-
+// Ejecutar carga al abrir página
+cargar();
 </script>
 
 </body>

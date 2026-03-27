@@ -2,30 +2,27 @@
 <html>
 
 <head>
-
 <meta charset="UTF-8">
 <title>Estadísticas - LogisticaZTR</title>
 
 <style>
-
 body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:30px;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  padding:30px;
 }
 
 .card{
-background:#1e293b;
-padding:20px;
-margin:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:20px;
+  margin:10px;
+  border-radius:10px;
 }
 
 .numero{
-font-size:35px;
+  font-size:35px;
 }
-
 </style>
 
 </head>
@@ -55,44 +52,57 @@ Choferes trabajando
 </div>
 
 <script>
+const API = "https://logisticaztr-backend.onrender.com";
+const token = localStorage.getItem("token");
 
+// 🔒 VALIDACIÓN ADMIN
+if(!token){
+  alert("No autorizado");
+  window.location = "/login-admin.html";
+}
+
+// =======================
+// CARGAR ESTADÍSTICAS
+// =======================
 async function cargar(){
+  try{
+    const res = await fetch(`${API}/trips`, {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+    
+    if(!res.ok) throw new Error("Error al cargar viajes");
 
-const res = await fetch("/trips");
-const viajes = await res.json();
+    const viajes = await res.json();
 
-let activos=0;
-let finalizados=0;
+    let activos = 0;
+    let finalizados = 0;
+    let choferes = new Set();
 
-let choferes = new Set();
+    viajes.forEach(v=>{
+      // Estados consistentes con backend
+      if(v.estado === "EN_VIAJE" || v.estado === "EN_CAMINO") activos++;
+      if(v.estado === "FINALIZADO" || v.estado === "ENTREGADO") finalizados++;
+      if(v.choferNombre) choferes.add(v.choferNombre);
+    });
 
-viajes.forEach(v=>{
+    document.getElementById("cargas").innerText = viajes.length;
+    document.getElementById("activos").innerText = activos;
+    document.getElementById("finalizados").innerText = finalizados;
+    document.getElementById("choferes").innerText = choferes.size;
 
-if(v.estado==="EN_CAMINO"){
-activos++;
-}
-
-if(v.estado==="ENTREGADO"){
-finalizados++;
-}
-
-if(v.choferNombre){
-choferes.add(v.choferNombre);
-}
-
-});
-
-document.getElementById("cargas").innerText=viajes.length;
-document.getElementById("activos").innerText=activos;
-document.getElementById("finalizados").innerText=finalizados;
-document.getElementById("choferes").innerText=choferes.size;
-
+  }catch(err){
+    console.error(err);
+    document.getElementById("cargas").innerText = "❌";
+    document.getElementById("activos").innerText = "❌";
+    document.getElementById("finalizados").innerText = "❌";
+    document.getElementById("choferes").innerText = "❌";
+  }
 }
 
 cargar();
-
 </script>
 
 </body>
-
 </html>

@@ -2,36 +2,32 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Cargas pendientes</title>
+<title>Cargas pendientes - ZTR</title>
 
 <style>
 body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:20px;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
 }
-
 .card{
-background:#1e293b;
-padding:15px;
-margin-bottom:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:10px;
 }
-
 button{
-padding:6px 10px;
-margin-top:10px;
-margin-right:5px;
-border:none;
-border-radius:6px;
-cursor:pointer;
+  padding:6px 10px;
+  margin-top:10px;
+  margin-right:5px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
 }
-
 .aprobar{background:#16a34a;color:white;}
 .rechazar{background:#dc2626;color:white;}
 </style>
-
 </head>
 
 <body>
@@ -42,61 +38,69 @@ cursor:pointer;
 
 <script>
 
+// Cargar viajes pendientes
 async function cargar(){
+  try{
+    const res = await fetch("/trips");
+    const viajes = await res.json();
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/trips")
-const viajes = await res.json()
+    let html = "";
 
-let html=""
+    viajes.forEach(v => {
+      if(v.estado === "PENDIENTE"){
+        html += `
+          <div class="card">
+            <b>${v.producto}</b><br>
+            ${v.origen} → ${v.destino}<br>
+            💰 $${v.valor}<br>
+            👤 ${v.clienteNombre || "-"}<br><br>
+            <button class="aprobar" onclick="aprobar('${v._id}')">Aprobar</button>
+            <button class="rechazar" onclick="rechazar('${v._id}')">Rechazar</button>
+          </div>
+        `;
+      }
+    });
 
-viajes.forEach(v=>{
+    document.getElementById("lista").innerHTML = html;
 
-if(v.estado === "PENDIENTE"){
-
-html += `
-<div class="card">
-
-<b>${v.producto}</b><br>
-${v.origen} → ${v.destino}<br>
-💰 $${v.valor}<br>
-
-👤 ${v.clienteNombre || "-"}
-
-<br>
-
-<button class="aprobar" onclick="aprobar('${v._id}')">
-Aprobar
-</button>
-
-<button class="rechazar" onclick="rechazar('${v._id}')">
-Rechazar
-</button>
-
-</div>
-`
+  }catch(err){
+    console.error("Error cargando cargas pendientes:", err);
+    document.getElementById("lista").innerHTML = "<p>❌ Error al cargar las cargas pendientes.</p>";
+  }
 }
 
-})
-
-document.getElementById("lista").innerHTML = html
-
-}
-
+// Aprobar carga
 async function aprobar(id){
-
-await fetch("https://logisticaztr-backend.onrender.com/trips/"+id+"/aprobar",{method:"POST"})
-cargar()
-
+  try{
+    const res = await fetch(`/trips/${id}/aprobar`, { method:"POST" });
+    if(res.ok){
+      cargar();
+    }else{
+      alert("Error al aprobar la carga");
+    }
+  }catch(err){
+    console.error(err);
+    alert("Error al aprobar la carga");
+  }
 }
 
+// Rechazar carga
 async function rechazar(id){
-
-await fetch("https://logisticaztr-backend.onrender.com/trips/rechazar/"+id,{method:"PUT"})
-cargar()
-
+  try{
+    const res = await fetch(`/trips/rechazar/${id}`, { method:"PUT" });
+    if(res.ok){
+      cargar();
+    }else{
+      alert("Error al rechazar la carga");
+    }
+  }catch(err){
+    console.error(err);
+    alert("Error al rechazar la carga");
+  }
 }
 
-cargar()
+// Ejecutar carga al abrir página
+cargar();
 
 </script>
 

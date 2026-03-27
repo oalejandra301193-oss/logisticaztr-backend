@@ -2,10 +2,20 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Comisiones</title>
+<title>Comisiones - LogisticaZTR</title>
 <style>
-body{background:#0f172a;color:white;font-family:Arial;padding:20px;}
-.card{background:#1e293b;padding:15px;margin-bottom:10px;border-radius:10px;}
+body{
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
+}
+.card{
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:10px;
+}
 </style>
 </head>
 
@@ -15,37 +25,54 @@ body{background:#0f172a;color:white;font-family:Arial;padding:20px;}
 <div id="lista"></div>
 
 <script>
+const API = "https://logisticaztr-backend.onrender.com";
+const token = localStorage.getItem("token");
 
+// 🔒 VALIDACIÓN ADMIN
+if(!token){
+  alert("No autorizado");
+  window.location = "/login-admin.html";
+}
+
+// =======================
+// CARGAR COMISIONES
+// =======================
 async function cargar(){
+  try{
+    const res = await fetch(`${API}/trips`, {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
 
-const res = await fetch("/trips")
-const viajes = await res.json()
+    if(!res.ok) throw new Error("Error al cargar viajes");
 
-let html=""
+    const viajes = await res.json();
+    let html = "";
 
-viajes.forEach(v=>{
+    viajes.forEach(v=>{
+      if(v.valor){
+        const comision = (v.valor * 0.05).toFixed(2);
+        html += `
+        <div class="card">
+          📦 <b>Producto:</b> ${v.producto || "-"}<br>
+          💰 <b>Valor carga:</b> $${v.valor || 0}<br>
+          💸 <b>Comisión 5%:</b> $${comision}<br>
+          🧾 <small>Detalle: 5% del valor total de la carga</small>
+        </div>
+        `;
+      }
+    });
 
-if(v.valor){
+    document.getElementById("lista").innerHTML = html;
 
-let comision = v.valor * 0.05
-
-html+=`
-<div class="card">
-📦 ${v.producto}<br>
-💰 $${v.valor}<br>
-💸 Comisión: $${comision}
-</div>
-`
+  }catch(err){
+    console.error(err);
+    document.getElementById("lista").innerHTML = "❌ Error cargando comisiones";
+  }
 }
 
-})
-
-document.getElementById("lista").innerHTML=html
-
-}
-
-cargar()
-
+cargar();
 </script>
 
 </body>

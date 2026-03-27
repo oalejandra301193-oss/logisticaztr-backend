@@ -1,34 +1,28 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <meta charset="UTF-8">
 <title>Finanzas - LogisticaZTR</title>
-
 <style>
-
 body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:30px;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  padding:30px;
 }
 
 .card{
-background:#1e293b;
-padding:20px;
-margin:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:20px;
+  margin:10px;
+  border-radius:10px;
 }
 
 .numero{
-font-size:35px;
+  font-size:35px;
 }
-
 </style>
-
 </head>
-
 <body>
 
 <h1>💰 Finanzas LogisticaZTR</h1>
@@ -45,120 +39,90 @@ Comisiones de la plataforma
 
 <div class="card">
 Viajes finalizados
-<div class="numero" id="viajes">0</div>
+<div class="numero" id="viajesFinalizados">0</div>
 </div>
 
 <h2>Detalle de viajes</h2>
+<div id="listaViajes"></div>
 
-<div id="lista"></div>
-
-<h2>Comisiones</h2>
-
-<div id="lista"></div>
-
-<h2>Finanzas</h2>
-
-<div id="total"></div>
-<div id="comision"></div>
-<div id="viajes"></div>
-
+<h2>Comisiones pagadas</h2>
+<div id="listaComisiones"></div>
 
 <script>
+const API = "https://logisticaztr-backend.onrender.com";
+const token = localStorage.getItem("token");
 
-const res = await fetch("/finanzas")
-const data = await res.json()
-
-document.getElementById("total").innerText = data.total
-document.getElementById("comision").innerText = data.comisiones
-document.getElementById("viajes").innerText = data.viajes
-
-async function cargar(){
-
-const res = await fetch("/trips")
-const viajes = await res.json()
-
-let html=""
-
-viajes.forEach(v=>{
-
-if(v.comisionPagada){
-
-html+=`
-
-<div>
-
-Viaje: ${v.producto}<br>
-Chofer: ${v.choferNombre}<br>
-Comisión pagada
-
-<hr>
-
-</div>
-
-`
-
+// 🔒 VALIDACIÓN ADMIN
+if(!token){
+  alert("No autorizado");
+  window.location = "/login-admin.html";
 }
-
-})
-
-document.getElementById("lista").innerHTML=html
-
-}
-
-cargar()
-
-</script>
-
-<script>
 
 async function cargarFinanzas(){
+  try{
+    const res = await fetch(`${API}/trips`, {
+      headers:{
+        "Authorization": "Bearer " + token
+      }
+    });
 
-const res = await fetch("/trips");
-const viajes = await res.json();
+    if(!res.ok) throw new Error("Error cargando viajes");
 
-let total = 0;
-let comisiones = 0;
-let finalizados = 0;
+    const viajes = await res.json();
 
-let html="";
+    let total = 0;
+    let comisiones = 0;
+    let finalizados = 0;
 
-viajes.forEach(v=>{
+    let htmlViajes = "";
+    let htmlComisiones = "";
 
-if(v.valor){
+    viajes.forEach(v=>{
+      if(v.valor){
+        total += Number(v.valor);
+        const comision = v.valor * 0.05;
+        comisiones += comision;
 
-total += Number(v.valor);
+        if(v.comisionPagada){
+          htmlComisiones += `
+          <div class="card">
+            Viaje: ${v.producto}<br>
+            Cliente: ${v.clienteNombre || "-"}<br>
+            Chofer: ${v.choferNombre || "-"}<br>
+            Comisión pagada: $${comision.toFixed(2)}
+          </div>
+          `;
+        }
+      }
 
-const comision = v.valor * 0.05;
-comisiones += comision;
+      if(v.estado==="ENTREGADO") finalizados++;
 
-}
+      htmlViajes += `
+      <div class="card">
+        ${v.origen} → ${v.destino}<br>
+        Cliente: ${v.clienteNombre || "-"}<br>
+        Valor: $${v.valor || 0}<br>
+        Estado: ${v.estado || "-"}
+      </div>
+      `;
+    });
 
-if(v.estado==="ENTREGADO"){
-finalizados++;
-}
+    document.getElementById("totalFacturado").innerText = "$" + total.toFixed(2);
+    document.getElementById("comisiones").innerText = "$" + comisiones.toFixed(2);
+    document.getElementById("viajesFinalizados").innerText = finalizados;
 
-html+=`
-<div class="card">
-${v.origen} → ${v.destino}<br>
-Cliente: ${v.clienteNombre || "-"}<br>
-Valor: $${v.valor || 0}
-</div>
-`;
+    document.getElementById("listaViajes").innerHTML = htmlViajes;
+    document.getElementById("listaComisiones").innerHTML = htmlComisiones;
 
-});
-
-document.getElementById("totalFacturado").innerText="$"+total;
-document.getElementById("comisiones").innerText="$"+comisiones;
-document.getElementById("viajes").innerText=finalizados;
-
-document.getElementById("lista").innerHTML=html;
-
+  }catch(err){
+    console.error(err);
+    document.getElementById("listaViajes").innerHTML = "<p>❌ Error cargando finanzas</p>";
+    document.getElementById("listaComisiones").innerHTML = "";
+  }
 }
 
 cargarFinanzas();
-
 </script>
 
 </body>
-
 </html>

@@ -2,28 +2,34 @@
 <html>
 
 <head>
-
 <meta charset="UTF-8">
-<title>Clientes</title>
+<title>Clientes - LogisticaZTR</title>
 
 <style>
-
 body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:20px;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  padding:20px;
 }
 
 .card{
-background:#1e293b;
-padding:15px;
-margin:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin:10px 0;
+  border-radius:10px;
 }
 
+button{
+  padding:6px 10px;
+  margin-top:8px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  background:#2563eb;
+  color:white;
+}
 </style>
-
 </head>
 
 <body>
@@ -33,7 +39,7 @@ border-radius:10px;
 <div id="lista"></div>
 
 <script>
-
+const API = "https://logisticaztr-backend.onrender.com";
 const token = localStorage.getItem("token");
 
 // 🔒 VALIDACIÓN ADMIN
@@ -45,66 +51,50 @@ if(!token){
 // =======================
 // CARGAR CLIENTES
 // =======================
-
 async function cargar(){
-
   try{
+    const res = await fetch(`${API}/clientes`, {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
 
-    const res = await fetch("/clientes");
+    if(!res.ok) throw new Error("Error al cargar clientes");
+
     const clientes = await res.json();
-
     let html = "";
 
     clientes.forEach(c=>{
-
-      html+=`
-
+      html += `
       <div class="card">
+        <b>Nombre:</b> ${c.nombre || "-"}<br>
+        <b>CUIT:</b> ${c.cuit || "-"}<br>
+        <b>Teléfono:</b> ${c.telefono || "-"}<br>
+        <b>Dirección comercial:</b> ${c.direccion || "-"}<br>
+        <b>Viajes:</b> ${c.viajes || 0}<br><br>
 
-      Nombre: ${c.nombre || "-"}
+        <input type="file" id="file-${c._id}">
+        <button onclick="subirArchivo('${c._id}')">Subir archivo</button><br><br>
 
-      <br>
-      CUIT: ${c.cuit || "-"}
-
-      <br>
-      Telefono: ${c.telefono || "-"}
-
-      <br>
-      Direccion comercial: ${c.direccion || "-"}
-
-      <br>
-      Viajes: ${c.viajes || 0}
-
-      <br><br>
-
-      <input type="file" id="file-${c._id}">
-      <button onclick="subirArchivo('${c._id}')">Subir archivo</button>
-
-      <br><br>
-
-      <div>
-      ${
-        c.archivos && c.archivos.length > 0
-        ? c.archivos.map(a =>
-          `<a href="/uploads/clientes/${a}" target="_blank">📄 Ver archivo</a><br>`
-        ).join("")
-        : "Sin archivos"
-      }
+        <div>
+        ${
+          c.archivos && c.archivos.length > 0
+          ? c.archivos.map(a =>
+            `<a href="${API}/uploads/clientes/${a}" target="_blank">📄 Ver archivo</a><br>`
+          ).join("")
+          : "Sin archivos"
+        }
+        </div>
       </div>
-
-      </div>
-
       `;
-
     });
 
     document.getElementById("lista").innerHTML = html;
 
   }catch(err){
     console.error(err);
-    document.getElementById("lista").innerHTML = "Error cargando clientes";
+    document.getElementById("lista").innerHTML = "❌ Error cargando clientes";
   }
-
 }
 
 cargar();
@@ -112,11 +102,8 @@ cargar();
 // =======================
 // SUBIR ARCHIVO (ADMIN)
 // =======================
-
 async function subirArchivo(id){
-
   const input = document.getElementById("file-"+id);
-
   if(!input.files[0]){
     alert("Seleccioná un archivo");
     return;
@@ -125,25 +112,27 @@ async function subirArchivo(id){
   const formData = new FormData();
   formData.append("archivo", input.files[0]);
 
-  const res = await fetch("/clientes/"+id+"/archivo",{
-    method:"POST",
-    headers:{
-      "Authorization": "Bearer " + token
-    },
-    body:formData
-  });
+  try{
+    const res = await fetch(`${API}/clientes/${id}/archivo`,{
+      method:"POST",
+      headers:{
+        "Authorization": "Bearer " + token
+      },
+      body:formData
+    });
 
-  if(res.ok){
-    alert("Archivo subido");
-    cargar();
-  }else{
-    alert("Error al subir archivo");
+    if(res.ok){
+      alert("Archivo subido correctamente");
+      cargar();
+    }else{
+      alert("❌ Error al subir archivo");
+    }
+  }catch(err){
+    console.error(err);
+    alert("❌ Error al subir archivo");
   }
-
 }
-
 </script>
 
 </body>
-
 </html>

@@ -2,31 +2,30 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Ranking de Clientes</title>
+<title>Ranking de Clientes - LogisticaZTR</title>
 
 <style>
 body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:20px;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
 }
 
 .card{
-background:#1e293b;
-padding:15px;
-margin-bottom:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:10px;
 }
 
 .top{
-color:#22c55e;
-font-size:18px;
+  color:#22c55e;
+  font-size:18px;
 }
 </style>
 
 </head>
-
 <body>
 
 <h2>👤 Ranking de Clientes</h2>
@@ -34,62 +33,73 @@ font-size:18px;
 <div id="lista"></div>
 
 <script>
+const API = "https://logisticaztr-backend.onrender.com";
+const token = localStorage.getItem("token");
+
+// 🔒 VALIDACIÓN ADMIN
+if(!token){
+  alert("No autorizado");
+  window.location = "/login-admin.html";
+}
 
 async function cargar(){
+  try{
+    const res = await fetch(`${API}/trips`, {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
 
-const res = await fetch("/trips")
-const viajes = await res.json()
+    if(!res.ok) throw new Error("Error al cargar viajes");
 
-let clientes = {}
+    const viajes = await res.json();
 
-viajes.forEach(v=>{
+    let clientes = {};
 
-if(!v.clienteCUIT) return
+    viajes.forEach(v=>{
+      if(!v.clienteCUIT) return;
 
-if(!clientes[v.clienteCUIT]){
-clientes[v.clienteCUIT] = {
-nombre:v.clienteNombre,
-viajes:0,
-total:0
+      if(!clientes[v.clienteCUIT]){
+        clientes[v.clienteCUIT] = {
+          nombre: v.clienteNombre || "Sin nombre",
+          viajes: 0,
+          total: 0
+        };
+      }
+
+      clientes[v.clienteCUIT].viajes++;
+      clientes[v.clienteCUIT].total += v.valor || 0;
+    });
+
+    // ordenar por cantidad de viajes
+    const ranking = Object.values(clientes)
+      .sort((a,b)=> b.viajes - a.viajes);
+
+    let html = "";
+
+    ranking.forEach((c,index)=>{
+      html+=`
+      <div class="card">
+        <div class="${index===0 ? "top" : ""}">
+          #${index+1} 👤 ${c.nombre}
+        </div>
+        <br>
+        📦 Viajes: ${c.viajes}
+        <br>
+        💰 Total gastado: $${c.total}
+      </div>
+      `;
+    });
+
+    document.getElementById("lista").innerHTML = html;
+
+  }catch(err){
+    console.error(err);
+    document.getElementById("lista").innerHTML = "<p>❌ Error cargando ranking de clientes</p>";
+  }
 }
-}
 
-clientes[v.clienteCUIT].viajes++
-clientes[v.clienteCUIT].total += v.valor || 0
-
-})
-
-// ordenar
-const ranking = Object.values(clientes)
-.sort((a,b)=> b.viajes - a.viajes)
-
-let html=""
-
-ranking.forEach((c,index)=>{
-
-html+=`
-<div class="card">
-<div class="${index===0 ? "top" : ""}">
-#${index+1} 👤 ${c.nombre}
-</div>
-
-<br>
-
-📦 Viajes: ${c.viajes}
-<br>
-💰 Total gastado: $${c.total}
-
-</div>
-`
-
-})
-
-document.getElementById("lista").innerHTML = html
-
-}
-
-cargar()
-
+cargar();
 </script>
 
 </body>

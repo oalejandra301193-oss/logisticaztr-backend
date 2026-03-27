@@ -1,48 +1,46 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <meta charset="UTF-8">
-<title>Cargas publicadas</title>
+<title>Cargas publicadas - ZTR</title>
 
 <style>
-
 body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:20px;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
 }
-
 h2{
-margin-bottom:20px;
+  margin-bottom:20px;
 }
-
 .card{
-background:#1e293b;
-padding:15px;
-margin-bottom:15px;
-border-radius:10px;
-cursor:pointer;
-transition:0.3s;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:15px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:0.3s;
 }
-
 .card:hover{
-background:#334155;
+  background:#334155;
 }
-
 .detalle{
-margin-top:10px;
-padding:10px;
-background:#020617;
-border-radius:8px;
-display:none;
+  margin-top:10px;
+  padding:10px;
+  background:#020617;
+  border-radius:8px;
+  display:none;
 }
-
+.detalle div{
+  margin-top:5px;
+  padding:5px;
+  border:1px solid #334155;
+  border-radius:5px;
+}
 </style>
 
 </head>
-
 <body>
 
 <h2>📦 Cargas publicadas</h2>
@@ -51,95 +49,71 @@ display:none;
 
 <script>
 
+// Cargar cargas publicadas
 async function cargar(){
+  try{
+    const res = await fetch("/trips");
+    const viajes = await res.json();
 
-try{
+    const publicadas = viajes.filter(v => v.estado === "PUBLICADO");
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/trips")
-const viajes = await res.json();
+    let html = "";
 
-const publicadas = viajes.filter(v => v.estado === "PUBLICADO");
+    if(publicadas.length === 0){
+      html = "<p>No hay cargas publicadas</p>";
+    }
 
-let html = "";
+    publicadas.forEach(v => {
+      html += `
+        <div class="card" onclick="toggle('${v._id}')">
+          <b>📦 ${v.producto || "-"}</b><br>
+          📍 ${v.origen} → ${v.destino}<br>
+          📏 ${v.distanciaKm || "-"} km<br>
+          💰 $${v.valor || "-"}
+          
+          <div id="det-${v._id}" class="detalle">
+            <hr>
+            <b>👤 Cliente</b><br>
+            Nombre: ${v.clienteNombre || "-"}<br>
+            Teléfono: ${v.clienteTelefono || "-"}<br>
+            CUIT: ${v.clienteCUIT || "-"}<br>
+            Dirección: ${v.clienteDireccion || "-"}<br><br>
 
-if(publicadas.length === 0){
-html = "<p>No hay cargas publicadas</p>";
+            <b>🚛 Postulaciones</b><br>
+            ${
+              v.postulaciones && v.postulaciones.length > 0
+              ? v.postulaciones.map(p => `
+                <div>
+                  👤 ${p.nombre || "-"}<br>
+                  📞 ${p.telefono || "-"}<br>
+                  🚛 ${p.patente1 || "-"}
+                </div>
+              `).join("")
+              : "Sin postulaciones"
+            }
+          </div>
+        </div>
+      `;
+    });
+
+    document.getElementById("lista").innerHTML = html;
+
+  }catch(error){
+    console.error("ERROR:", error);
+    document.getElementById("lista").innerHTML = "❌ Error cargando datos";
+  }
 }
 
-publicadas.forEach(v => {
-
-html += `
-
-<div class="card" onclick="toggle('${v._id}')">
-
-<b>📦 ${v.producto || "-"}</b><br>
-📍 ${v.origen} → ${v.destino}<br>
-📏 ${v.distanciaKm || "-"} km<br>
-💰 $${v.valor || "-"}
-
-<div id="det-${v._id}" class="detalle">
-
-<hr>
-
-<b>👤 Cliente</b><br>
-Nombre: ${v.clienteNombre || "-"}<br>
-Teléfono: ${v.clienteTelefono || "-"}<br>
-CUIT: ${v.clienteCUIT || "-"}<br>
-Dirección: ${v.clienteDireccion || "-"}
-
-<br><br>
-
-<b>🚛 Postulaciones</b><br>
-
-${
-v.postulaciones && v.postulaciones.length > 0
-? v.postulaciones.map(p => `
-<div style="border:1px solid #334155; padding:5px; margin-top:5px; border-radius:5px;">
-👤 ${p.nombre}<br>
-📞 ${p.telefono}<br>
-🚛 ${p.patente1}
-</div>
-`).join("")
-: "Sin postulaciones"
-}
-
-</div>
-
-</div>
-
-`;
-
-});
-
-document.getElementById("lista").innerHTML = html;
-
-}catch(error){
-
-console.error("ERROR:", error);
-document.getElementById("lista").innerHTML = "❌ Error cargando datos";
-
-}
-
-}
-
+// Mostrar/ocultar detalles
 function toggle(id){
-
-const div = document.getElementById("det-"+id);
-
-if(div.style.display === "none" || div.style.display === ""){
-div.style.display = "block";
-}else{
-div.style.display = "none";
+  const div = document.getElementById("det-"+id);
+  div.style.display = (div.style.display === "block") ? "none" : "block";
 }
 
-}
-
+// Ejecutar carga al abrir página
 cargar();
 
 </script>
 
-</script>
-
 </body>
-
 </html>
