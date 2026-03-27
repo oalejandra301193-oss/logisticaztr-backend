@@ -131,16 +131,22 @@ mejorChofer()
 
 async function cargar(){
 
-const viaje = await res.json()
+try{
+
+const res = await fetch("/mis-viajes"); // 🔥 ESTE FALTABA
+const viajes = await res.json();
+
+if(!viajes.length){
+return;
+}
+
+const viaje = viajes[0];
 
 document.getElementById("info").innerHTML=`
 
 <div class="card">
-
 Estado: ${viaje.estado}<br><br>
-
 Chofer: ${viaje.choferNombre || "Sin asignar"}
-
 </div>
 
 `
@@ -185,6 +191,10 @@ document.getElementById("rating").innerHTML=`
 
 `
 
+}
+
+}catch(err){
+console.error("Error cargando viaje:",err);
 }
 
 }
@@ -248,6 +258,11 @@ const origen=document.getElementById("origen").value
 const destino=document.getElementById("destino").value
 const distancia=document.getElementById("distancia").value
 const valor=document.getElementById("valor").value
+
+if(!coords || !coords.origenLat){
+alert("Error calculando ubicación");
+return;
+}
 
 // 🔥 VALIDACIÓN CLAVE
 if(!window.coords){
