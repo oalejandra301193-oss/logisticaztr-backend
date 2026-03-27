@@ -81,10 +81,10 @@ const viajes = await res.json();
 
 viajes.forEach(v=>{
 
-if(v.ultimaUbicacion){
+if(v.estado === "EN_VIAJE" && v.ultimaUbicacion){
 
-const lat = v.ultimaUbicacion.lat;
-const lng = v.ultimaUbicacion.lng;
+const lat = v.ultimaUbicacion.origenlat;
+const lng = v.ultimaUbicacion.origenlng;
 
 if(!camiones[v._id]){
 

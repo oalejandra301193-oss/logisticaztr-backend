@@ -33,6 +33,11 @@ const DriverSchema = new mongoose.Schema({
 archivos: {
   type: [String],
   default: []
+},
+
+ultimaUbicacion:{
+lat:Number,
+lng:Number
 }
 
 });

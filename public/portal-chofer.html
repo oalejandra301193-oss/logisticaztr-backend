@@ -68,12 +68,31 @@ miMarker = L.marker([lat,lng]).addTo(map)
 }
 
 // 🔥 OBTENER UBICACIÓN DEL CHOFER
-navigator.geolocation.getCurrentPosition(async (pos)=>{
+navigator.geolocation.watchPosition(async (pos)=>{
 
 const lat = pos.coords.latitude;
 const lng = pos.coords.longitude;
 
-iniciarMapa(lat,lng);
+// guardar en backend
+await fetch("/trips/location",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+lat,
+lng,
+driverId:localStorage.getItem("choferId")
+})
+});
+
+}, (err)=>{
+console.log(err);
+},{
+enableHighAccuracy:true,
+maximumAge:0,
+timeout:5000
+});
 
 // 🔥 GUARDAR UBICACIÓN EN BACKEND
 const choferId = localStorage.getItem("choferId");
@@ -92,9 +111,6 @@ driverId:choferId
 
 // 🔥 CARGAR CARGAS ORDENADAS
 cargarCargas(choferId);
-
-});
-
 
 // 🔥 CARGAR CARGAS CERCANAS
 async function cargarCargas(choferId){
@@ -115,7 +131,7 @@ viajes.forEach(v=>{
 // 🔥 MARCAR EN MAPA (SIN DIRECCIÓN EXACTA)
 const marker = L.marker([v.origenLat, v.origenLng])
 .addTo(map)
-.bindPopup("📦 Carga disponible");
+.bindPopup("📦 Carga");
 
 window.markers.push(marker);
 

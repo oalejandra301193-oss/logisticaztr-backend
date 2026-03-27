@@ -99,9 +99,9 @@ L.marker([lat,lng]).addTo(map)
 // 📦 cargas
 viajes.forEach(v=>{
 
-if(v.lat && v.lng && v.estado==="PUBLICADO"){
+if(v.origenlat && v.origenlng && v.estado==="PUBLICADO"){
 
-L.marker([v.lat,v.lng]).addTo(map)
+L.marker([v.origenlat,v.origenlng]).addTo(map)
 .bindPopup(`📦 ${v.producto}`);
 
 }
@@ -211,14 +211,14 @@ let lista = [];
 // 🔥 FILTRAR SOLO PUBLICADAS (IMPORTANTÍSIMO)
 viajes.forEach(v=>{
 
-if(v.estado === "APROBADO"){ // 👈 CLAVE
+if(v.estado === "PUBLICADO"){ // 👈 CLAVE
 
 let distancia = 9999;
 
-if(lat && lng && v.lat && v.lng){
+if(lat && lng && v.origenlat && v.origenlng){
 distancia = Math.sqrt(
-Math.pow(lat - v.lat,2) +
-Math.pow(lng - v.lng,2)
+Math.pow(lat - v.origenlat,2) +
+Math.pow(lng - v.origenlng,2)
 );
 }
 
@@ -247,7 +247,7 @@ html+=`
 Postularme
 </button>
 
-<button onclick="verMapa(${v.lat},${v.lng})">
+<button onclick="verMapa(${v.origenlat},${v.origenlng})">
 Ver en mapa
 </button>
 

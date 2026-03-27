@@ -133,6 +133,45 @@ error:"Error guardando carga"
 
 });
 
+router.get("/cargas-cercanas/:id", async (req,res)=>{
+
+try{
+
+const driver = await Driver.findById(req.params.id);
+
+if(!driver || !driver.ultimaUbicacion){
+return res.json([]);
+}
+
+const trips = await Trip.find({
+estado:"PUBLICADO",
+origenLat:{$exists:true}
+});
+
+const lista = trips.map(t=>{
+
+const dist = calcularDistancia(
+driver.ultimaUbicacion.lat,
+driver.ultimaUbicacion.lng,
+t.origenLat,
+t.origenLng
+);
+
+return {...t._doc, distancia:dist};
+
+});
+
+lista.sort((a,b)=> a.distancia - b.distancia);
+
+res.json(lista);
+
+}catch(err){
+console.log(err);
+res.status(500).send("Error cargas cercanas");
+}
+
+});
+
 router.get("/mapa-cargas", async (req,res)=>{
 
 try{
@@ -185,7 +224,7 @@ router.get('/all', async (req, res) => {
     ).length;
 
     const viajesPendientes = trips.filter(
-      v => v.estado === "DISPONIBLE"
+      v => v.estado === "PUBLICADO"
     ).length;
 
     const comisiones = trips.reduce(
