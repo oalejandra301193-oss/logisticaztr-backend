@@ -10,9 +10,11 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
-
 body{
 font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
 }
 
 #mapa{
@@ -20,72 +22,86 @@ height:500px;
 width:100%;
 border-radius:10px;
 }
-
 </style>
 
 </head>
 
 <body>
 
-<h2>Mapa Logístico</h2>
+<h2>🗺️ Mapa Logístico</h2>
 
 <div id="mapa"></div>
 
 <script>
 
-// 🔹 CREAR MAPA (UNO SOLO)
-let mapa = L.map("mapa").setView([-34.6,-58.4],5);
+// 🔹 MAPA BASE
+let mapa = L.map("mapa").setView([-34.6,-58.4],6);
 
 L.tileLayer(
 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 { maxZoom:19 }
 ).addTo(mapa);
 
-// 🔹 ICONO CAMION
+// 🔹 ICONO CAMIÓN (FIX REAL)
 const camionIcon = L.icon({
-iconUrl:"https://cdn-icons-png.flaticon.com/512/743/743922.png",
-iconSize:[40,40]
+iconUrl:"https://cdn-icons-png.flaticon.com/512/1995/1995470.png",
+iconSize:[35,35]
 });
 
+// 🔹 ARRAYS PARA CONTROLAR MARCADORES
+let cargasMarkers = [];
 let camiones = {};
 
-// 🔹 MOSTRAR CARGAS PUBLICADAS
+// 🔹 CARGAS PUBLICADAS (FIX)
 async function cargarMapaCargas(){
 
-const res = await fetch("/trips"); // 🔥 usamos la ruta correcta
-const viajes = await res.json();
+try{
 
-viajes.forEach(v=>{
+// 🔥 usar endpoint correcto
+const res = await fetch("/trips/mapa-cargas");
+const cargas = await res.json();
 
-// SOLO LAS PUBLICADAS
-if(v.estado === "PUBLICADO" && v.origenLat && v.origenLng){
+// limpiar anteriores
+cargasMarkers.forEach(m=>mapa.removeLayer(m));
+cargasMarkers = [];
 
-L.marker([v.origenLat, v.origenLng])
+cargas.forEach(c=>{
+
+if(!c.lat || !c.lng) return;
+
+const marker = L.marker([c.lat, c.lng])
 .addTo(mapa)
 .bindPopup(`
-📦 ${v.producto} <br>
-💰 $${v.valor}
+📦 ${c.producto || "-"}<br>
+💰 $${c.valor}
 `);
 
-}
+cargasMarkers.push(marker);
 
 });
 
+}catch(err){
+console.error("Error cargando cargas:", err);
 }
 
-// 🔹 MOSTRAR CAMIONES EN TIEMPO REAL
+}
+
+// 🔹 CAMIONES EN TIEMPO REAL
 async function cargarCamiones(){
+
+try{
 
 const res = await fetch("/trips");
 const viajes = await res.json();
 
 viajes.forEach(v=>{
 
-if(v.estado === "EN_VIAJE" && v.ultimaUbicacion){
+if(!v.ultimaUbicacion) return;
 
-const lat = v.ultimaUbicacion.origenlat;
-const lng = v.ultimaUbicacion.origenlng;
+const lat = v.ultimaUbicacion.lat;
+const lng = v.ultimaUbicacion.lng;
 
+// crear o actualizar
 if(!camiones[v._id]){
 
 camiones[v._id] = L.marker(
@@ -94,7 +110,7 @@ camiones[v._id] = L.marker(
 ).addTo(mapa);
 
 camiones[v._id].bindPopup(
-"🚛 Chofer: " + (v.chofer?.nombre || "Sin asignar")
+"🚛 " + (v.chofer?.nombre || "Chofer")
 );
 
 }else{
@@ -103,18 +119,20 @@ camiones[v._id].setLatLng([lat,lng]);
 
 }
 
-}
-
 });
 
+}catch(err){
+console.error("Error camiones:", err);
 }
 
-// 🔹 INICIAR TODO
+}
+
+// 🔹 INICIO
 cargarMapaCargas();
 cargarCamiones();
 
-// 🔁 ACTUALIZAR SOLO CAMIONES
-setInterval(cargarCamiones,2000);
+// 🔁 REFRESH
+setInterval(cargarCamiones, 3000);
 
 </script>
 

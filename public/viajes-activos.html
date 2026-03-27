@@ -26,16 +26,24 @@ border-radius:10px;
 
 <h2>🚛 Viajes activos</h2>
 
-<div id="lista"></div>
+<div id="lista">Cargando...</div>
 
 <script>
 
 async function cargar(){
 
-const res = await fetch("/trips")
-const viajes = await res.json()
+try{
 
-let html=""
+const res = await fetch("/trips");
+
+// 🔴 VALIDAR RESPUESTA
+if(!res.ok){
+throw new Error("Error HTTP " + res.status);
+}
+
+const viajes = await res.json();
+
+let html = "";
 
 viajes.forEach(v=>{
 
@@ -44,28 +52,51 @@ if(v.estado === "EN_VIAJE"){
 html += `
 <div class="card">
 
-<b>${v.producto}</b><br>
-${v.origen} → ${v.destino}<br>
+<b>${v.producto || "-"}</b><br>
+${v.origen || "-"} → ${v.destino || "-"}<br>
 
-👨‍✈️ ${v.chofer?.nombre || "-"}
+👨‍✈️ ${v.chofer?.nombre || "Sin asignar"}
 
 <br><br>
 
-<button onclick="window.location='mapa.html'">
+<button onclick="verMapa('${v._id}')">
 Ver en mapa
 </button>
 
 </div>
-`
-}
-
-})
-
-document.getElementById("lista").innerHTML = html
+`;
 
 }
 
-cargar()
+});
+
+// 🔴 SI NO HAY VIAJES
+if(html === ""){
+html = "<p>No hay viajes activos</p>";
+}
+
+document.getElementById("lista").innerHTML = html;
+
+}catch(error){
+
+console.error("❌ Error cargando viajes:", error);
+
+document.getElementById("lista").innerHTML =
+"<p>Error cargando viajes</p>";
+
+}
+
+}
+
+// 🔹 IR AL MAPA CON ID
+function verMapa(id){
+window.location = "mapa.html?id=" + id;
+}
+
+// 🔄 ACTUALIZACIÓN AUTOMÁTICA (cada 10s)
+setInterval(cargar, 10000);
+
+cargar();
 
 </script>
 

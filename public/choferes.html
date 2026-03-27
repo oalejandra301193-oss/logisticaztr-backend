@@ -24,7 +24,15 @@ border-radius:10px;
 
 img{
 width:80px;
+height:80px;
+object-fit:cover;
 border-radius:50%;
+margin-bottom:10px;
+}
+
+button{
+padding:8px;
+margin-top:5px;
 }
 
 </style>
@@ -43,8 +51,8 @@ const token = localStorage.getItem("token");
 
 // 🔒 VALIDACIÓN ADMIN
 if(!token){
-  alert("No autorizado");
-  window.location = "/login-admin.html";
+alert("No autorizado");
+window.location = "/login-admin.html";
 }
 
 // =======================
@@ -53,71 +61,91 @@ if(!token){
 
 async function cargar(){
 
-  const res = await fetch("/drivers");
-  const drivers = await res.json();
+try{
 
-  let html = "";
+const res = await fetch("/drivers");
 
-  drivers.forEach(d=>{
+if(!res.ok){
+throw new Error("Error obteniendo choferes");
+}
 
-    html+=`
+const drivers = await res.json();
 
-    <div class="card">
+let html = "";
 
-    <img src="/uploads/choferes/${d.foto || 'default.png'}">
+drivers.forEach(d=>{
 
-    <br>
+const foto = d.foto
+? "/uploads/choferes/" + d.foto
+: "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
-    Nombre: ${d.nombre} 
+html+=`
 
-    <br>
+<div class="card">
 
-    Apellido: ${d.apellido}
+<img src="${foto}">
 
-    <br>
+<br>
 
-    DNI: ${d.dni || "-"}
+<b>${d.nombre || "Sin nombre"} ${d.apellido || ""}</b>
 
-    <br>
+<br>
 
-    Tel: ${d.telefono}
+🪪 DNI: ${d.dni || "-"}
 
-    <br>
+<br>
 
-    Patente 1: ${d.patente1 || "-"}
+📞 Tel: ${d.telefono || "-"}
 
-    <br>
+<br>
 
-    Patente 2: ${d.patente2 || "-"}
+🚛 Patente 1: ${d.patente1 || "-"}
 
-    <br>
+<br>
 
-    Patente 3: ${d.patente3 || "-"}
+🚛 Patente 2: ${d.patente2 || "-"}
 
-    <br><br>
+<br>
 
-    <input type="file" id="file-${d._id}">
-    <button onclick="subirArchivo('${d._id}')">Subir archivo</button>
+🚛 Patente 3: ${d.patente3 || "-"}
 
-    <br><br>
+<br>
 
-    <div>
-    ${
-      d.archivos && d.archivos.length > 0
-      ? d.archivos.map(a =>
-        `<a href="/uploads/choferes/${a}" target="_blank">📄 Ver archivo</a><br>`
-      ).join("")
-      : "Sin archivos"
-    }
-    </div>
+🟢 Disponible: ${d.disponible ? "SI" : "NO"}
 
-    </div>
+<br><br>
 
-    `;
+<input type="file" id="file-${d._id}">
+<button onclick="subirArchivo('${d._id}')">📤 Subir archivo</button>
 
-  });
+<br><br>
 
-  document.getElementById("lista").innerHTML = html;
+<div>
+
+${
+d.archivos && d.archivos.length > 0
+? d.archivos.map(a =>
+`<a href="/uploads/choferes/${a}" target="_blank">📄 Ver archivo</a><br>`
+).join("")
+: "Sin archivos"
+}
+
+</div>
+
+</div>
+
+`;
+
+});
+
+document.getElementById("lista").innerHTML = html;
+
+}catch(err){
+
+console.error(err);
+alert("Error cargando choferes");
+
+}
 
 }
 
@@ -129,35 +157,41 @@ cargar();
 
 async function subirArchivo(id){
 
-  const input = document.getElementById("file-"+id);
+const input = document.getElementById("file-"+id);
 
-  if(!input.files[0]){
-    alert("Seleccioná un archivo");
-    return;
-  }
+if(!input.files[0]){
+alert("Seleccioná un archivo");
+return;
+}
 
-  const formData = new FormData();
-  formData.append("archivo", input.files[0]);
+const formData = new FormData();
+formData.append("archivo", input.files[0]);
 
-  const res = await fetch("/choferes/"+id+"/archivo",{
-    method:"POST",
-    headers:{
-      "Authorization": "Bearer " + token
-    },
-    body:formData
-  });
+try{
 
-  if(res.ok){
-    alert("Archivo subido");
-    cargar();
-  }else{
-    alert("Error al subir archivo");
-  }
+const res = await fetch("/choferes/"+id+"/archivo",{
+method:"POST",
+headers:{
+"Authorization": "Bearer " + token
+},
+body:formData
+});
+
+if(res.ok){
+alert("Archivo subido");
+cargar();
+}else{
+alert("Error al subir archivo");
+}
+
+}catch(err){
+console.error(err);
+alert("Error de conexión");
+}
 
 }
 
 </script>
 
 </body>
-
 </html>

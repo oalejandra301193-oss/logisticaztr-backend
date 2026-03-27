@@ -22,6 +22,7 @@ border-radius:10px;
 .top{
 color:#22c55e;
 font-size:18px;
+font-weight:bold;
 }
 </style>
 
@@ -31,43 +32,71 @@ font-size:18px;
 
 <h2>🏆 Ranking de Choferes</h2>
 
-<div id="lista"></div>
+<div id="lista">Cargando...</div>
 
 <script>
 
 async function cargar(){
 
-const res = await fetch("/trips/ranking-choferes")
-const ranking = await res.json()
+try{
 
-let html=""
+const res = await fetch("/trips/ranking-choferes");
+
+// 🔴 VALIDACIÓN
+if(!res.ok){
+throw new Error("Error HTTP " + res.status);
+}
+
+const ranking = await res.json();
+
+let html = "";
+
+// 🔴 SI NO HAY DATOS
+if(!ranking || ranking.length === 0){
+html = "<p>No hay datos de ranking todavía</p>";
+document.getElementById("lista").innerHTML = html;
+return;
+}
 
 ranking.forEach((r,index)=>{
 
-html+=`
+html += `
 <div class="card">
+
 <div class="${index===0 ? "top" : ""}">
 #${index+1} 👨‍✈️ ${r._id || "Sin nombre"}
 </div>
 
 <br>
 
-🚚 Viajes: ${r.viajes}
+🚚 Viajes: ${r.viajes || 0}
 <br>
 📏 Km recorridos: ${Math.round(r.km || 0)}
 <br>
 ⭐ Rating: ${r.rating ? r.rating.toFixed(1) : "Sin datos"}
 
 </div>
-`
+`;
 
-})
+});
 
-document.getElementById("lista").innerHTML = html
+document.getElementById("lista").innerHTML = html;
+
+}catch(error){
+
+console.error("❌ Error cargando ranking:", error);
+
+document.getElementById("lista").innerHTML =
+"<p>Error cargando ranking</p>";
 
 }
 
-cargar()
+}
+
+// 🔄 ACTUALIZAR CADA 15 SEGUNDOS
+setInterval(cargar, 15000);
+
+cargar();
 
 </script>
 

@@ -30,16 +30,21 @@ const DriverSchema = new mongoose.Schema({
 
   foto: String,
 
-archivos: {
-  type: [String],
-  default: []
-},
+  archivos: {
+    type: [String],
+    default: []
+  },
 
-ultimaUbicacion:{
-lat:Number,
-lng:Number
-}
+  // 🔥 CLAVE PARA TODO EL SISTEMA
+  ultimaUbicacion: {
+    lat: Number,
+    lng: Number,
+    fecha: {
+      type: Date,
+      default: Date.now
+    }
+  }
 
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model("Driver", DriverSchema);

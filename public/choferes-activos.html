@@ -3,46 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <title>Choferes activos</title>
+
 <style>
-body{background:#0f172a;color:white;font-family:Arial;padding:20px;}
-.card{background:#1e293b;padding:15px;margin-bottom:10px;border-radius:10px;}
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+margin-bottom:10px;
+border-radius:10px;
+}
 </style>
+
 </head>
 
 <body>
 
 <h2>🟢 Choferes activos</h2>
+
 <div id="lista"></div>
 
 <script>
 
 async function cargar(){
 
-const res = await fetch("/trips")
-const viajes = await res.json()
+try{
 
-let html=""
+// 🔥 AHORA SI: drivers reales
+const res = await fetch("/drivers");
+const drivers = await res.json();
 
-viajes.forEach(v=>{
+let html = "";
 
-if(v.estado === "EN_VIAJE"){
+drivers.forEach(d=>{
 
-html+=`
+// SOLO DISPONIBLES
+if(d.disponible){
+
+html += `
 <div class="card">
-👨‍✈️ ${v.chofer?.nombre || "-"}<br>
-🚛 ${v.producto}
+
+👨‍✈️ ${d.nombre || "-"} ${d.apellido || ""} <br>
+📞 ${d.telefono || "-"} <br>
+🚛 ${d.patente1 || "-"} <br>
+
+📍 ${d.ultimaUbicacion ? "Ubicación activa" : "Sin ubicación"}
+
 </div>
-`
+`;
 
 }
 
-})
+});
 
-document.getElementById("lista").innerHTML=html
+document.getElementById("lista").innerHTML = html;
+
+}catch(err){
+console.error(err);
+}
 
 }
 
-cargar()
+cargar();
 
 </script>
 

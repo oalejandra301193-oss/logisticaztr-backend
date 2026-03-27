@@ -43,7 +43,7 @@ button{
 <div id="map"></div>
 
 <h3>📦 Cargas cercanas</h3>
-<div id="lista"></div>
+<div id="lista">Cargando...</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
@@ -51,8 +51,9 @@ button{
 
 let map;
 let miMarker;
+let markers = [];
 
-// 🔥 INICIALIZAR MAPA
+// 🔹 INICIALIZAR MAPA
 function iniciarMapa(lat,lng){
 
 map = L.map('map').setView([lat,lng],10);
@@ -67,36 +68,32 @@ miMarker = L.marker([lat,lng]).addTo(map)
 
 }
 
-// 🔥 OBTENER UBICACIÓN DEL CHOFER
-navigator.geolocation.watchPosition(async (pos)=>{
+// 🔹 ACTUALIZAR UBICACIÓN EN MAPA
+function actualizarMiUbicacion(lat,lng){
+if(miMarker){
+miMarker.setLatLng([lat,lng]);
+}
+}
+
+// 🔹 OBTENER UBICACIÓN
+navigator.geolocation.getCurrentPosition(async (pos)=>{
+
+try{
 
 const lat = pos.coords.latitude;
 const lng = pos.coords.longitude;
 
-// guardar en backend
-await fetch("/trips/location",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-lat,
-lng,
-driverId:localStorage.getItem("choferId")
-})
-});
+iniciarMapa(lat,lng);
 
-}, (err)=>{
-console.log(err);
-},{
-enableHighAccuracy:true,
-maximumAge:0,
-timeout:5000
-});
-
-// 🔥 GUARDAR UBICACIÓN EN BACKEND
 const choferId = localStorage.getItem("choferId");
 
+// 🔴 VALIDACIÓN
+if(!choferId){
+alert("Falta choferId en localStorage");
+return;
+}
+
+// 🔹 GUARDAR UBICACIÓN
 await fetch("/trips/location",{
 method:"POST",
 headers:{
@@ -109,40 +106,56 @@ driverId:choferId
 })
 });
 
-// 🔥 CARGAR CARGAS ORDENADAS
+// 🔹 CARGAR CARGAS
 cargarCargas(choferId);
 
-// 🔥 CARGAR CARGAS CERCANAS
+}catch(error){
+
+console.error("❌ Error ubicación:", error);
+
+}
+
+});
+
+// 🔹 CARGAR CARGAS CERCANAS
 async function cargarCargas(choferId){
 
+try{
+
 const res = await fetch("/trips/cargas-cercanas/"+choferId);
+
+// 🔴 VALIDACIÓN
+if(!res.ok){
+throw new Error("Error HTTP " + res.status);
+}
+
 const viajes = await res.json();
 
 let html = "";
 
-// limpiar marcadores anteriores (opcional simple)
-if(window.markers){
-window.markers.forEach(m=>map.removeLayer(m));
-}
-window.markers = [];
+// 🔹 LIMPIAR MARCADORES
+markers.forEach(m=>map.removeLayer(m));
+markers = [];
 
 viajes.forEach(v=>{
 
-// 🔥 MARCAR EN MAPA (SIN DIRECCIÓN EXACTA)
+if(!v.origenLat || !v.origenLng) return;
+
+// 🔹 MARCADOR
 const marker = L.marker([v.origenLat, v.origenLng])
 .addTo(map)
-.bindPopup("📦 Carga");
+.bindPopup("📦 Carga disponible");
 
-window.markers.push(marker);
+markers.push(marker);
 
-// 🔥 LISTADO
+// 🔹 LISTADO
 html += `
 <div class="card">
 
-📦 ${v.producto || "-" } <br>
-📍 Zona aproximada <br>
-💰 $${v.valor} <br>
-📏 ${v.distancia.toFixed(1)} km <br>
+📦 <b>${v.producto || "-"}</b><br>
+📍 Zona aproximada<br>
+💰 $${v.valor || 0}<br>
+📏 ${v.distancia ? v.distancia.toFixed(1) : 0} km<br>
 
 <button onclick="postular('${v._id}')">
 Postularme
@@ -153,13 +166,28 @@ Postularme
 
 });
 
+// 🔴 SIN RESULTADOS
+if(html === ""){
+html = "<p>No hay cargas cercanas</p>";
+}
+
 document.getElementById("lista").innerHTML = html;
+
+}catch(error){
+
+console.error("❌ Error cargando cargas:", error);
+
+document.getElementById("lista").innerHTML =
+"<p>Error cargando cargas</p>";
 
 }
 
+}
 
-// 🔥 POSTULARSE (CORREGIDO)
+// 🔹 POSTULARSE
 async function postular(id){
+
+try{
 
 const res = await fetch("/trips/postular/"+id,{
 method:"POST",
@@ -175,12 +203,29 @@ patente1: localStorage.getItem("patente1")
 });
 
 if(res.ok){
-alert("Postulación enviada");
+alert("✅ Postulación enviada");
 }else{
-alert("Error al postularte");
+alert("❌ Error al postularte");
+}
+
+}catch(error){
+
+console.error("❌ Error postulación:", error);
+alert("Error de conexión");
+
 }
 
 }
+
+// 🔄 ACTUALIZAR CARGAS CADA 15s
+setInterval(()=>{
+
+const choferId = localStorage.getItem("choferId");
+if(choferId){
+cargarCargas(choferId);
+}
+
+},15000);
 
 </script>
 

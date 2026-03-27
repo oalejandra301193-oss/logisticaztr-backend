@@ -2,13 +2,10 @@
 <html>
 
 <head>
-
 <meta charset="UTF-8">
-
 <title>Flota - Logistica ZTR</title>
 
 <style>
-
 body{
 font-family:Arial;
 background:#0f172a;
@@ -28,94 +25,78 @@ height:500px;
 margin-top:20px;
 border-radius:10px;
 }
-
 </style>
 
 </head>
 
 <body>
 
-<h2>Flota</h2>
-
-<div id="flota"></div>
-
 <h2>🚛 Flota de Choferes</h2>
 
 <div id="lista"></div>
-
 <div id="mapa"></div>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 
-const res = await fetch("/drivers")
-const drivers = await res.json()
-
-
-let mapa = L.map("mapa").setView([-34.6,-58.4],5)
+let mapa = L.map("mapa").setView([-34.6,-58.4],5);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
 maxZoom:19
-}).addTo(mapa)
+}).addTo(mapa);
 
-let marcadores=[]
+let marcadores = [];
 
 async function cargar(){
 
-const res = await fetch("/drivers")
+try{
 
-const drivers = await res.json()
+const res = await fetch("/drivers");
+const drivers = await res.json();
 
-let html=""
+let html = "";
 
-marcadores.forEach(m=>mapa.removeLayer(m))
-marcadores=[]
+// limpiar mapa
+marcadores.forEach(m=>mapa.removeLayer(m));
+marcadores = [];
 
 drivers.forEach(d=>{
 
-html+=`
-
+html += `
 <div class="card">
-
-👨‍✈️ Chofer: ${d.nombre || "Sin nombre"}
-
-<br>
-
-🪪 DNI: ${d.dni || "-"}
-
-<br>
-
+👨‍✈️ ${d.nombre || "Sin nombre"}<br>
+🪪 DNI: ${d.dni || "-"}<br>
 🟢 Disponible: ${d.disponible ? "SI" : "NO"}
-
 </div>
+`;
 
-`
-
-if(d.ubicacion){
+if(d.ultimaUbicacion){
 
 const marker = L.marker([
-d.ubicacion.lat,
-d.ubicacion.lng
-]).addTo(mapa)
+d.ultimaUbicacion.lat,
+d.ultimaUbicacion.lng
+]).addTo(mapa);
 
-marker.bindPopup("Chofer: "+(d.nombre || "Chofer"))
+marker.bindPopup("🚛 " + (d.nombre || "Chofer"));
 
-marcadores.push(marker)
-
-}
-
-})
-
-document.getElementById("lista").innerHTML=html
+marcadores.push(marker);
 
 }
 
-setInterval(cargar,5000)
+});
 
-cargar()
+document.getElementById("lista").innerHTML = html;
+
+}catch(err){
+console.error(err);
+}
+
+}
+
+setInterval(cargar,5000);
+cargar();
 
 </script>
 

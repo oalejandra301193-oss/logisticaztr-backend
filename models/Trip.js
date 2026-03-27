@@ -3,192 +3,145 @@ const crypto = require("crypto");
 
 const tripSchema = new mongoose.Schema({
 
-  choferNombre:String,
-  choferDni:String,
+  // 🚛 DATOS CHOFER (rápido acceso)
+  choferNombre: String,
+  choferDni: String,
 
+  // ⭐ CALIFICACIONES
   ratingChofer:{
-  type:Number,
-  default:0
+    type:Number,
+    default:0
   },
-
   ratingCliente:{
-  type:Number,
-  default:0
+    type:Number,
+    default:0
   },
-
-  cargaConfirmadaChofer:{
-type:Boolean,
-default:false
-},
-
-cargaConfirmadaCliente:{
-type:Boolean,
-default:false
-},
-
-descargaConfirmadaChofer:{
-type:Boolean,
-default:false
-},
-
-descargaConfirmadaCliente:{
-type:Boolean,
-default:false
-},
-
 
   comentario:String,
 
-  // 📍 Datos del viaje
-origen: { type: String, required: true },
-destino: { type: String, required: true },
+  // 📍 ORIGEN / DESTINO
+  origen: { type: String, required: true },
+  destino: { type: String, required: true },
 
-// 🌍 Coordenadas para mapa
-origenLat: Number,
-origenLng: Number,
-destinoLat: Number,
-destinoLng: Number,
+  // 🌍 COORDENADAS
+  origenLat: Number,
+  origenLng: Number,
+  destinoLat: Number,
+  destinoLng: Number,
 
-distanciaKm: { type: Number, required: true },
-valor: { type: Number, required: true },
-producto: { type: String, required: true },
+  distanciaKm: { type: Number, required: true },
+  valor: { type: Number, required: true },
+  producto: { type: String, required: true },
 
-// 💳 Adelanto que paga el cliente a la empresa
-adelanto:{
-type:Number,
-default:0
-},
-
-// 💰 comisión de Logistica ZTR
-comision:{
-type:Number,
-default:0
-},
-
-  // 📦 Estado del viaje
-  estado: {
-    type: String,
-    default: "PENDIENTE"
+  // 💳 DINERO
+  adelanto:{
+    type:Number,
+    default:0
+  },
+  comision:{
+    type:Number,
+    default:0
+  },
+  comisionPagada:{
+    type:Boolean,
+    default:false
   },
 
-  // 🧾 Datos del cliente
+  // 📦 ESTADO
+  estado:{
+    type:String,
+    enum:["PENDIENTE","PUBLICADO","ASIGNADO","EN_VIAJE","FINALIZADO","RECHAZADO"],
+    default:"PENDIENTE"
+  },
+
+  // 👤 CLIENTE
   clienteNombre: String,
-  clienteDireccion: String,
   clienteCUIT: String,
   clienteTelefono: String,
+  clienteDireccionComercial: String,
+  clienteDireccionCarga: String,
+  clienteDireccionDescarga: String,
 
-  // 💰 Comisión
-  comisionPagada: {
-    type: Boolean,
-    default: false
-  },
-
-  // 🚛 Datos del chofer
-  chofer: {
-    nombre: {
-      type: String,
-      default: "Sin asignar"
+  // 🚛 CHOFER COMPLETO
+  chofer:{
+    nombre:{
+      type:String,
+      default:"Sin asignar"
     },
-    dni: String,
-    telefono: String,
-    camion: String
+    dni:String,
+    telefono:String,
+    camion:String
   },
 
-  // ✅ Verificaciones
-  clienteVerificado: {
-    type: Boolean,
-    default: false
+  // ✅ CONFIRMACIONES
+  cargaConfirmadaChofer:{ type:Boolean, default:false },
+  cargaConfirmadaCliente:{ type:Boolean, default:false },
+  descargaConfirmadaChofer:{ type:Boolean, default:false },
+  descargaConfirmadaCliente:{ type:Boolean, default:false },
+
+  // 🚛 PUBLICACIÓN
+  publicado:{
+    type:Boolean,
+    default:true
   },
 
-  choferVerificado: {
-    type: Boolean,
-    default: false
-  },
-
-  // 📎 Archivos de verificación
-  archivoCliente: String,
-  archivoChofer: String,
-
-  // 🚛 CARGA PUBLICA
-  publicado: {
-    type: Boolean,
-    default: true
-  },
-
-  // 👨‍✈️ CHOFERES QUE SE POSTULAN
-  postulaciones: [
+  // 📨 POSTULACIONES
+  postulaciones:[
     {
-      nombre: String,
-      telefono: String,
-      dni: String,
-      patente1: String,
-      patente2: String,
-      patente3: String,
-      fecha: { type: Date, default: Date.now }
+      nombre:String,
+      telefono:String,
+      dni:String,
+      patente1:String,
+      patente2:String,
+      patente3:String,
+      fecha:{ type:Date, default:Date.now }
     }
   ],
 
+  // 💰 COTIZACIONES
   cotizaciones:[
-{
-dni:String,
-precio:Number,
-fecha:{
-type:Date,
-default:Date.now
-}
-}
-],
+    {
+      dni:String,
+      precio:Number,
+      fecha:{ type:Date, default:Date.now }
+    }
+  ],
 
-
-  // 📏 Distancia recorrida real
-  distanciaTotal: {
-    type: Number,
-    default: 0
+  // 📏 DISTANCIA REAL
+  distanciaTotal:{
+    type:Number,
+    default:0
   },
 
-  // 🔐 Token único para link del chofer
-  tokenChofer: {
-    type: String,
+  // 🔐 TOKEN CHOFER
+  tokenChofer:{
+    type:String,
     default: () => crypto.randomBytes(32).toString("hex")
   },
 
-  // 📡 Seguimiento
-  seguimientoActivo: {
-    type: Boolean,
-    default: false
-  },
-
-  seguimientoRechazado: {
-    type: Boolean,
-    default: false
-  },
+  // 📡 TRACKING
+  seguimientoActivo:{ type:Boolean, default:false },
+  seguimientoRechazado:{ type:Boolean, default:false },
 
   fechaInicioSeguimiento: Date,
   fechaFinSeguimiento: Date,
 
-  // 📍 Historial de ubicaciones
-  ubicaciones: [
+  // 📍 HISTORIAL GPS
+  ubicaciones:[
     {
-      lat: Number,
-      lng: Number,
-      fechaCreacion: {
-        type: Date,
-        default: Date.now
-      }
+      lat:Number,
+      lng:Number,
+      fecha:{ type:Date, default:Date.now }
     }
   ],
 
-  // 📍 Última ubicación rápida
-  ultimaUbicacion: {
-    lat: Number,
-    lng: Number,
-    fechaCreacion: {
-      type: Date,
-      default: Date.now
-    }
-  } 
+  // 📍 ÚLTIMA UBICACIÓN
+  ultimaUbicacion:{
+    lat:Number,
+    lng:Number,
+    fecha:{ type:Date, default:Date.now }
+  }
 
-}, { timestamps: true });
-
+}, { timestamps:true });
 
 module.exports = mongoose.model("Trip", tripSchema);

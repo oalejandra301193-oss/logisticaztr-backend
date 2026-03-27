@@ -7,7 +7,6 @@
 <title>Panel de Despacho</title>
 
 <style>
-
 body{
 font-family:Arial;
 background:#0f172a;
@@ -32,173 +31,157 @@ button{
 padding:8px;
 margin-top:10px;
 }
-
 </style>
 
 </head>
 
 <body>
 
-<h2>🚚 Panel de Despacho LogisticaZTR</h2>
+<h2>🚚 Panel de Despacho</h2>
 
 <div id="info"></div>
-
 <div id="mapa"></div>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 
-let mapa = L.map("mapa").setView([-34.6,-58.4],5)
+let mapa = L.map("mapa").setView([-34.6,-58.4],5);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
 maxZoom:19
-}).addTo(mapa)
+}).addTo(mapa);
 
-let camiones=[]
-let cargas=[]
+let camiones = [];
+let cargas = [];
 
 async function cargar(){
 
-const resTrips = await fetch("/trips")
-const trips = await resTrips.json()
+try{
 
-const resDrivers = await fetch("/drivers")
-const drivers = await resDrivers.json()
+const resTrips = await fetch("/trips/mapa-cargas");
+const trips = await resTrips.json();
 
-camiones.forEach(c=>mapa.removeLayer(c))
-cargas.forEach(c=>mapa.removeLayer(c))
+const resDrivers = await fetch("/drivers");
+const drivers = await resDrivers.json();
 
-camiones=[]
-cargas=[]
+// limpiar mapa
+camiones.forEach(c=>mapa.removeLayer(c));
+cargas.forEach(c=>mapa.removeLayer(c));
 
-let html=""
+camiones = [];
+cargas = [];
 
+let html = "";
+
+// 📦 CARGAS PUBLICADAS
 trips.forEach(t=>{
 
-if(t.estado==="PENDIENTE"){
+if(!t.lat || !t.lng) return;
 
-if(t.origenLat){
+const marker = L.marker([t.lat, t.lng]).addTo(mapa);
 
-const marker = L.marker([t.origenLat,t.origenLng]).addTo(mapa)
+marker.bindPopup(`
+📦 ${t.producto}<br>
+💰 $${t.valor}
+`);
 
-marker.bindPopup(
-"📦 "+t.producto+"<br>"+t.origen+" → "+t.destino
-)
+cargas.push(marker);
 
-cargas.push(marker)
-
-html+=`
+html += `
 <div class="panel">
-
-📦 ${t.producto}
-
-<br>
-
-📍 ${t.origen}
-
-<br>
-
-<button onclick="sugerir('${t._id}',${t.origenLat},${t.origenLng})">
+📦 ${t.producto}<br>
+<button onclick="sugerir(${t.lat},${t.lng})">
 Buscar chofer cercano
 </button>
-
 </div>
-`
+`;
 
-}
+});
 
-}
-
-})
-
+// 🚛 CHOFERES
 drivers.forEach(d=>{
 
-if(d.ubicacion){
+if(!d.ultimaUbicacion) return;
 
 const marker = L.marker([
-d.ubicacion.lat,
-d.ubicacion.lng
-]).addTo(mapa)
+d.ultimaUbicacion.lat,
+d.ultimaUbicacion.lng
+]).addTo(mapa);
 
-marker.bindPopup("🚛 "+d.nombre)
+marker.bindPopup("🚛 " + (d.nombre || "Chofer"));
 
-camiones.push(marker)
+camiones.push(marker);
+
+});
+
+document.getElementById("info").innerHTML = html;
+
+}catch(err){
+console.error(err);
+}
 
 }
 
-})
-
-document.getElementById("info").innerHTML=html
-
-}
-
+// 📏 DISTANCIA
 function distancia(lat1,lng1,lat2,lng2){
 
-const R=6371
+const R=6371;
 
-const dLat=(lat2-lat1)*Math.PI/180
-const dLng=(lng2-lng1)*Math.PI/180
+const dLat=(lat2-lat1)*Math.PI/180;
+const dLng=(lng2-lng1)*Math.PI/180;
 
 const a=
 Math.sin(dLat/2)*Math.sin(dLat/2)+
 Math.cos(lat1*Math.PI/180)*
 Math.cos(lat2*Math.PI/180)*
-Math.sin(dLng/2)*Math.sin(dLng/2)
+Math.sin(dLng/2)*Math.sin(dLng/2);
 
-return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 
 }
 
-async function sugerir(tripId,lat,lng){
+// 🔍 SUGERIR MEJOR CHOFER
+async function sugerir(lat,lng){
 
-const res = await fetch("/drivers")
-const drivers = await res.json()
+const res = await fetch("/drivers");
+const drivers = await res.json();
 
-let mejor=null
-let mejorDistancia=99999
+let mejor=null;
+let mejorDistancia=99999;
 
 drivers.forEach(d=>{
 
-if(d.ubicacion){
+if(!d.ultimaUbicacion) return;
 
 const dist=distancia(
 lat,
 lng,
-d.ubicacion.lat,
-d.ubicacion.lng
-)
+d.ultimaUbicacion.lat,
+d.ultimaUbicacion.lng
+);
 
-if(dist<mejorDistancia){
-
-mejorDistancia=dist
-mejor=d
-
+if(dist < mejorDistancia){
+mejorDistancia = dist;
+mejor = d;
 }
 
-}
-
-})
+});
 
 if(mejor){
-
 alert(
-"Chofer sugerido: "+mejor.nombre+
-"\nDistancia: "+mejorDistancia.toFixed(1)+" km"
-)
-
+"🚛 Chofer: " + mejor.nombre +
+"\n📏 Distancia: " + mejorDistancia.toFixed(1) + " km"
+);
 }
 
 }
 
-setInterval(cargar,5000)
-
-cargar()
+setInterval(cargar,5000);
+cargar();
 
 </script>
 
 </body>
-
 </html>

@@ -26,16 +26,24 @@ border-radius:10px;
 
 <h2>📋 Postulaciones</h2>
 
-<div id="lista"></div>
+<div id="lista">Cargando...</div>
 
 <script>
 
 async function cargar(){
 
-const res = await fetch("/trips")
-const viajes = await res.json()
+try{
 
-let html=""
+const res = await fetch("/trips");
+
+// 🔴 VALIDAR RESPUESTA
+if(!res.ok){
+throw new Error("Error HTTP " + res.status);
+}
+
+const viajes = await res.json();
+
+let html = "";
 
 viajes.forEach(v=>{
 
@@ -46,28 +54,45 @@ v.postulaciones.forEach(p=>{
 html += `
 <div class="card">
 
-🚛 ${v.producto}<br>
-${v.origen} → ${v.destino}
+🚛 <b>${v.producto || "-"}</b><br>
+${v.origen || "-"} → ${v.destino || "-"}
 
 <br><br>
 
-👤 ${p.nombre}<br>
-📞 ${p.telefono}<br>
+👤 ${p.nombre || "Sin nombre"}<br>
+📞 ${p.telefono || "-"}
 
 </div>
-`
+`;
 
-})
-
-}
-
-})
-
-document.getElementById("lista").innerHTML = html
+});
 
 }
 
-cargar()
+});
+
+// 🔴 SI NO HAY POSTULACIONES
+if(html === ""){
+html = "<p>No hay postulaciones todavía</p>";
+}
+
+document.getElementById("lista").innerHTML = html;
+
+}catch(error){
+
+console.error("❌ Error cargando postulaciones:", error);
+
+document.getElementById("lista").innerHTML =
+"<p>Error cargando postulaciones</p>";
+
+}
+
+}
+
+// 🔄 ACTUALIZAR CADA 15 SEGUNDOS
+setInterval(cargar, 15000);
+
+cargar();
 
 </script>
 

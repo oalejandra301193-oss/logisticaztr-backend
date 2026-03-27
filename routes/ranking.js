@@ -1,42 +1,50 @@
-const express = require("express")
-const router = express.Router()
-const Trip = require("../models/Trip")
+const express = require("express");
+const router = express.Router();
+const Trip = require("../models/Trip");
 
+// 🏆 RANKING DE CHOFERES
 router.get("/", async(req,res)=>{
 
-try{
+  try{
 
-const ranking = await Trip.aggregate([
+    const ranking = await Trip.aggregate([
 
-{
-$match:{estado:"ENTREGADO"}
-},
+      // 🔥 SOLO VIAJES TERMINADOS
+      {
+        $match:{ estado:"FINALIZADO" }
+      },
 
-{
-$group:{
-_id:"$choferNombre",
-viajes:{$sum:1}
-}
-},
+      // 🔥 AGRUPAR POR CHOFER
+      {
+        $group:{
+          _id:"$chofer.nombre",
+          viajes:{ $sum:1 },
+          km:{ $sum:"$distanciaTotal" },
+          rating:{ $avg:"$ratingChofer" }
+        }
+      },
 
-{
-$sort:{viajes:-1}
-},
+      // 🔥 ORDENAR POR CANTIDAD DE VIAJES
+      {
+        $sort:{ viajes:-1 }
+      },
 
-{
-$limit:10
-}
+      // 🔥 TOP 10
+      {
+        $limit:10
+      }
 
-])
+    ]);
 
-res.json(ranking)
+    res.json(ranking);
 
-}catch(err){
+  }catch(err){
 
-res.status(500).json({error:"Error ranking"})
+    console.error("❌ ERROR RANKING:", err);
+    res.status(500).json({error:"Error ranking"});
 
-}
+  }
 
-})
+});
 
-module.exports = router
+module.exports = router;
