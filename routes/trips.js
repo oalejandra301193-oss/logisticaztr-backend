@@ -48,11 +48,10 @@ valor,
 clienteNombre,
 clienteCUIT,
 clienteTelefono,
-clienteComercio, // 🔥 CAMBIO IMPORTANTE
+clienteComercio,
 
 direccionDescarga,
 direccionCarga
-
 } = req.body;
 
 if(!origen || !destino){
@@ -60,14 +59,20 @@ return res.status(400).json({error:"Faltan datos"});
 }
 
 // 🔹 CLIENTE
-let client = await Client.findOne({ cuit: clienteCUIT });
+const clienteCUITLimpio = (req.body.clienteCUIT || "").trim();
+
+let client = await Client.findOne({ cuit: clienteCUITLimpio });
+
+if(!clienteCUITLimpio){
+  return res.status(400).json({error:"CUIT obligatorio"});
+}
 
 if (!client) {
 client = new Client({
 nombre: clienteNombre,
 cuit: clienteCUIT,
 telefono: clienteTelefono,
-direccion: clienteDireccion,
+direccion: direccionCarga,
 viajes: 1
 });
 } else {
@@ -147,6 +152,21 @@ const viajes = await Trip.find();
 res.json(viajes);
 }catch(err){
 res.status(500).json({error:"Error"});
+}
+});
+
+// 🔹 MIS CARGAS (CLIENTE)
+router.get("/mis-cargas/:clienteId", async (req,res)=>{
+try{
+
+const {clienteId} = req.params;
+
+const viajes = await Trip.find({ clienteId });
+
+res.json(viajes);
+
+}catch(err){
+res.status(500).json({error:"Error obteniendo mis cargas"});
 }
 });
 
