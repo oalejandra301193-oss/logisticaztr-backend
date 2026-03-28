@@ -67,7 +67,7 @@ client = new Client({
 nombre: clienteNombre,
 cuit: clienteCUIT,
 telefono: clienteTelefono,
-direccion: clienteComercio,
+direccion: clienteDireccion,
 viajes: 1
 });
 } else {
