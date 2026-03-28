@@ -36,18 +36,23 @@ const upload = multer({storage});
 router.post("/", async (req,res)=>{
 try{
 
+const clienteId = req.body.clienteId;    
+
 const {
 producto,
 origen,
 destino,
 distanciaKm,
 valor,
+
 clienteNombre,
 clienteCUIT,
 clienteTelefono,
-clienteDireccionComercial,
+clienteComercio, // 🔥 CAMBIO IMPORTANTE
+
 direccionDescarga,
 direccionCarga
+
 } = req.body;
 
 if(!origen || !destino){
@@ -62,7 +67,7 @@ client = new Client({
 nombre: clienteNombre,
 cuit: clienteCUIT,
 telefono: clienteTelefono,
-direccion: clienteDireccionComercial,
+direccion: clienteComercio,
 viajes: 1
 });
 } else {
@@ -72,7 +77,7 @@ client.viajes += 1;
 await client.save();
 
 // 🔹 VIAJE
-const newTrip = new Trip({
+const newTrip = new Trip({  
 
 producto,
 origen,
@@ -86,10 +91,14 @@ destinoLng: req.body.destinoLng,
 distanciaKm: Number(distanciaKm),
 valor: Number(valor),
 
+// 🔥 NUEVO (CLAVE)
+clienteId,
+
 clienteNombre,
 clienteCUIT,
 clienteTelefono,
-clienteDireccionComercial,
+clienteComercio, // 🔥 NUEVO
+
 clienteDireccionCarga: direccionCarga,
 clienteDireccionDescarga: direccionDescarga,
 

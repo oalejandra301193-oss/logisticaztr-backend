@@ -100,6 +100,47 @@ app.get("/clientes", async (req,res)=>{
   }
 });
 
+// 🔹 CREAR PERFIL CLIENTE
+app.post("/clientes/perfil", upload.single("logo"), async (req,res)=>{
+  try{
+
+    const nuevo = new Client({
+      nombre: req.body.nombre,
+      comercio: req.body.comercio,
+      cuit: req.body.cuit,
+      telefono: req.body.telefono,
+      direccionDescarga: req.body.direccionDescarga,
+      direccionCarga: req.body.direccionCarga,
+      logo: req.file ? req.file.filename : null
+    });
+
+    await nuevo.save();
+
+    res.json(nuevo);
+
+  }catch(err){
+    console.error(err);
+    res.status(500).json({error:"Error creando cliente"});
+  }
+});
+
+// 🔹 OBTENER CLIENTE POR ID
+app.get("/clientes/:id", async (req,res)=>{
+  try{
+
+    const cliente = await Client.findById(req.params.id);
+
+    if(!cliente){
+      return res.status(404).json({error:"Cliente no encontrado"});
+    }
+
+    res.json(cliente);
+
+  }catch(err){
+    res.status(500).json({error:"Error obteniendo cliente"});
+  }
+});
+
 // 🔹 FINANZAS
 app.get("/finanzas",async(req,res)=>{
   const viajes = await Trip.find({estado:"FINALIZADO"});

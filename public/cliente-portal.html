@@ -6,131 +6,231 @@
 <style>
 body{
   font-family:Arial;
-  background:#f4f4f4;
-  padding:30px;
+  background:#0f172a;
+  color:white;
+  padding:20px;
+}
+
+h2, h3{
+  margin-bottom:20px;
 }
 
 .card{
-  background:white;
-  padding:20px;
-  margin-bottom:20px;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:15px;
   border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,0.1);
 }
 
 button{
-  padding:10px 20px;
-  background:#3498db;
-  color:white;
+  padding:8px 12px;
+  margin-top:8px;
+  margin-right:5px;
   border:none;
-  border-radius:5px;
+  border-radius:6px;
   cursor:pointer;
-  margin:5px;
 }
 
+.ver{ background:#2563eb; color:white; }
+.eliminar{ background:#dc2626; color:white; }
+
 .estado{
-  display:inline-block;
-  padding:3px 6px;
+  padding:4px 8px;
   border-radius:5px;
   font-size:12px;
   margin-left:10px;
-  color:white;
 }
 
-.publicado{background:#334155;}
-.en_viaje{background:#16a34a;}
-.finalizado{background:#64748b;}
+.publicado{background:#334155}
+.en_viaje{background:#16a34a}
+.finalizado{background:#64748b}
+
+input, select{ width:100%; padding:8px; margin-top:5px; margin-bottom:10px; border-radius:6px; border:none; }
 </style>
 </head>
 
 <body>
 
-<h2>Portal Cliente</h2>
-
+<h3>Publicar carga</h3>
 <div class="card">
-<h3>📦 Publicar carga</h3>
-<button onclick="window.location='cliente.html'">Publicar nueva carga</button>
-</div>
+<input id="producto" placeholder="Producto">
+<input id="origen" placeholder="Ciudad de origen">
+<input id="destino" placeholder="Ciudad de destino">
+<input id="distancia" placeholder="Distancia KM" readonly>
+<input id="valor" placeholder="Valor del viaje">
+<select id="tipoCarga">
+  <option value="granel">Granel</option>
+  <option value="bolsas">Mercadería embolsada</option>
+  <option value="pallet">Palletizada</option>
+  <option value="general">Carga general</option>
+  <option value="pie">Tabla por pie</option>
+</select>
+<input id="cantidad" placeholder="Cantidad (toneladas / bultos / pallets / pies)">
 
-<div class="card">
-<h3>🚚 Mis viajes</h3>
-<div id="misViajes">Cargando...</div>
-</div>
-
-<div class="card">
-<h3>💰 Adelantos</h3>
+<button onclick="calcularDistancia()">Calcular distancia</button>
+<button onclick="calcularFlete()">Calcular flete</button>
+<button onclick="crearCarga()">Publicar carga</button>
 <button onclick="pagarAdelanto()">Pagar adelanto</button>
+
+<div id="lista"></div>
 </div>
 
+<h3>Datos del cliente</h3>
 <div class="card">
-<h3>📁 Documentación</h3>
-<input type="file" id="archivo">
-<button onclick="subirDocumento()">Subir documento</button>
+<input id="nombreApellido" placeholder="Nombre y apellido">
+<input id="comercio" placeholder="Nombre del comercio">
+<input id="cuit" placeholder="CUIT">
+<input id="telefono" placeholder="Teléfono">
+<input id="direccionDescarga" placeholder="Dirección de descarga">
+<input id="direccionCarga" placeholder="Dirección de Carga">
 </div>
 
 <script>
-const API = "https://logisticaztr-backend.onrender.com";
+// ======================
+// Funciones de carga y publicación
+// ======================
 
-// ======================
-// Cargar viajes del cliente
-// ======================
-async function cargarViajes(){
+async function cargarCargas(){
   try{
-    const res = await fetch(`${API}/trips`);
-    const viajes = await res.json();
-    if(!Array.isArray(viajes) || viajes.length === 0){
-      document.getElementById("misViajes").innerHTML = "<p>No tenés viajes</p>";
-      return;
-    }
+    const res = await fetch("/trips");
+    const cargas = await res.json();
 
     let html = "";
-    viajes.forEach(v=>{
-      if(v.clienteNombre){
-        let estadoClass="publicado";
-        if(v.estado==="EN_VIAJE") estadoClass="en_viaje";
-        if(v.estado==="FINALIZADO") estadoClass="finalizado";
+    cargas.forEach(c=>{
+      let estadoClass="publicado";
+      if(c.estado==="EN_VIAJE") estadoClass="en_viaje";
+      if(c.estado==="FINALIZADO") estadoClass="finalizado";
 
-        html += `
-          <p>
-            <b>Producto:</b> ${v.producto || "-"}<br>
-            <b>Origen → Destino:</b> ${v.origen || "-"} → ${v.destino || "-"}<br>
-            <b>Chofer:</b> ${v.choferNombre || "Sin asignar"}<br>
-            Estado: <span class="estado ${estadoClass}">${v.estado || "-"}</span>
-          </p>
-          <hr>
-        `;
-      }
+      html+=`
+        <div class="card">
+          <b>Producto:</b> ${c.producto || "-"}<br>
+          <b>Origen:</b> ${c.origen || "-"}<br>
+          <b>Destino:</b> ${c.destino || "-"}<br>
+          <b>Distancia:</b> ${c.distanciaKm || "-"} km<br>
+          <b>Precio:</b> $${c.valor || "-"}<br>
+          <b>Estado:</b> <span class="estado ${estadoClass}">${c.estado || "PUBLICADO"}</span><br><br>
+          <b>Chofer:</b> ${c.choferNombre || "Sin asignar"}<br><br>
+          <button class="ver" onclick="verPostulaciones('${c._id}')">Ver postulaciones</button>
+          <button class="eliminar" onclick="eliminarCarga('${c._id}')">Eliminar carga</button>
+        </div>
+      `;
     });
 
-    document.getElementById("misViajes").innerHTML = html;
+    document.getElementById("lista").innerHTML = html;
+
   }catch(err){
     console.error(err);
-    document.getElementById("misViajes").innerHTML = "❌ Error cargando viajes";
+    document.getElementById("lista").innerHTML="❌ Error cargando cargas";
   }
 }
 
 // ======================
-// Subir documento
+// Crear carga
 // ======================
-async function subirDocumento(){
-  const file = document.getElementById("archivo").files[0];
-  if(!file){ alert("Seleccioná un archivo primero"); return; }
+async function crearCarga(){
+  const producto = document.getElementById("producto").value;
+  const origen = document.getElementById("origen").value;
+  const destino = document.getElementById("destino").value;
+  const distancia = document.getElementById("distancia").value;
+  const valor = document.getElementById("valor").value;
+  const tipo = document.getElementById("tipoCarga").value;
+  const cantidad = document.getElementById("cantidad").value;
 
-  const formData = new FormData();
-  formData.append("archivo", file);
+  const nombre = document.getElementById("nombreApellido").value;
+  const comercio = document.getElementById("comercio").value;
+  const cuit = document.getElementById("cuit").value;
+  const telefono = document.getElementById("telefono").value;
+  const direccionDescarga = document.getElementById("direccionDescarga").value;
+  const direccionCarga = document.getElementById("direccionCarga").value;
 
-  try{
-    const res = await fetch(`${API}/subir-documento`,{
-      method:"POST",
-      body:formData
-    });
-    if(!res.ok) throw new Error("Error al subir documento");
-    alert("Documento guardado ✅");
-    document.getElementById("archivo").value = "";
-  }catch(err){
-    console.error(err);
-    alert("❌ Error al subir documento");
+  if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad||
+     !nombre||!comercio||!cuit||!telefono||!direccionCarga||!direccionDescarga){
+    alert("⚠ Debe completar todos los datos");
+    return;
   }
+
+  const data = {
+    producto, origen, destino, distanciaKm:distancia, valor, tipoCarga:tipo, cantidad,
+    clienteNombre:nombre, clienteComercio:comercio, clienteCUIT:cuit, clienteTelefono:telefono,
+    direccionDescarga, direccionCarga,
+    estado:"PENDIENTE"
+  };
+
+  const res = await fetch("/trips",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  });
+
+  if(!res.ok){ alert("❌ Error al guardar la carga"); return; }
+
+  alert("✅ Carga enviada para aprobación");
+  cargarCargas();
+}
+
+// ======================
+// Eliminar carga
+// ======================
+async function eliminarCarga(id){
+  if(!confirm("Eliminar carga?")) return;
+  await fetch("/trips/"+id,{method:"DELETE"});
+  cargarCargas();
+}
+
+// ======================
+// Ver postulaciones
+// ======================
+async function verPostulaciones(id){
+  const res = await fetch("/trips/"+id+"/postulaciones");
+  const postulaciones = await res.json();
+  if(postulaciones.length===0){ alert("No hay choferes postulados"); return; }
+
+  let texto="Choferes postulados:\n\n";
+  postulaciones.forEach(p=>{ texto+=`${p.nombre || "-"} - ${p.telefono || "-"}\n`; });
+  alert(texto);
+}
+
+// ======================
+// Calcular distancia y flete
+// ======================
+async function calcularDistancia(){
+  const origen = document.getElementById("origen").value;
+  const destino = document.getElementById("destino").value;
+  if(!origen || !destino){ alert("Ingrese origen y destino"); return; }
+
+  const res1 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${origen}`);
+  const data1 = await res1.json();
+  const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${destino}`);
+  const data2 = await res2.json();
+  if(!data1[0] || !data2[0]){ alert("No se pudo calcular la distancia"); return; }
+
+  const lat1=parseFloat(data1[0].lat), lon1=parseFloat(data1[0].lon);
+  const lat2=parseFloat(data2[0].lat), lon2=parseFloat(data2[0].lon);
+
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  const distancia = R * c;
+
+  document.getElementById("distancia").value = Math.round(distancia);
+}
+
+function calcularFlete(){
+  const km = parseFloat(document.getElementById("distancia").value);
+  const tipo = document.getElementById("tipoCarga").value;
+  const cantidad = parseFloat(document.getElementById("cantidad").value);
+  if(!km){ alert("Primero calcule la distancia"); return; }
+
+  let tarifa = 0;
+  if(tipo==="granel") tarifa=120;
+  if(tipo==="bolsas") tarifa=140;
+  if(tipo==="pallet") tarifa=160;
+  if(tipo==="general") tarifa=150;
+  if(tipo==="pie") tarifa=20;
+
+  document.getElementById("valor").value = Math.round(km * tarifa * (cantidad||1));
 }
 
 // ======================
@@ -138,29 +238,29 @@ async function subirDocumento(){
 // ======================
 async function pagarAdelanto(){
   const id = prompt("ID del viaje");
-  if(!id){ alert("ID inválido"); return; }
-
   const monto = prompt("Monto del adelanto");
-  if(!monto || isNaN(monto)){ alert("Monto inválido"); return; }
+  await fetch(`/trips/adelanto/${id}`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({monto})
+  });
+  alert("Adelanto registrado");
+}
 
-  try{
-    const res = await fetch(`${API}/trips/adelanto/${id}`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({monto})
-    });
-    if(!res.ok) throw new Error("Error al registrar adelanto");
-    alert("Adelanto registrado ✅");
-  }catch(err){
-    console.error(err);
-    alert("❌ Error al registrar adelanto");
-  }
+// ======================
+// Ver viaje en curso
+// ======================
+async function verViaje(){
+  const res = await fetch("/mis-viajes");
+  const viajes = await res.json();
+  if(!viajes.length){ alert("Todavía no tenés una carga en viaje"); return; }
+  alert(`Carga en viaje:\nProducto: ${viajes[0].producto}\nEstado: ${viajes[0].estado}`);
 }
 
 // ======================
 // Inicializar
 // ======================
-cargarViajes();
+cargarCargas();
 </script>
 
 </body>

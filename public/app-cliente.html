@@ -4,11 +4,11 @@
 <head>
 <meta charset="UTF-8">
 <title>App Cliente ZTR</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#000000">
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
 body{
@@ -17,234 +17,241 @@ body{
   color:white;
   padding:20px;
 }
+
 .card{
   background:#1e293b;
   padding:20px;
-  margin:10px;
+  margin:10px 0;
   border-radius:10px;
 }
+
+input{
+  display:block;
+  margin:5px 0;
+  padding:8px;
+  width:100%;
+}
+
 button{
   padding:10px;
   margin-top:10px;
+  cursor:pointer;
 }
-#mapa{
-  height:300px;
-  margin-top:20px;
+
+#perfilVista img{
+  border-radius:10px;
+  margin-bottom:10px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📦 App Cliente ZTR</h2>
+<h2>📦 App Cliente</h2>
 
-<button onclick="mostrarFormulario()">Publicar carga</button>
-<button onclick="verViaje()">Ver carga en viaje</button>
+<!-- =========================
+PERFIL
+========================= -->
 
-<div id="ranking"></div>
-<div id="contenido"></div>
+<h3>👤 Mi perfil</h3>
 
-<h3>Publicar carga</h3>
-<div class="card">
-<input id="producto" placeholder="Producto"><br><br>
-<input id="origen" placeholder="Ciudad de origen"><br><br>
-<input id="destino" placeholder="Ciudad de destino"><br><br>
-<input id="distancia" placeholder="Distancia KM" readonly><br><br>
-<input id="valor" placeholder="Valor del viaje"><br><br>
-<select id="tipoCarga">
-<option value="granel">Granel</option>
-<option value="bolsas">Mercadería embolsada</option>
-<option value="pallet">Palletizada</option>
-<option value="general">Carga general</option>
-<option value="pie">Tabla por pie</option>
-</select>
-<br><br>
-<input id="cantidad" placeholder="Cantidad (toneladas / bultos / pallets / pies)">
-<br><br>
-<button onclick="calcularDistancia()">Calcular distancia</button>
-<button onclick="calcularFlete()">Calcular flete</button>
-<button onclick="crearCarga()">Publicar carga</button>
+<div id="formPerfil" class="card">
+
+<input id="nombreApellido" placeholder="Nombre y apellido">
+<input id="comercio" placeholder="Nombre del comercio">
+<input id="cuit" placeholder="CUIT">
+<input id="telefono" placeholder="Teléfono">
+<input id="direccionDescarga" placeholder="Dirección de descarga">
+<input id="direccionCarga" placeholder="Dirección de Carga">
+
+<input type="file" id="logoCliente">
+
+<button onclick="crearPerfil()">Crear perfil</button>
+
 </div>
 
-<div id="info"></div>
-<div id="rating"></div>
-<div id="mapa"></div>
+<div id="perfilVista"></div>
+
+<button onclick="irPortal()" id="btnPortal" style="display:none;">
+Ir a mi portal
+</button>
+
+<div id="ranking"></div>
 
 <script>
-let mapa;
-let camion;
-let coords;
-let id; // tripId actual
 
-// Mostrar ranking chofer del mes
-async function mejorChofer(){
-  try{
-    const res=await fetch("/ranking");
-    const data=await res.json();
-    if(data.length){
-      document.getElementById("ranking").innerHTML="🏆 Chofer del mes: "+data[0]._id;
-    }
-  }catch(err){console.error(err);}
-}
-mejorChofer();
+// =======================
+// CREAR PERFIL
+// =======================
 
-// Ver viaje en curso y mostrar en mapa
-async function verViaje(){
-  try{
-    const res=await fetch("/mis-viajes");
-    const viajes=await res.json();
-    if(!viajes.length){ alert("Todavía no tenés una carga en viaje"); return; }
-    mostrarMapa(viajes[0]);
-  }catch(err){console.error(err);}
+async function crearPerfil(){
+
+const nombre = document.getElementById("nombreApellido").value
+const comercio = document.getElementById("comercio").value
+const cuit = document.getElementById("cuit").value
+const telefono = document.getElementById("telefono").value
+const direccionDescarga = document.getElementById("direccionDescarga").value
+const direccionCarga = document.getElementById("direccionCarga").value
+
+if(!nombre || !cuit){
+alert("Completa los datos obligatorios");
+return;
 }
 
-// Cargar viaje cada 5s y actualizar mapa
-setInterval(cargar,5000);
-async function cargar(){
-  try{
-    const res = await fetch("/mis-viajes");
-    const viajes = await res.json();
-    if(!viajes.length) return;
+const formData = new FormData();
 
-    const viaje = viajes[0];
-    id = viaje._id;
+formData.append("nombre",nombre)
+formData.append("comercio",comercio)
+formData.append("cuit",cuit)
+formData.append("telefono",telefono)
+formData.append("direccionDescarga",direccionDescarga)
+formData.append("direccionCarga",direccionCarga)
 
-    document.getElementById("info").innerHTML=`
-      <div class="card">
-        Estado: ${viaje.estado}<br><br>
-        Chofer: ${viaje.choferNombre || "Sin asignar"}
-      </div>
-    `;
+const file = document.getElementById("logoCliente").files[0]
 
-    if(!mapa){
-      mapa = L.map("mapa").setView([-34.6,-58.4],5);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(mapa);
-    }
-
-    if(viaje.ultimaUbicacion){
-      if(camion) mapa.removeLayer(camion);
-      camion = L.marker([viaje.ultimaUbicacion.lat, viaje.ultimaUbicacion.lng]).addTo(mapa);
-      mapa.setView([viaje.ultimaUbicacion.lat, viaje.ultimaUbicacion.lng],8);
-    }
-
-    if(viaje.estado==="FINALIZADO"){
-      document.getElementById("rating").innerHTML=`
-        <h3>Calificar chofer</h3>
-        <button onclick="puntuar(5)">⭐⭐⭐⭐⭐</button>
-        <button onclick="puntuar(4)">⭐⭐⭐⭐</button>
-        <button onclick="puntuar(3)">⭐⭐⭐</button>
-        <button onclick="puntuar(2)">⭐⭐</button>
-        <button onclick="puntuar(1)">⭐</button>
-      `;
-    }
-  }catch(err){console.error("Error cargando viaje:",err);}
+if(file){
+formData.append("logo",file)
 }
 
-// Calificar chofer
-async function puntuar(n){
-  try{
-    await fetch("/trips/rating-chofer",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({tripId:id,rating:n})
-    });
-    alert("Gracias por calificar");
-  }catch(err){console.error(err);}
+// 🔥 guardar en backend
+const res = await fetch("/clientes/perfil",{
+method:"POST",
+body:formData
+})
+
+if(res.ok){
+
+const data = await res.json()
+
+// guardar ID en localStorage
+localStorage.setItem("clienteId", data._id)
+
+alert("Perfil creado")
+
+mostrarPerfil()
+
+}else{
+alert("Error creando perfil")
 }
 
-// Calcular distancia entre coordenadas
-function distancia(lat1,lng1,lat2,lng2){
-  const R=6371;
-  const dLat=(lat2-lat1)*Math.PI/180;
-  const dLng=(lng2-lng1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-// Geocodificar ciudad a coordenadas
-async function geocodificar(lugar){
-  const res = await fetch("https://nominatim.openstreetmap.org/search?format=json&q="+encodeURIComponent(lugar));
-  const data = await res.json();
-  return {lat:parseFloat(data[0].lat), lng:parseFloat(data[0].lon)};
+// =======================
+// MOSTRAR PERFIL
+// =======================
+
+async function mostrarPerfil(){
+
+const id = localStorage.getItem("clienteId")
+
+if(!id) return
+
+const res = await fetch("/clientes/"+id)
+const c = await res.json()
+
+let html = `
+<div class="card" id="perfilVista">
+
+<img src="/uploads/clientes/${c.logo || 'default.png'}" width="120"><br>
+
+<b>${c.nombre}</b><br>
+🏪 ${c.comercio || "-"}<br>
+📞 ${c.telefono || "-"}<br>
+CUIT: ${c.cuit || "-"}<br>
+
+<br>
+
+<button onclick="editarPerfil()">Editar perfil</button>
+
+</div>
+`
+
+document.getElementById("perfilVista").innerHTML = html
+
+document.getElementById("formPerfil").style.display = "none"
+document.getElementById("btnPortal").style.display = "block"
+
 }
 
-// Calcular distancia y guardar coords
-async function calcularDistancia(){
-  const origen=document.getElementById("origen").value;
-  const destino=document.getElementById("destino").value;
-  const o = await geocodificar(origen);
-  const d = await geocodificar(destino);
-  const km = distancia(o.lat,o.lng,d.lat,d.lng);
-  document.getElementById("distancia").value = km.toFixed(0);
-  coords={origenLat:o.lat,origenLng:o.lng,destinoLat:d.lat,destinoLng:d.lng};
+// =======================
+// EDITAR PERFIL
+// =======================
+
+function editarPerfil(){
+document.getElementById("formPerfil").style.display = "block"
 }
 
-// Calcular flete según tipo de carga
-function calcularFlete(){
-  const tipo=document.getElementById("tipoCarga").value;
-  const cantidad=parseFloat(document.getElementById("cantidad").value) || 0;
-  const km=parseFloat(document.getElementById("distancia").value) || 0;
-  let precio=0;
-  if(tipo==="granel") precio=cantidad*3500;
-  if(tipo==="bolsas") precio=cantidad*900;
-  if(tipo==="pallet") precio=cantidad*6000;
-  if(tipo==="general") precio=km*1200;
-  if(tipo==="pie") precio=cantidad*2500;
-  document.getElementById("valor").value=Math.round(precio);
+// =======================
+// IR AL PORTAL
+// =======================
+
+function irPortal(){
+window.location = "cliente-portal.html"
 }
 
-// Crear carga y enviar al backend
-async function crearCarga(){
-  const producto=document.getElementById("producto").value;
-  const origen=document.getElementById("origen").value;
-  const destino=document.getElementById("destino").value;
-  const distancia=document.getElementById("distancia").value;
-  const valor=document.getElementById("valor").value;
+// =======================
+// VERIFICAR PERFIL
+// =======================
 
-  if(!coords){ alert("Primero calculá la distancia"); return; }
+async function verificarPerfil(){
 
-  navigator.geolocation.getCurrentPosition(async (pos)=>{
-    try{
-      const res = await fetch("/trips",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          producto,
-          origen,
-          destino,
-          distanciaKm:distancia,
-          valor,
-          origenLat: coords.origenLat,
-          origenLng: coords.origenLng,
-          destinoLat: coords.destinoLat,
-          destinoLng: coords.destinoLng
-        })
-      });
-      if(res.ok) alert("Carga enviada para aprobación");
-      else alert("Error al crear carga");
-    }catch(err){console.error(err); alert("Error");}
-  });
+const id = localStorage.getItem("clienteId")
+
+if(!id) return
+
+const res = await fetch("/clientes/"+id)
+
+if(res.ok){
+mostrarPerfil()
 }
 
-// Mostrar mapa del viaje
-function mostrarMapa(viaje){
-  if(!mapa){
-    mapa = L.map("mapa").setView([-34.6,-58.4],5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(mapa);
-  }
-  if(camion) mapa.removeLayer(camion);
-  if(viaje.ultimaUbicacion){
-    camion = L.marker([viaje.ultimaUbicacion.lat,viaje.ultimaUbicacion.lng]).addTo(mapa);
-    mapa.setView([viaje.ultimaUbicacion.lat,viaje.ultimaUbicacion.lng],8);
-  }
 }
 
-// Botón para mostrar formulario (solo visual)
-function mostrarFormulario(){
-  document.querySelector(".card").style.display="block";
+verificarPerfil()
+
+// =======================
+// RANKING CLIENTES
+// =======================
+
+async function ranking(){
+
+const res = await fetch("/trips")
+const viajes = await res.json()
+
+let clientes = {}
+
+viajes.forEach(v=>{
+
+if(!v.clienteCUIT) return
+
+if(!clientes[v.clienteCUIT]){
+clientes[v.clienteCUIT]={
+nombre:v.clienteNombre,
+viajes:0
 }
+}
+
+clientes[v.clienteCUIT].viajes++
+
+})
+
+const lista = Object.values(clientes)
+.sort((a,b)=> b.viajes - a.viajes)
+
+let html = "<h3>🏆 Ranking clientes</h3>"
+
+lista.slice(0,5).forEach((c,i)=>{
+html += `${i+1}. ${c.nombre} (${c.viajes} viajes)<br>`
+})
+
+document.getElementById("ranking").innerHTML = html
+
+}
+
+ranking()
 
 </script>
+
 </body>
 </html>
 
