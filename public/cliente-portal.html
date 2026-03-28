@@ -71,6 +71,14 @@ input, select{ width:100%; padding:8px; margin-top:5px; margin-bottom:10px; bord
 <button onclick="calcularFlete()">Calcular flete</button>
 <button onclick="crearCarga()">Publicar carga</button>
 <button onclick="pagarAdelanto()">Pagar adelanto</button>
+<button onclick="window.location='app-cliente.html'">
+⬅ Volver al perfil
+</button>
+<button onclick="cargarMisCargas()">
+📦 Mis cargas
+</button>
+
+<div id="misCargas"></div>
 
 <div id="lista"></div>
 </div>
@@ -84,6 +92,9 @@ input, select{ width:100%; padding:8px; margin-top:5px; margin-bottom:10px; bord
 <input id="direccionDescarga" placeholder="Dirección de descarga">
 <input id="direccionCarga" placeholder="Dirección de Carga">
 </div>
+
+<h3>📦 Mis cargas</h3>
+<div id="misCargas"></div>
 
 <script>
 // ======================
@@ -110,7 +121,6 @@ async function cargarCargas(){
           <b>Precio:</b> $${c.valor || "-"}<br>
           <b>Estado:</b> <span class="estado ${estadoClass}">${c.estado || "PUBLICADO"}</span><br><br>
           <b>Chofer:</b> ${c.choferNombre || "Sin asignar"}<br><br>
-          <button class="ver" onclick="verPostulaciones('${c._id}')">Ver postulaciones</button>
           <button class="eliminar" onclick="eliminarCarga('${c._id}')">Eliminar carga</button>
         </div>
       `;
@@ -151,7 +161,7 @@ async function crearCarga(){
 
   const data = {
     producto, origen, destino, distanciaKm:distancia, valor, tipoCarga:tipo, cantidad,
-    clienteNombre:nombre, clienteComercio:comercio, clienteCUIT:cuit, clienteTelefono:telefono,
+    clienteNombre:nombre, Comercio:comercio, clienteCUIT:cuit, clienteTelefono:telefono,
     direccionDescarga, direccionCarga,
     estado:"PENDIENTE"
   };
@@ -177,17 +187,65 @@ async function eliminarCarga(id){
   cargarCargas();
 }
 
-// ======================
-// Ver postulaciones
-// ======================
-async function verPostulaciones(id){
-  const res = await fetch("/trips/"+id+"/postulaciones");
-  const postulaciones = await res.json();
-  if(postulaciones.length===0){ alert("No hay choferes postulados"); return; }
+async function cargarMisCargas(){
 
-  let texto="Choferes postulados:\n\n";
-  postulaciones.forEach(p=>{ texto+=`${p.nombre || "-"} - ${p.telefono || "-"}\n`; });
-  alert(texto);
+const clienteId = localStorage.getItem("clienteId");
+
+if(!clienteId){
+alert("No hay cliente logueado");
+return;
+}
+
+const res = await fetch("/trips/mis-cargas/" + clienteId);
+const viajes = await res.json();
+
+let html = "";
+
+viajes.forEach(v=>{
+
+html+=`
+<div class="card">
+
+<b>📦 ${v.producto}</b><br>
+📍 ${v.origen} → ${v.destino}<br>
+💰 $${v.valor}<br>
+
+Estado: ${v.estado}<br>
+🚛 ${v.choferNombre || "Sin asignar"}
+
+<br><br>
+
+<button onclick="eliminarCarga('${v._id}')">
+🗑 Eliminar
+</button>
+
+<button onclick="editarCarga('${v._id}')">
+✏ Editar
+</button>
+
+${
+v.estado === "EN_VIAJE"
+? `<button onclick="verMapa('${v._id}')">📍 Seguimiento</button>`
+: ""
+}
+
+${
+v.estado === "FINALIZADO"
+? `
+<br>
+<button onclick="puntuar('${v._id}',5)">⭐⭐⭐⭐⭐</button>
+<button onclick="puntuar('${v._id}',4)">⭐⭐⭐⭐</button>
+<button onclick="puntuar('${v._id}',3)">⭐⭐⭐</button>
+`
+: ""
+}
+
+</div>
+`
+})
+
+document.getElementById("misCargas").innerHTML = html;
+
 }
 
 // ======================
@@ -255,6 +313,24 @@ async function verViaje(){
   const viajes = await res.json();
   if(!viajes.length){ alert("Todavía no tenés una carga en viaje"); return; }
   alert(`Carga en viaje:\nProducto: ${viajes[0].producto}\nEstado: ${viajes[0].estado}`);
+}
+
+async function puntuar(id, rating){
+
+await fetch("/trips/rating-chofer",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+tripId:id,
+rating
+})
+});
+
+alert("Gracias por calificar");
+
+cargarMisCargas();
 }
 
 // ======================
