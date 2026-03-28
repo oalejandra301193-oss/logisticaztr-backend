@@ -18,6 +18,24 @@ const bcrypt = require("bcrypt");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
 
+// 📁 MULTER (🔧 MOVIDO ARRIBA)
+const storage = multer.diskStorage({
+  destination:(req,file,cb)=>{
+    if(req.originalUrl.includes("choferes")){
+      cb(null,"uploads/choferes");
+    } else if(req.originalUrl.includes("clientes")){
+      cb(null,"uploads/clientes");
+    } else {
+      cb(null,"uploads");
+    }
+  },
+  filename:(req,file,cb)=>{
+    cb(null,Date.now()+"-"+file.originalname);
+  }
+});
+
+const upload = multer({storage});
+
 // 📦 MODELOS
 const Trip = require("./models/Trip");
 const Driver = require("./models/Driver");
@@ -221,24 +239,6 @@ app.get("/crear-admin",async(req,res)=>{
   await admin.save();
   res.send("Admin creado");
 });
-
-// 📁 MULTER
-const storage = multer.diskStorage({
-  destination:(req,file,cb)=>{
-    if(req.originalUrl.includes("choferes")){
-      cb(null,"uploads/choferes");
-    } else if(req.originalUrl.includes("clientes")){
-      cb(null,"uploads/clientes");
-    } else {
-      cb(null,"uploads");
-    }
-  },
-  filename:(req,file,cb)=>{
-    cb(null,Date.now()+"-"+file.originalname);
-  }
-});
-
-const upload = multer({storage});
 
 // 🔹 SUBIR ARCHIVO
 app.post("/subir-documento",upload.single("archivo"),(req,res)=>{
