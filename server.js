@@ -164,6 +164,31 @@ app.post("/clientes/perfil", upload.single("logo"), async (req,res)=>{
     res.status(500).json({error:"Error guardando cliente"});
   }
 });
+
+app.put("/clientes/:id", upload.single("logo"), async (req,res)=>{
+  try{
+
+    const cliente = await Client.findById(req.params.id);
+
+    if(!cliente){
+      return res.status(404).json({error:"Cliente no encontrado"});
+    }
+
+    Object.assign(cliente, req.body);
+
+    if(req.file){
+      cliente.logo = req.file.filename;
+    }
+
+    await cliente.save();
+
+    res.json(cliente);
+
+  }catch(err){
+    res.status(500).json({error:"Error actualizando cliente"});
+  }
+});
+
 // 🔹 OBTENER CLIENTE POR ID
 app.get("/clientes/:id", async (req,res)=>{
   try{
