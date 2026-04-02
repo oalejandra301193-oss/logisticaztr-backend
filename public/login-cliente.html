@@ -144,6 +144,8 @@ localStorage.setItem("token", data.token)
 localStorage.setItem("clienteId", data._id)
 localStorage.setItem("clienteCUIT", (data.cuit || "").trim())
 
+console.log("CLIENTE GUARDADO:", data);
+
 // 🔥 IMPORTANTE: marcar que es cliente con cuenta
 localStorage.setItem("tipoCliente", "registrado")
 

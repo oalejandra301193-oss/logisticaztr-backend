@@ -147,7 +147,10 @@ const c = await res.json()
 let html = `
 <div class="card">
 
-<img src="/uploads/clientes/${c.logo || 'default.png'}" width="120"><br><br>
+${c.logo 
+  ? `<img src="/uploads/clientes/${c.logo}" width="120">` 
+  : `<div>Sin logo</div>`
+}
 
 <b>${c.nombre}</b><br>
 🏪 ${c.comercio || "-"}<br>
