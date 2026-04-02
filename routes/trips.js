@@ -31,12 +31,11 @@ filename:(req,file,cb)=> cb(null,Date.now()+path.extname(file.originalname))
 });
 
 const upload = multer({storage});
-
 // 🔹 CREAR CARGA (APP CLIENTE)
 router.post("/", async (req,res)=>{
 try{
 
-const clienteId = req.body.clienteId;    
+const clienteId = req.body.clienteId;
 
 const {
 producto,
@@ -52,31 +51,44 @@ clienteComercio,
 
 direccionDescarga,
 direccionCarga
+
 } = req.body;
 
+// 🔴 VALIDACIÓN
 if(!origen || !destino){
 return res.status(400).json({error:"Faltan datos"});
 }
 
-// 🔹 CLIENTE
-const clienteCUITLimpio = (req.body.clienteCUIT || "").trim();
+// 🔹 NORMALIZAR CUIT (CLAVE)
+const clienteCUITLimpio = (clienteCUIT || "")
+  .trim()
+  .replace(/\s/g, "");
 
-let client = await Client.findOne({ cuit: clienteCUITLimpio });
-
+// 🔴 OBLIGATORIO
 if(!clienteCUITLimpio){
   return res.status(400).json({error:"CUIT obligatorio"});
 }
 
+// 🔹 BUSCAR CLIENTE
+let client = await Client.findOne({ cuit: clienteCUITLimpio });
+
+// 🔴 SI NO EXISTE → CREAR
 if (!client) {
-client = new Client({
-nombre: clienteNombre,
-cuit: clienteCUIT,
-telefono: clienteTelefono,
-direccion: direccionCarga,
-viajes: 1
-});
+  client = new Client({
+    nombre: clienteNombre,
+    comercio: clienteComercio,
+    cuit: clienteCUITLimpio,
+    telefono: clienteTelefono,
+    direccion: direccionCarga,
+    viajes: 1
+  });
 } else {
-client.viajes += 1;
+  // 🔹 SI EXISTE → ACTUALIZAR (IMPORTANTE)
+  client.nombre = clienteNombre;
+  client.comercio = clienteComercio;
+  client.telefono = clienteTelefono;
+  client.direccion = direccionCarga;
+  client.viajes += 1;
 }
 
 await client.save();
@@ -96,13 +108,13 @@ destinoLng: req.body.destinoLng,
 distanciaKm: Number(distanciaKm),
 valor: Number(valor),
 
-// 🔥 NUEVO (CLAVE)
-clienteId,
+// 🔥 CLAVE PARA MIS CARGAS
+clienteId: clienteId || client._id,
 
 clienteNombre,
-clienteCUIT,
+clienteCUIT: clienteCUITLimpio,
 clienteTelefono,
-clienteComercio, // 🔥 NUEVO
+clienteComercio,
 
 clienteDireccionCarga: direccionCarga,
 clienteDireccionDescarga: direccionDescarga,

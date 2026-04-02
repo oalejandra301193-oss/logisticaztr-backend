@@ -100,36 +100,42 @@ input, select{
 // Cargar cargas
 // ======================
 async function cargarCargas(){
-  try{
-    const res = await fetch("/trips");
-    const cargas = await res.json();
 
-    let html="";
-    cargas.forEach(c=>{
-      let estadoClass="publicado";
-      if(c.estado==="EN_VIAJE") estadoClass="en_viaje";
-      if(c.estado==="FINALIZADO") estadoClass="finalizado";
+const cuitInput = document.getElementById("cuit").value;
+const cuit = cuitInput.trim().replace(/\D/g,"");
 
-      html+=`
-        <div class="card">
-          <b>Producto:</b> ${c.producto || "-"}<br>
-          <b>Origen:</b> ${c.origen || "-"}<br>
-          <b>Destino:</b> ${c.destino || "-"}<br>
-          <b>Distancia:</b> ${c.distanciaKm || "-"} km<br>
-          <b>Precio:</b> $${c.valor || "-"}<br>
-          <b>Estado:</b> <span class="estado ${estadoClass}">${c.estado || "PUBLICADO"}</span><br><br>
-          <b>Chofer:</b> ${c.choferNombre || "Sin asignar"}<br><br>
-          <button class="ver" onclick="verPostulaciones('${c._id}')">Ver postulaciones</button>
-          <button class="eliminar" onclick="eliminarCarga('${c._id}')">Eliminar carga</button>
-        </div>
-      `;
-    });
+if(!cuit) return;
 
-    document.getElementById("lista").innerHTML = html;
-  }catch(err){
-    console.error(err);
-    document.getElementById("lista").innerHTML="❌ Error cargando cargas";
-  }
+const res = await fetch("/trips");
+const cargas = await res.json();
+
+// 🔥 FILTRAR SOLO LAS DE ESTE CLIENTE
+const mias = cargas.filter(c => 
+  (c.clienteCUIT || "").replace(/\D/g,"") === cuit
+);
+
+let html="";
+
+mias.forEach(c=>{
+  let estadoClass="publicado";
+  if(c.estado==="EN_VIAJE") estadoClass="en_viaje";
+  if(c.estado==="FINALIZADO") estadoClass="finalizado";
+
+  html+=`
+    <div class="card">
+      <b>Producto:</b> ${c.producto}<br>
+      <b>Origen:</b> ${c.origen}<br>
+      <b>Destino:</b> ${c.destino}<br>
+      <b>Precio:</b> $${c.valor}<br>
+      <b>Estado:</b> <span class="estado ${estadoClass}">${c.estado}</span><br><br>
+
+      <button class="eliminar" onclick="eliminarCarga('${c._id}')">Eliminar</button>
+    </div>
+  `;
+});
+
+document.getElementById("lista").innerHTML = html;
+
 }
 
 // ======================
@@ -144,9 +150,11 @@ async function crearCarga(){
   const tipo = document.getElementById("tipoCarga").value;
   const cantidad = document.getElementById("cantidad").value;
 
+  const clienteId = localStorage.getItem("clienteId");
   const nombre = document.getElementById("nombreApellido").value;
   const comercio = document.getElementById("comercio").value;
-  const cuit = document.getElementById("cuit").value;
+  const cuitInput = document.getElementById("cuit").value;
+  const cuit = cuitInput.trim().replace(/\D/g,""); // 🔥 SOLO NÚMEROS
   const telefono = document.getElementById("telefono").value;
   const direccionDescarga = document.getElementById("direccionDescarga").value;
   const direccionCarga = document.getElementById("direccionCarga").value;
@@ -159,10 +167,18 @@ async function crearCarga(){
 
   const data = {
     producto, origen, destino, distanciaKm:distancia, valor, tipoCarga:tipo, cantidad,
-    clienteNombre:nombre, clienteComercio:comercio, clienteCUIT:cuit, clienteTelefono:telefono,
-    direccionDescarga, direccionCarga,
-    estado:"PENDIENTE"
-  };
+    clienteId, // 🔥 CLAVE
+
+  clienteNombre:nombre,
+  clienteComercio:comercio,
+  clienteCUIT:cuit,
+  clienteTelefono:telefono,
+
+  direccionDescarga,
+  direccionCarga,
+
+  estado:"PENDIENTE"
+};
 
   const res = await fetch("/trips",{
     method:"POST",
@@ -173,6 +189,7 @@ async function crearCarga(){
   if(!res.ok){ alert("❌ Error al guardar la carga"); return; }
   alert("✅ Carga enviada para aprobación");
   cargarCargas();
+  document.querySelectorAll("input").forEach(i => i.value = "");
 }
 
 // ======================
@@ -182,19 +199,6 @@ async function eliminarCarga(id){
   if(!confirm("Eliminar carga?")) return;
   await fetch("/trips/"+id,{method:"DELETE"});
   cargarCargas();
-}
-
-// ======================
-// Ver postulaciones
-// ======================
-async function verPostulaciones(id){
-  const res = await fetch("/trips/"+id+"/postulaciones");
-  const postulaciones = await res.json();
-  if(postulaciones.length===0){ alert("No hay choferes postulados"); return; }
-
-  let texto="Choferes postulados:\n\n";
-  postulaciones.forEach(p=>{ texto+=`${p.nombre || "-"} - ${p.telefono || "-"}\n`; });
-  alert(texto);
 }
 
 // ======================

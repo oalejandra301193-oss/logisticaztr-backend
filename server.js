@@ -122,26 +122,48 @@ app.get("/clientes", async (req,res)=>{
 app.post("/clientes/perfil", upload.single("logo"), async (req,res)=>{
   try{
 
-    const nuevo = new Client({
-      nombre: req.body.nombre,
-      comercio: req.body.comercio,
-      cuit: req.body.cuit,
-      telefono: req.body.telefono,
-      direccionDescarga: req.body.direccionDescarga,
-      direccionCarga: req.body.direccionCarga,
-      logo: req.file ? req.file.filename : null
-    });
+    const cuit = (req.body.cuit || "").trim().replace(/\s/g, "");
 
-    await nuevo.save();
+    if(!cuit){
+      return res.status(400).json({error:"CUIT obligatorio"});
+    }
 
-    res.json(nuevo);
+    let cliente = await Client.findOne({ cuit });
+
+    if(!cliente){
+      // 🔹 CREA SOLO SI NO EXISTE
+      cliente = new Client({
+        nombre: req.body.nombre,
+        comercio: req.body.comercio,
+        cuit,
+        telefono: req.body.telefono,
+        direccionDescarga: req.body.direccionDescarga,
+        direccionCarga: req.body.direccionCarga,
+        logo: req.file ? req.file.filename : null,
+        viajes: 0
+      });
+    } else {
+      // 🔹 ACTUALIZA (CLAVE PARA NO DUPLICAR)
+      cliente.nombre = req.body.nombre;
+      cliente.comercio = req.body.comercio;
+      cliente.telefono = req.body.telefono;
+      cliente.direccionDescarga = req.body.direccionDescarga;
+      cliente.direccionCarga = req.body.direccionCarga;
+
+      if(req.file){
+        cliente.logo = req.file.filename;
+      }
+    }
+
+    await cliente.save();
+
+    res.json(cliente);
 
   }catch(err){
     console.error(err);
-    res.status(500).json({error:"Error creando cliente"});
+    res.status(500).json({error:"Error guardando cliente"});
   }
 });
-
 // 🔹 OBTENER CLIENTE POR ID
 app.get("/clientes/:id", async (req,res)=>{
   try{

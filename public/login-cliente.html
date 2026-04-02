@@ -114,31 +114,40 @@ const email = document.getElementById("email").value
 const password = document.getElementById("password").value
 
 if(!email || !password){
-alert("Completá los datos")
-return
+  alert("Completá los datos")
+  return
 }
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/cliente/login",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-email,
-password
-})
+const res = await fetch("/api/auth/cliente/login",{
+  method:"POST",
+  headers:{
+    "Content-Type":"application/json"
+  },
+  body:JSON.stringify({ email, password })
 })
 
 if(!res.ok){
-alert("Datos incorrectos")
-return
+  alert("Datos incorrectos")
+  return
 }
 
 const data = await res.json()
 
-localStorage.setItem("token",data.token)
+// 🔥 VALIDACIÓN CLAVE
+if(!data._id){
+  alert("Error: cliente sin ID")
+  return
+}
 
-window.location="/app-cliente.html"
+// 🔥 GUARDADO CORRECTO
+localStorage.setItem("token", data.token)
+localStorage.setItem("clienteId", data._id)
+localStorage.setItem("clienteCUIT", (data.cuit || "").trim())
+
+// 🔥 IMPORTANTE: marcar que es cliente con cuenta
+localStorage.setItem("tipoCliente", "registrado")
+
+window.location = "/app-cliente.html"
 
 }
 

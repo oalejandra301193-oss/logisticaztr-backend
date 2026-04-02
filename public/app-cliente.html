@@ -7,9 +7,6 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
-
 <style>
 body{
   font-family:Arial;
@@ -38,9 +35,8 @@ button{
   cursor:pointer;
 }
 
-#perfilVista img{
+img{
   border-radius:10px;
-  margin-bottom:10px;
 }
 </style>
 </head>
@@ -48,10 +44,6 @@ button{
 <body>
 
 <h2>📦 App Cliente</h2>
-
-<!-- =========================
-PERFIL
-========================= -->
 
 <h3>👤 Mi perfil</h3>
 
@@ -65,8 +57,9 @@ PERFIL
 <input id="direccionCarga" placeholder="Dirección de Carga">
 
 <input type="file" id="logoCliente">
+<input id="cuit" placeholder="CUIT" style="display:none;">
 
-<button onclick="crearPerfil()">Crear perfil</button>
+<button onclick="guardarPerfil()">Guardar perfil</button>
 
 </div>
 
@@ -81,57 +74,59 @@ Ir a mi portal
 <script>
 
 // =======================
-// CREAR PERFIL
+// CREAR / EDITAR PERFIL
 // =======================
 
-async function crearPerfil(){
+async function guardarPerfil(){
+
+const clienteId = localStorage.getItem("clienteId")
+
+// 🔴 SI NO HAY ID → NO PERMITIR
+if(!clienteId){
+  alert("Tenés que iniciar sesión")
+  window.location = "login-cliente.html"
+  return
+}
 
 const nombre = document.getElementById("nombreApellido").value
 const comercio = document.getElementById("comercio").value
-const cuit = document.getElementById("cuit").value
 const telefono = document.getElementById("telefono").value
 const direccionDescarga = document.getElementById("direccionDescarga").value
 const direccionCarga = document.getElementById("direccionCarga").value
 
-if(!nombre || !cuit){
-alert("Completa los datos obligatorios");
-return;
+if(!nombre){
+  alert("El nombre es obligatorio");
+  return;
 }
 
 const formData = new FormData();
 
 formData.append("nombre",nombre)
 formData.append("comercio",comercio)
-formData.append("cuit",cuit)
 formData.append("telefono",telefono)
 formData.append("direccionDescarga",direccionDescarga)
 formData.append("direccionCarga",direccionCarga)
 
+// 🔥 ARCHIVO
 const file = document.getElementById("logoCliente").files[0]
-
 if(file){
-formData.append("logo",file)
+  formData.append("logo",file)
 }
 
-// 🔥 guardar en backend
-const res = await fetch("/clientes/perfil",{
-method:"POST",
-body:formData
+// 🔥 SIEMPRE EDITAR (NUNCA CREAR)
+const res = await fetch("/clientes/"+clienteId,{
+  method:"PUT",
+  body:formData
 })
 
 if(res.ok){
 
-const data = await res.json()
+  alert("Perfil actualizado")
 
-// guardar ID en localStorage
-localStorage.setItem("clienteId", data._id)
-
-alert("Perfil creado")
-
-mostrarPerfil()
+  mostrarPerfil()
 
 }else{
-alert("Error creando perfil")
+  alert("Error guardando perfil")
 }
 
 }
@@ -150,10 +145,9 @@ const res = await fetch("/clientes/"+id)
 const c = await res.json()
 
 let html = `
-<div class="card" id="perfilVista">
+<div class="card">
 
-<img src="/uploads/clientes/${c.logo || 'default.png'}" width="120"><br>
-<img src="https://logisticaztr-backend.onrender.com/uploads/clientes/${cliente.logo}" width="100">
+<img src="/uploads/clientes/${c.logo || 'default.png'}" width="120"><br><br>
 
 <b>${c.nombre}</b><br>
 🏪 ${c.comercio || "-"}<br>
@@ -171,6 +165,9 @@ document.getElementById("perfilVista").innerHTML = html
 
 document.getElementById("formPerfil").style.display = "none"
 document.getElementById("btnPortal").style.display = "block"
+
+// 🔥 OCULTAR CUIT (NO SE TOCA MÁS)
+document.getElementById("cuit").style.display = "none"
 
 }
 
@@ -211,7 +208,7 @@ mostrarPerfil()
 verificarPerfil()
 
 // =======================
-// RANKING CLIENTES
+// RANKING
 // =======================
 
 async function ranking(){
