@@ -4,8 +4,13 @@ const ClientSchema = new mongoose.Schema({
 
   nombre: String,
   telefono: String,
-  direccion: String,
   cuit: String,
+
+  // 🔥 NUEVOS CAMPOS (CLAVE)
+  comercio: String,
+  direccionCarga: String,
+  direccionDescarga: String,
+  logo: String,
 
   // 🔥 LOGIN
   email: String,
@@ -22,9 +27,9 @@ const ClientSchema = new mongoose.Schema({
   },
 
   archivos: {
-  type: [String],
-  default: []
-}
+    type: [String],
+    default: []
+  }
 
 });
 
