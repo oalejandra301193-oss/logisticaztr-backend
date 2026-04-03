@@ -83,19 +83,6 @@ input, select{ width:100%; padding:8px; margin-top:5px; margin-bottom:10px; bord
 <div id="lista"></div>
 </div>
 
-<h3>Datos del cliente</h3>
-<div class="card">
-<input id="nombreApellido" placeholder="Nombre y apellido">
-<input id="comercio" placeholder="Nombre del comercio">
-<input id="cuit" placeholder="CUIT">
-<input id="telefono" placeholder="Teléfono">
-<input id="direccionDescarga" placeholder="Dirección de descarga">
-<input id="direccionCarga" placeholder="Dirección de Carga">
-</div>
-
-<h3>📦 Mis cargas</h3>
-<div id="misCargas"></div>
-
 <script>
 // ======================
 // Funciones de carga y publicación
@@ -107,24 +94,50 @@ async function cargarCargas(){
     const cargas = await res.json();
 
     let html = "";
-    cargas.forEach(c=>{
-      let estadoClass="publicado";
-      if(c.estado==="EN_VIAJE") estadoClass="en_viaje";
-      if(c.estado==="FINALIZADO") estadoClass="finalizado";
+    viajes.forEach(v=>{
 
-      html+=`
-        <div class="card">
-          <b>Producto:</b> ${c.producto || "-"}<br>
-          <b>Origen:</b> ${c.origen || "-"}<br>
-          <b>Destino:</b> ${c.destino || "-"}<br>
-          <b>Distancia:</b> ${c.distanciaKm || "-"} km<br>
-          <b>Precio:</b> $${c.valor || "-"}<br>
-          <b>Estado:</b> <span class="estado ${estadoClass}">${c.estado || "PUBLICADO"}</span><br><br>
-          <b>Chofer:</b> ${c.choferNombre || "Sin asignar"}<br><br>
-          <button class="eliminar" onclick="eliminarCarga('${c._id}')">Eliminar carga</button>
-        </div>
-      `;
-    });
+let estadoClass = "publicado";
+if(v.estado==="EN_VIAJE") estadoClass="en_viaje";
+if(v.estado==="FINALIZADO") estadoClass="finalizado";
+
+html+=`
+<div class="card">
+
+<b>📦 ${v.producto}</b><br>
+📍 ${v.origen} → ${v.destino}<br>
+💰 $${v.valor}<br>
+
+Estado: <span class="estado ${estadoClass}">${v.estado}</span><br>
+🚛 ${v.choferNombre || "Sin asignar"}
+
+<br><br>
+
+${
+v.estado === "PENDIENTE"
+? `<button onclick="eliminarCarga('${v._id}')">🗑 Eliminar</button>`
+: ""
+}
+
+${
+v.estado === "EN_VIAJE"
+? `<button onclick="verMapa('${v._id}')">📍 Seguimiento</button>`
+: ""
+}
+
+${
+v.estado === "FINALIZADO"
+? `
+<br>
+<button onclick="puntuar('${v._id}',5)">⭐⭐⭐⭐⭐</button>
+<button onclick="puntuar('${v._id}',4)">⭐⭐⭐⭐</button>
+<button onclick="puntuar('${v._id}',3)">⭐⭐⭐</button>
+`
+: ""
+}
+
+</div>
+`
+})
 
     document.getElementById("lista").innerHTML = html;
 
@@ -138,6 +151,13 @@ async function cargarCargas(){
 // Crear carga
 // ======================
 async function crearCarga(){
+const clienteId = localStorage.getItem("clienteId");
+
+if(!clienteId){
+  alert("Tenés que iniciar sesión");
+  return;
+}
+
   const producto = document.getElementById("producto").value;
   const origen = document.getElementById("origen").value;
   const destino = document.getElementById("destino").value;
@@ -146,25 +166,34 @@ async function crearCarga(){
   const tipo = document.getElementById("tipoCarga").value;
   const cantidad = document.getElementById("cantidad").value;
 
-  const nombre = document.getElementById("nombreApellido").value;
-  const comercio = document.getElementById("comercio").value;
-  const cuit = document.getElementById("cuit").value;
-  const telefono = document.getElementById("telefono").value;
-  const direccionDescarga = document.getElementById("direccionDescarga").value;
-  const direccionCarga = document.getElementById("direccionCarga").value;
-
   if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad||
      !nombre||!comercio||!cuit||!telefono||!direccionCarga||!direccionDescarga){
     alert("⚠ Debe completar todos los datos");
     return;
   }
 
-  const data = {
-    producto, origen, destino, distanciaKm:distancia, valor, tipoCarga:tipo, cantidad,
-    clienteNombre:nombre, Comercio:comercio, clienteCUIT:cuit, clienteTelefono:telefono,
-    direccionDescarga, direccionCarga,
-    estado:"PENDIENTE"
-  };
+const data = {
+  producto,
+  origen,
+  destino,
+  distanciaKm:distancia,
+  valor,
+  tipoCarga:tipo,
+  cantidad,
+
+  // 🔥 IDENTIDAD REAL DEL CLIENTE
+  clienteId,
+
+  clienteNombre:nombre,
+  clienteComercio:comercio,
+  clienteCUIT:cuit,
+  clienteTelefono:telefono,
+
+  direccionDescarga,
+  direccionCarga,
+
+  estado:"PENDIENTE"
+};
 
   const res = await fetch("/trips",{
     method:"POST",
@@ -175,7 +204,7 @@ async function crearCarga(){
   if(!res.ok){ alert("❌ Error al guardar la carga"); return; }
 
   alert("✅ Carga enviada para aprobación");
-  cargarCargas();
+cargarMisCargas(); // 🔥 
 }
 
 // ======================
