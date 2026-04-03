@@ -65,29 +65,40 @@ async function cargar(){
     let html = "";
 
     clientes.forEach(c=>{
-      html += `
-      <div class="card">
-        <b>Nombre:</b> ${c.nombre || "-"}<br>
-        <b>CUIT:</b> ${c.cuit || "-"}<br>
-        <b>Teléfono:</b> ${c.telefono || "-"}<br>
-        <b>Dirección comercial:</b> ${c.direccion || "-"}<br>
-        <b>Viajes:</b> ${c.viajes || 0}<br><br>
+  html += `
+  <div class="card">
 
-        <input type="file" id="file-${c._id}">
-        <button onclick="subirArchivo('${c._id}')">Subir archivo</button><br><br>
+    ${c.logo 
+      ? `<img src="${API}/uploads/clientes/${c.logo}" width="80"><br><br>`
+      : ""
+    }
 
-        <div>
-        ${
-          c.archivos && c.archivos.length > 0
-          ? c.archivos.map(a =>
-            `<a href="${API}/uploads/clientes/${a}" target="_blank">📄 Ver archivo</a><br>`
-          ).join("")
-          : "Sin archivos"
-        }
-        </div>
-      </div>
-      `;
-    });
+    <b>Nombre:</b> ${c.nombre || "-"}<br>
+    <b>Comercio:</b> ${c.comercio || "-"}<br>
+    <b>CUIT:</b> ${c.cuit || "-"}<br>
+    <b>Teléfono:</b> ${c.telefono || "-"}<br>
+
+    <b>Dirección de carga:</b> ${c.direccionCarga || "-"}<br>
+    <b>Dirección de descarga:</b> ${c.direccionDescarga || "-"}<br>
+
+    <b>Viajes:</b> ${c.viajes || 0}<br><br>
+
+    <input type="file" id="file-${c._id}">
+    <button onclick="subirArchivo('${c._id}')">Subir archivo</button><br><br>
+
+    <div>
+    ${
+      c.archivos && c.archivos.length > 0
+      ? c.archivos.map(a =>
+        `<a href="${API}/uploads/clientes/${a}" target="_blank">📄 Ver archivo</a><br>`
+      ).join("")
+      : "Sin archivos"
+    }
+    </div>
+
+  </div>
+  `;
+});
 
     document.getElementById("lista").innerHTML = html;
 
