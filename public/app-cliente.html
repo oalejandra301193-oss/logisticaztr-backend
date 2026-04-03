@@ -51,7 +51,6 @@ img{
 
 <input id="nombreApellido" placeholder="Nombre y apellido">
 <input id="comercio" placeholder="Nombre del comercio">
-<input id="cuit" placeholder="CUIT">
 <input id="telefono" placeholder="Teléfono">
 <input id="direccionDescarga" placeholder="Dirección de descarga">
 <input id="direccionCarga" placeholder="Dirección de Carga">
@@ -143,15 +142,15 @@ if(!id) return
 
 const res = await fetch("/clientes/"+id)
 const c = await res.json()
+console.log("CLIENTE:", c)
 
 let html = `
 <div class="card">
 
 ${c.logo 
-  ? `<img src="/uploads/clientes/${c.logo}" width="120">` 
+  ? `<<img src="https://logisticaztr-backend.onrender.com/uploads/${c.logo}" width="120">` 
   : `<div>Sin logo</div>`
 }
-
 <b>${c.nombre}</b><br>
 🏪 ${c.comercio || "-"}<br>
 📞 ${c.telefono || "-"}<br>
