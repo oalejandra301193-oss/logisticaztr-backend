@@ -174,8 +174,18 @@ app.put("/clientes/:id", upload.single("logo"), async (req,res)=>{
       return res.status(404).json({error:"Cliente no encontrado"});
     }
 
-    Object.assign(cliente, req.body);
+    // 🔥 DEBUG (dejalo para probar)
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
 
+    // 🔥 ACTUALIZAR CAMPOS
+    if(req.body.nombre) cliente.nombre = req.body.nombre;
+    if(req.body.comercio) cliente.comercio = req.body.comercio;
+    if(req.body.telefono) cliente.telefono = req.body.telefono;
+    if(req.body.direccionDescarga) cliente.direccionDescarga = req.body.direccionDescarga;
+    if(req.body.direccionCarga) cliente.direccionCarga = req.body.direccionCarga;
+
+    // 🔥 LOGO
     if(req.file){
       cliente.logo = req.file.filename;
     }
@@ -185,6 +195,7 @@ app.put("/clientes/:id", upload.single("logo"), async (req,res)=>{
     res.json(cliente);
 
   }catch(err){
+    console.error(err);
     res.status(500).json({error:"Error actualizando cliente"});
   }
 });
