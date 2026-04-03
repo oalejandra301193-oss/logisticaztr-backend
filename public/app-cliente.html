@@ -142,15 +142,17 @@ if(!id) return
 
 const res = await fetch("/clientes/"+id)
 const c = await res.json()
+
 console.log("CLIENTE:", c)
 
 let html = `
 <div class="card">
 
 ${c.logo 
-      ? `<img src="${API}/uploads/clientes/${c.logo}" width="80"><br><br>`
-      : ""
-    }
+  ? `<img src="https://logisticaztr-backend.onrender.com/uploads/clientes/${c.logo}" width="100"><br><br>`
+  : `<div>Sin logo</div>`
+}
+
 <b>${c.nombre}</b><br>
 🏪 ${c.comercio || "-"}<br>
 📞 ${c.telefono || "-"}<br>
@@ -165,10 +167,13 @@ CUIT: ${c.cuit || "-"}<br>
 
 document.getElementById("perfilVista").innerHTML = html
 
+// 🔥 OCULTAR FORM
 document.getElementById("formPerfil").style.display = "none"
+
+// 🔥 MOSTRAR BOTÓN PORTAL
 document.getElementById("btnPortal").style.display = "block"
 
-// 🔥 OCULTAR CUIT (NO SE TOCA MÁS)
+// 🔥 OCULTAR CUIT
 document.getElementById("cuit").style.display = "none"
 
 }
