@@ -148,9 +148,9 @@ let html = `
 <div class="card">
 
 ${c.logo 
-  ? `<<img src="https://logisticaztr-backend.onrender.com/uploads/${c.logo}" width="120">` 
-  : `<div>Sin logo</div>`
-}
+      ? `<img src="${API}/uploads/clientes/${c.logo}" width="80"><br><br>`
+      : ""
+    }
 <b>${c.nombre}</b><br>
 🏪 ${c.comercio || "-"}<br>
 📞 ${c.telefono || "-"}<br>
