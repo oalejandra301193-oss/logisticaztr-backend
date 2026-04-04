@@ -247,15 +247,24 @@ function calcularFlete(){
 // ======================
 // Pagar adelanto
 // ======================
-async function pagarAdelanto(){
-  const id = prompt("ID del viaje");
-  const monto = prompt("Monto del adelanto");
-  await fetch(`/trips/adelanto/${id}`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({monto})
-  });
-  alert("Adelanto registrado");
+async function pagarAdelanto(id, monto){
+
+const res = await fetch("/crear-pago",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body: JSON.stringify({
+  monto,
+  tripId: id
+})
+});
+
+const data = await res.json();
+
+// 🔥 REDIRECCION A PAYPAL REAL
+window.location = data.url;
+
 }
 
 // ======================

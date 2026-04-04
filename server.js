@@ -89,6 +89,37 @@ function distancia(lat1,lon1,lat2,lon2){
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+app.get("/capturar-pago", async (req,res)=>{
+
+try{
+
+const { token, tripId } = req.query;
+
+const accessToken = await getAccessToken();
+
+await axios({
+  url: `https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}/capture`,
+  method: "post",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${accessToken}`
+  }
+});
+
+// 🔥 ACA CONFIRMAS EL PAGO EN TU SISTEMA
+await Trip.findByIdAndUpdate(tripId,{
+  adelantoPagado: true
+});
+
+res.send("✅ Pago confirmado correctamente");
+
+}catch(err){
+console.error(err);
+res.status(500).send("Error al capturar pago");
+}
+
+});
+
 // 🔹 ADELANTO
 app.post("/trips/adelanto/:id", async(req,res)=>{
   try{
@@ -377,6 +408,71 @@ mongoose.connect(process.env.MONGO_URI)
 })
 .catch(error=>{
   console.error("❌ Error Mongo:",error);
+});
+
+const axios = require("axios");
+
+const PAYPAL_CLIENT = process.env.PAYPAL_CLIENT;
+const PAYPAL_SECRET = process.env.PAYPAL_SECRET;
+
+async function getAccessToken(){
+
+const res = await axios({
+  url: "https://api-m.sandbox.paypal.com/v1/oauth2/token",
+  method: "post",
+  headers: {
+    "Accept": "application/json",
+    "Accept-Language": "en_US"
+  },
+  auth: {
+    username: PAYPAL_CLIENT,
+    password: PAYPAL_SECRET
+  },
+  data: "grant_type=client_credentials"
+});
+
+return res.data.access_token;
+}
+
+app.post("/crear-pago", async (req,res)=>{
+
+try{
+
+const { monto, tripId } = req.body;
+
+const accessToken = await getAccessToken();
+
+const order = await axios({
+  url: "https://api-m.sandbox.paypal.com/v2/checkout/orders",
+  method: "post",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${accessToken}`
+  },
+  data: {
+    intent: "CAPTURE",
+    purchase_units: [{
+      amount: {
+        currency_code: "USD",
+        value: monto
+      }
+    }],
+    application_context: {
+      return_url: "https://tu-frontend.com/pago-exitoso.html",
+      cancel_url: "https://tu-frontend.com/pago-cancelado.html"
+    }
+  }
+});
+
+const link = order.data.links.find(l=> l.rel==="approve").href;
+
+res.json({ url: link });
+
+}catch(err){
+console.error(err);
+res.status(500).send("Error creando pago");
+}
+
 });
 
 
