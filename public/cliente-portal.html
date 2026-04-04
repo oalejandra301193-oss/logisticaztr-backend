@@ -95,61 +95,57 @@ async function cargarCargas(){
     let html = "";
     cargas.forEach(v=>{
 
-let estadoClass = "publicado";
-if(v.estado==="EN_VIAJE") estadoClass="en_viaje";
-if(v.estado==="FINALIZADO") estadoClass="finalizado";
+      let estadoClass = "publicado";
+      if(v.estado==="EN_VIAJE") estadoClass="en_viaje";
+      if(v.estado==="FINALIZADO") estadoClass="finalizado";
 
-html+=`
-<div class="card">
+      html+=`
+      <div class="card">
 
-<b>📦 ${v.producto}</b><br>
-📍 ${v.origen} → ${v.destino}<br>
-💰 $${v.valor}<br>
+      <b>📦 ${v.producto}</b><br>
+      📍 ${v.origen} → ${v.destino}<br>
+      💰 $${v.valor}<br>
 
-Estado: <span class="estado ${estadoClass}">${v.estado}</span><br>
-🚛 ${v.choferNombre || "Sin asignar"}
+      Estado: <span class="estado ${estadoClass}">${v.estado}</span><br>
+      🚛 ${v.choferNombre || "Sin asignar"}
 
-<br><br>
+      <br><br>
 
-${
-v.estado === "PENDIENTE"
-? `<button onclick="eliminarCarga('${v._id}')">🗑 Eliminar</button>`
-: ""
-}
+      ${
+      v.estado === "PENDIENTE"
+      ? `<button onclick="eliminarCarga('${v._id}')">🗑 Eliminar</button>`
+      : ""
+      }
 
-${
-v.estado === "EN_VIAJE"
-? `<button onclick="verMapa('${v._id}')">📍 Seguimiento</button>`
-: ""
-}
+      ${
+      v.estado === "EN_VIAJE"
+      ? `<button onclick="verMapa('${v._id}')">📍 Seguimiento</button>`
+      : ""
+      }
 
-${
-v.estado === "FINALIZADO"
-? `
-<br>
-<button onclick="puntuar('${v._id}',5)">⭐⭐⭐⭐⭐</button>
-<button onclick="puntuar('${v._id}',4)">⭐⭐⭐⭐</button>
-<button onclick="puntuar('${v._id}',3)">⭐⭐⭐</button>
-`
-: ""
-}
+      ${
+      v.estado === "FINALIZADO"
+      ? `
+      <br>
+      <button onclick="puntuar('${v._id}',5)">⭐⭐⭐⭐⭐</button>
+      <button onclick="puntuar('${v._id}',4)">⭐⭐⭐⭐</button>
+      <button onclick="puntuar('${v._id}',3)">⭐⭐⭐</button>
+      `
+      : ""
+      }
 
-</div>
-`
-})
+      </div>
+      `
+    });
 
+    // 🔥 ESTO FALTABA
     document.getElementById("lista").innerHTML = html;
 
   }catch(err){
     console.error(err);
     document.getElementById("lista").innerHTML="❌ Error cargando cargas";
   }
-
-  <button onclick="pagarAdelanto('${v._id}', ${v.valor})">
-💰 Pagar adelanto
-</button>
 }
-
 // ======================
 // CREAR CARGA
 // ======================
