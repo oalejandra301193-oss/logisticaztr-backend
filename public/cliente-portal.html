@@ -151,9 +151,10 @@ v.estado === "FINALIZADO"
 }
 
 // ======================
-// Crear carga
+// CREAR CARGA
 // ======================
 async function crearCarga(){
+
 const clienteId = localStorage.getItem("clienteId");
 
 if(!clienteId){
@@ -161,18 +162,18 @@ if(!clienteId){
   return;
 }
 
-  const producto = document.getElementById("producto").value;
-  const origen = document.getElementById("origen").value;
-  const destino = document.getElementById("destino").value;
-  const distancia = document.getElementById("distancia").value;
-  const valor = document.getElementById("valor").value;
-  const tipo = document.getElementById("tipoCarga").value;
-  const cantidad = document.getElementById("cantidad").value;
+const producto = document.getElementById("producto").value;
+const origen = document.getElementById("origen").value;
+const destino = document.getElementById("destino").value;
+const distancia = document.getElementById("distancia").value;
+const valor = document.getElementById("valor").value;
+const tipo = document.getElementById("tipoCarga").value;
+const cantidad = document.getElementById("cantidad").value;
 
-  if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad){
-    alert("⚠ Debe completar todos los datos");
-    return;
-  }
+if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad){
+  alert("⚠ Completa todos los datos");
+  return;
+}
 
 const data = {
   producto,
@@ -182,48 +183,61 @@ const data = {
   valor,
   tipoCarga:tipo,
   cantidad,
-
   clienteId,
-
   estado:"PENDIENTE"
 };
 
-  const res = await fetch("/trips",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
-  });
+const res = await fetch("/trips",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify(data)
+});
 
-  if(!res.ok){ alert("❌ Error al guardar la carga"); return; }
+if(!res.ok){
+  alert("❌ Error al crear carga");
+  return;
+}
 
-  alert("✅ Carga enviada para aprobación");
-cargarMisCargas(); // 🔥 
+alert("✅ Carga enviada para aprobacion");
+cargarMisCargas();
+
 }
 
 // ======================
-// Eliminar carga
+// ELIMINAR
 // ======================
 async function eliminarCarga(id){
   if(!confirm("Eliminar carga?")) return;
   await fetch("/trips/"+id,{method:"DELETE"});
-  cargarCargas();
+  cargarMisCargas();
 }
 
+// ======================
+// MIS CARGAS (ARREGLADO)
+// ======================
 async function cargarMisCargas(){
 
 const clienteId = localStorage.getItem("clienteId");
 
 if(!clienteId){
-alert("No hay cliente logueado");
-return;
+  alert("No hay cliente logueado");
+  return;
 }
 
-const res = await fetch("/trips/mis-cargas/" + clienteId);
+const res = await fetch("/trips");
+
 const viajes = await res.json();
+
+// 🔥 FILTRAR POR CLIENTE
+const misViajes = viajes.filter(v => v.clienteId === clienteId);
 
 let html = "";
 
-viajes.forEach(v=>{
+misViajes.forEach(v=>{
+
+let estadoClass="publicado";
+if(v.estado==="EN_VIAJE") estadoClass="en_viaje";
+if(v.estado==="FINALIZADO") estadoClass="finalizado";
 
 html+=`
 <div class="card">
@@ -232,17 +246,15 @@ html+=`
 📍 ${v.origen} → ${v.destino}<br>
 💰 $${v.valor}<br>
 
-Estado: ${v.estado}<br>
+Estado: <span class="estado ${estadoClass}">${v.estado}</span><br>
 🚛 ${v.choferNombre || "Sin asignar"}
 
 <br><br>
 
-<button onclick="eliminarCarga('${v._id}')">
-🗑 Eliminar
-</button>
+<button onclick="eliminarCarga('${v._id}')">🗑 Eliminar</button>
 
-<button onclick="editarCarga('${v._id}')">
-✏ Editar
+<button onclick="pagarAdelanto('${v._id}', ${v.valor})">
+💰 Pagar adelanto
 </button>
 
 ${
@@ -256,8 +268,6 @@ v.estado === "FINALIZADO"
 ? `
 <br>
 <button onclick="puntuar('${v._id}',5)">⭐⭐⭐⭐⭐</button>
-<button onclick="puntuar('${v._id}',4)">⭐⭐⭐⭐</button>
-<button onclick="puntuar('${v._id}',3)">⭐⭐⭐</button>
 `
 : ""
 }
@@ -314,24 +324,28 @@ function calcularFlete(){
 }
 
 // ======================
-// Pagar adelanto
+// PAGAR ADELANTO (REAL)
 // ======================
 async function pagarAdelanto(id, monto){
 
 const res = await fetch("/crear-pago",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body: JSON.stringify({
-  monto,
-  tripId: id
-})
+  method:"POST",
+  headers:{
+    "Content-Type":"application/json"
+  },
+  body: JSON.stringify({
+    monto,
+    tripId:id
+  })
 });
 
 const data = await res.json();
 
-// 🔥 REDIRECCION A PAYPAL REAL
+if(!data.url){
+  alert("Error en pago");
+  return;
+}
+
 window.location = data.url;
 
 }
