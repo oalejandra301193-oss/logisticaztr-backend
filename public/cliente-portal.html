@@ -158,6 +158,10 @@ if(!clienteId){
   return;
 }
 
+// 🔥 TRAER DATOS DEL CLIENTE
+const resCliente = await fetch("/clientes/" + clienteId);
+const cliente = await resCliente.json();
+
 const producto = document.getElementById("producto").value;
 const origen = document.getElementById("origen").value;
 const destino = document.getElementById("destino").value;
@@ -179,7 +183,18 @@ const data = {
   valor,
   tipoCarga:tipo,
   cantidad,
+
   clienteId,
+
+  // 🔥 DATOS DEL PERFIL
+  clienteNombre: cliente.nombre,
+  clienteCUIT: cliente.cuit,
+  clienteTelefono: cliente.telefono,
+  clienteComercio: cliente.comercio,
+
+  direccionCarga: cliente.direccionCarga,
+  direccionDescarga: cliente.direccionDescarga,
+
   estado:"PENDIENTE"
 };
 
@@ -190,11 +205,13 @@ const res = await fetch("/trips",{
 });
 
 if(!res.ok){
+  const error = await res.text();
+  console.log("ERROR BACK:", error); // 🔥 CLAVE
   alert("❌ Error al crear carga");
   return;
 }
 
-alert("✅ Carga enviada para aprobacion");
+alert("✅ Carga enviada para aprobación");
 cargarMisCargas();
 
 }
