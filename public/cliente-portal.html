@@ -52,7 +52,7 @@ input, select{ width:100%; padding:8px; margin-top:5px; margin-bottom:10px; bord
 <body>
 
 <h3>Publicar carga</h3>
-<div class="card">
+<div id="vistaPublicar" class="card">
 <input id="producto" placeholder="Producto">
 <input id="origen" placeholder="Ciudad de origen">
 <input id="destino" placeholder="Ciudad de destino">
@@ -73,9 +73,17 @@ input, select{ width:100%; padding:8px; margin-top:5px; margin-bottom:10px; bord
 <button onclick="window.location='app-cliente.html'">
 ⬅ Volver al perfil
 </button>
-<button onclick="cargarMisCargas()">
+<button onclick="verMisCargas()">
 📦 Mis cargas
 </button>
+<div id="vistaMisCargas" style="display:none;">
+  <h3>📦 Mis cargas</h3>
+  <div id="misCargas"></div>
+
+  <button onclick="volverPublicar()">
+    ⬅ Volver
+  </button>
+</div>
 
 <div id="misCargas"></div>
 
@@ -395,6 +403,18 @@ cargarMisCargas();
 // Inicializar
 // ======================
 cargarCargas();
+
+function verMisCargas(){
+  document.getElementById("vistaPublicar").style.display = "none";
+  document.getElementById("vistaMisCargas").style.display = "block";
+
+  cargarMisCargas();
+}
+
+function volverPublicar(){
+  document.getElementById("vistaPublicar").style.display = "block";
+  document.getElementById("vistaMisCargas").style.display = "none";
+}
 </script>
 
 </body>
