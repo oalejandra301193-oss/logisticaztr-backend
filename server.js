@@ -18,6 +18,25 @@ const bcrypt = require("bcrypt");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
 
+const mongoose = require("mongoose");
+
+app.get("/trips/cliente/:clienteId", async (req, res) => {
+  try {
+
+    const clienteId = new mongoose.Types.ObjectId(req.params.clienteId);
+
+    const trips = await Trip.find({
+      clienteId: clienteId
+    });
+
+    res.json(trips);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo viajes" });
+  }
+});
+
 // 📁 MULTER (🔧 MOVIDO ARRIBA)
 const storage = multer.diskStorage({
   destination:(req,file,cb)=>{
@@ -173,10 +192,16 @@ app.get("/clientes", async (req,res)=>{
 
 app.get("/trips/cliente/:clienteId", async (req, res) => {
   try {
-    const trips = await Trip.find({ clienteId: req.params.clienteId });
+
+    const trips = await Trip.find({
+      clienteId: req.params.clienteId
+    });
+
     res.json(trips);
+
   } catch (err) {
-    res.status(500).json({ error: "Error obteniendo viajes del cliente" });
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo viajes" });
   }
 });
 
