@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require("mongoose");
 const Trip = require('../models/Trip');
 const multer = require("multer");
 const path = require("path");
@@ -109,7 +110,7 @@ distanciaKm: Number(distanciaKm),
 valor: Number(valor),
 
 // 🔥 CLAVE PARA MIS CARGAS
-clienteId: clienteId || client._id,
+clienteId: new mongoose.Types.ObjectId(clienteId || client._id),
 
 clienteNombre,
 clienteCUIT: clienteCUITLimpio,
@@ -171,13 +172,14 @@ res.status(500).json({error:"Error"});
 router.get("/mis-cargas/:clienteId", async (req,res)=>{
 try{
 
-const {clienteId} = req.params;
+const clienteId = new mongoose.Types.ObjectId(req.params.clienteId);
 
 const viajes = await Trip.find({ clienteId });
 
 res.json(viajes);
 
 }catch(err){
+console.error(err);
 res.status(500).json({error:"Error obteniendo mis cargas"});
 }
 });
