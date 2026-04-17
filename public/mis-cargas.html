@@ -91,7 +91,7 @@ async function cargarMisCargas(){
   try{
 
     // 🔥 USAMOS EL ENDPOINT CORRECTO
-    const res = await fetch(`/trips/mis-cargas/${clienteId}`)
+    const res = await fetch(`/trips/mis-cargas/${clienteId}`);
     const viajes = await res.json();
 
     if(!viajes.length){

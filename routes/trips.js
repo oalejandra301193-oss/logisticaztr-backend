@@ -110,7 +110,7 @@ distanciaKm: Number(distanciaKm),
 valor: Number(valor),
 
 // 🔥 CLAVE PARA MIS CARGAS
-clienteId: new mongoose.Types.ObjectId(clienteId || client._id),
+clienteId: clienteId ? new mongoose.Types.ObjectId(clienteId) : client._id,
 
 clienteNombre,
 clienteCUIT: clienteCUITLimpio,
