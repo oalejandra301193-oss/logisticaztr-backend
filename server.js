@@ -175,8 +175,10 @@ app.get("/clientes", async (req,res)=>{
 app.get("/trips/cliente/:clienteId", async (req, res) => {
   try {
 
+    const clienteId = new mongoose.Types.ObjectId(req.params.clienteId);
+
     const trips = await Trip.find({
-      clienteId: req.params.clienteId
+      clienteId: clienteId
     });
 
     res.json(trips);
