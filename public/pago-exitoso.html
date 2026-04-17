@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pago exitoso</title>
+</head>
+
+<body style="font-family:Arial; background:#0f172a; color:white; text-align:center; padding:40px;">
+
+<h2>💰 Procesando pago...</h2>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+const token = params.get("token");
+
+if(!token){
+  document.body.innerHTML = "❌ Error: token no encontrado";
+}else{
+
+  fetch(`/capturar-pago?token=${token}`)
+  .then(res => res.text())
+  .then(data=>{
+    document.body.innerHTML = `
+      <h2>✅ Pago confirmado</h2>
+      <p>${data}</p>
+      <button onclick="window.location.href='mis-cargas.html'">
+        Volver a mis cargas
+      </button>
+    `;
+  })
+  .catch(()=>{
+    document.body.innerHTML = "❌ Error confirmando pago";
+  });
+
+}
+
+</script>
+
+</body>
+</html>

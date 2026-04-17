@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mis Cargas - Logistica ZTR</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  padding:20px;
+}
+
+h2{
+  margin-bottom:20px;
+}
+
+.card{
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:15px;
+  border-radius:10px;
+}
+
+button{
+  padding:8px 12px;
+  margin-top:8px;
+  margin-right:5px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.mapa{ background:#2563eb; color:white; }
+.pagar{ background:#16a34a; color:white; }
+.eliminar{ background:#dc2626; color:white; }
+
+.estado{
+  padding:4px 8px;
+  border-radius:5px;
+  font-size:12px;
+  margin-left:10px;
+}
+
+.publicado{background:#334155}
+.en_viaje{background:#16a34a}
+.finalizado{background:#64748b}
+
+.chofer{
+  display:flex;
+  align-items:center;
+  margin-top:10px;
+}
+
+.chofer img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  margin-right:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📦 Mis cargas</h2>
+
+<button onclick="window.location.href='cliente-portal.html'">
+⬅ Volver a publicar
+</button>
+
+<div id="contenedor"></div>
+
+<script>
+
+// ======================
+// CARGAR MIS CARGAS
+// ======================
+
+async function cargarMisCargas(){
+
+  const clienteId = localStorage.getItem("clienteId");
+
+  if(!clienteId){
+    alert("Tenés que iniciar sesión");
+    window.location.href = "login-cliente.html";
+    return;
+  }
+
+  try{
+
+    // 🔥 USAMOS EL ENDPOINT CORRECTO
+    const res = await fetch(`/trips/cliente/${clienteId}`);
+    const viajes = await res.json();
+
+    if(!viajes.length){
+      document.getElementById("contenedor").innerHTML = "No tenés cargas todavía";
+      return;
+    }
+
+    let html = "";
+
+    viajes.forEach(v=>{
+
+      let estadoClass="publicado";
+      if(v.estado==="EN_VIAJE") estadoClass="en_viaje";
+      if(v.estado==="FINALIZADO") estadoClass="finalizado";
+
+      html+=`
+      <div class="card">
+
+        <b>📦 ${v.producto}</b><br>
+        📍 ${v.origen} → ${v.destino}<br>
+        💰 $${v.valor}<br>
+
+        Estado: <span class="estado ${estadoClass}">${v.estado}</span>
+
+        <div class="chofer">
+          ${
+            v.choferFoto 
+            ? `<img src="/uploads/choferes/${v.choferFoto}">`
+            : `<img src="https://via.placeholder.com/40">`
+          }
+          <div>
+            ${v.choferNombre || "Sin chofer asignado"}
+          </div>
+        </div>
+
+        <br>
+
+        ${
+          v.estado === "PENDIENTE"
+          ? `<button class="eliminar" onclick="eliminarCarga('${v._id}')">🗑 Eliminar</button>`
+          : ""
+        }
+
+        ${
+          !v.adelantoPagado
+          ? `<button class="pagar" onclick="pagarAdelanto('${v._id}', ${v.valor})">💰 Pagar adelanto</button>`
+          : `<span>✅ Adelanto pagado</span>`
+        }
+
+        ${
+          v.estado === "EN_VIAJE"
+          ? `<button class="mapa" onclick="verMapa('${v._id}')">📍 Ver en mapa</button>`
+          : ""
+        }
+
+        ${
+          v.estado === "FINALIZADO"
+          ? `
+          <br>
+          Puntuar chofer:<br>
+          <button onclick="puntuar('${v._id}',5)">⭐⭐⭐⭐⭐</button>
+          <button onclick="puntuar('${v._id}',4)">⭐⭐⭐⭐</button>
+          <button onclick="puntuar('${v._id}',3)">⭐⭐⭐</button>
+          `
+          : ""
+        }
+
+      </div>
+      `;
+    });
+
+    document.getElementById("contenedor").innerHTML = html;
+
+  }catch(err){
+    console.error(err);
+    document.getElementById("contenedor").innerHTML = "❌ Error cargando cargas";
+  }
+}
+
+// ======================
+// ELIMINAR
+// ======================
+
+async function eliminarCarga(id){
+  if(!confirm("Eliminar carga?")) return;
+
+  await fetch("/trips/"+id,{method:"DELETE"});
+
+  cargarMisCargas();
+}
+
+// ======================
+// PAGAR ADELANTO
+// ======================
+
+async function pagarAdelanto(id, monto){
+
+  const res = await fetch("/crear-pago",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      monto,
+      tripId:id
+    })
+  });
+
+  const data = await res.json();
+
+  if(!data.url){
+    alert("Error en pago");
+    return;
+  }
+
+  window.location = data.url;
+}
+
+// ======================
+// MAPA (redirige)
+// ======================
+
+function verMapa(id){
+  window.location.href = `mapa-cliente.html?tripId=${id}`;
+}
+
+// ======================
+// PUNTUAR
+// ======================
+
+async function puntuar(id, rating){
+
+  await fetch("/trips/rating-chofer",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      tripId:id,
+      rating
+    })
+  });
+
+  alert("Gracias por calificar");
+
+  cargarMisCargas();
+}
+
+// ======================
+// INIT
+// ======================
+
+cargarMisCargas();
+
+</script>
+
+</body>
+</html>

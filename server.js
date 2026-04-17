@@ -93,10 +93,15 @@ app.get("/capturar-pago", async (req,res)=>{
 
 try{
 
-const { token, tripId } = req.query;
+const { token } = req.query;
+
+if(!token){
+  return res.status(400).send("Token faltante");
+}
 
 const accessToken = await getAccessToken();
 
+// 🔥 CAPTURA REAL EN PAYPAL
 await axios({
   url: `https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}/capture`,
   method: "post",
@@ -106,9 +111,17 @@ await axios({
   }
 });
 
-// 🔥 ACA CONFIRMAS EL PAGO EN TU SISTEMA
-await Trip.findByIdAndUpdate(tripId,{
-  adelantoPagado: true
+// 🔥 BUSCAR VIAJE POR PAYPAL
+const trip = await Trip.findOne({ paypalOrderId: token });
+
+if(!trip){
+  return res.status(404).send("Viaje no encontrado");
+}
+
+// 🔥 CONFIRMAR PAGO + FECHA
+await Trip.findByIdAndUpdate(trip._id,{
+  adelantoPagado: true,
+  adelantoFecha: new Date()
 });
 
 res.send("✅ Pago confirmado correctamente");
@@ -120,10 +133,12 @@ res.status(500).send("Error al capturar pago");
 
 });
 
-// 🔹 ADELANTO
+// 🔹 ADELANTO (solo define el monto, NO paga)
 app.post("/trips/adelanto/:id", async(req,res)=>{
   try{
-    const {monto} = req.body;
+
+    const { monto } = req.body;
+
     const trip = await Trip.findById(req.params.id);
 
     if(!trip){
@@ -131,11 +146,18 @@ app.post("/trips/adelanto/:id", async(req,res)=>{
     }
 
     trip.adelanto = monto;
+
     await trip.save();
 
-    res.json({ok:true,adelanto:monto});
+    res.json({
+      ok:true,
+      adelanto:monto,
+      mensaje:"Adelanto definido correctamente"
+    });
+
   }catch(err){
-    res.status(500).json({error:"Error"});
+    console.error(err);
+    res.status(500).json({error:"Error guardando adelanto"});
   }
 });
 
@@ -146,6 +168,15 @@ app.get("/clientes", async (req,res)=>{
     res.json(clientes);
   }catch(err){
     res.status(500).json({error:"Error obteniendo clientes"});
+  }
+});
+
+app.get("/trips/cliente/:clienteId", async (req, res) => {
+  try {
+    const trips = await Trip.find({ clienteId: req.params.clienteId });
+    res.json(trips);
+  } catch (err) {
+    res.status(500).json({ error: "Error obteniendo viajes del cliente" });
   }
 });
 
@@ -458,10 +489,16 @@ const order = await axios({
       }
     }],
     application_context: {
-      return_url: "https://tu-frontend.com/pago-exitoso.html",
-      cancel_url: "https://tu-frontend.com/pago-cancelado.html"
+      return_url: `http://localhost:3000/pago-exitoso.html`,
+      cancel_url: `http://localhost:3000/pago-cancelado.html`
     }
   }
+});
+
+// 🔥 GUARDAR RELACIÓN CON PAYPAL
+await Trip.findByIdAndUpdate(tripId, {
+  paypalOrderId: order.data.id,
+  adelanto: monto
 });
 
 const link = order.data.links.find(l=> l.rel==="approve").href;

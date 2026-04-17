@@ -73,87 +73,12 @@ input, select{ width:100%; padding:8px; margin-top:5px; margin-bottom:10px; bord
 <button onclick="window.location='app-cliente.html'">
 ⬅ Volver al perfil
 </button>
-<button onclick="verMisCargas()">
+
+<button onclick="window.location.href='mis-cargas.html'">
 📦 Mis cargas
 </button>
-<div id="vistaMisCargas" style="display:none;">
-  <h3>📦 Mis cargas</h3>
-  <div id="misCargas"></div>
-
-  <button onclick="volverPublicar()">
-    ⬅ Volver
-  </button>
-</div>
-
-<div id="misCargas"></div>
-
-<div id="lista"></div>
-</div>
 
 <script>
-// ======================
-// Funciones de carga y publicación
-// ======================
-
-async function cargarCargas(){
-  try{
-    const res = await fetch("/trips");
-    const cargas = await res.json();
-
-    let html = "";
-    cargas.forEach(v=>{
-
-      let estadoClass = "publicado";
-      if(v.estado==="EN_VIAJE") estadoClass="en_viaje";
-      if(v.estado==="FINALIZADO") estadoClass="finalizado";
-
-      html+=`
-      <div class="card">
-
-      <b>📦 ${v.producto}</b><br>
-      📍 ${v.origen} → ${v.destino}<br>
-      💰 $${v.valor}<br>
-
-      Estado: <span class="estado ${estadoClass}">${v.estado}</span><br>
-      🚛 ${v.choferNombre || "Sin asignar"}
-
-      <br><br>
-
-      ${
-      v.estado === "PENDIENTE"
-      ? `<button onclick="eliminarCarga('${v._id}')">🗑 Eliminar</button>`
-      : ""
-      }
-
-      ${
-      v.estado === "EN_VIAJE"
-      ? `<button onclick="verMapa('${v._id}')">📍 Seguimiento</button>`
-      : ""
-      }
-
-      ${
-      v.estado === "FINALIZADO"
-      ? `
-      <br>
-      <button onclick="puntuar('${v._id}',5)">⭐⭐⭐⭐⭐</button>
-      <button onclick="puntuar('${v._id}',4)">⭐⭐⭐⭐</button>
-      <button onclick="puntuar('${v._id}',3)">⭐⭐⭐</button>
-      `
-      : ""
-      }
-
-      </div>
-      `
-    });
-
-    // 🔥 ESTO FALTABA
-    document.getElementById("lista").innerHTML = html;
-
-  }catch(err){
-    console.error(err);
-    document.getElementById("lista").innerHTML="❌ Error cargando cargas";
-  }
-}
 // ======================
 // CREAR CARGA
 // ======================
@@ -220,7 +145,6 @@ if(!res.ok){
 }
 
 alert("✅ Carga enviada para aprobación");
-cargarMisCargas();
 
 }
 
@@ -230,75 +154,6 @@ cargarMisCargas();
 async function eliminarCarga(id){
   if(!confirm("Eliminar carga?")) return;
   await fetch("/trips/"+id,{method:"DELETE"});
-  cargarMisCargas();
-}
-
-// ======================
-// MIS CARGAS (ARREGLADO)
-// ======================
-async function cargarMisCargas(){
-
-const clienteId = localStorage.getItem("clienteId");
-
-if(!clienteId){
-  alert("No hay cliente logueado");
-  return;
-}
-
-const res = await fetch("/trips");
-
-const viajes = await res.json();
-
-// 🔥 FILTRAR POR CLIENTE
-const misViajes = viajes.filter(v => v.clienteId === clienteId);
-
-let html = "";
-
-misViajes.forEach(v=>{
-
-let estadoClass="publicado";
-if(v.estado==="EN_VIAJE") estadoClass="en_viaje";
-if(v.estado==="FINALIZADO") estadoClass="finalizado";
-
-html+=`
-<div class="card">
-
-<b>📦 ${v.producto}</b><br>
-📍 ${v.origen} → ${v.destino}<br>
-💰 $${v.valor}<br>
-
-Estado: <span class="estado ${estadoClass}">${v.estado}</span><br>
-🚛 ${v.choferNombre || "Sin asignar"}
-
-<br><br>
-
-<button onclick="eliminarCarga('${v._id}')">🗑 Eliminar</button>
-
-<button onclick="pagarAdelanto('${v._id}', ${v.valor})">
-💰 Pagar adelanto
-</button>
-
-${
-v.estado === "EN_VIAJE"
-? `<button onclick="verMapa('${v._id}')">📍 Seguimiento</button>`
-: ""
-}
-
-${
-v.estado === "FINALIZADO"
-? `
-<br>
-<button onclick="puntuar('${v._id}',5)">⭐⭐⭐⭐⭐</button>
-`
-: ""
-}
-
-</div>
-`
-})
-
-document.getElementById("misCargas").innerHTML = html;
-
 }
 
 // ======================
@@ -404,17 +259,6 @@ cargarMisCargas();
 // ======================
 cargarCargas();
 
-function verMisCargas(){
-  document.getElementById("vistaPublicar").style.display = "none";
-  document.getElementById("vistaMisCargas").style.display = "block";
-
-  cargarMisCargas();
-}
-
-function volverPublicar(){
-  document.getElementById("vistaPublicar").style.display = "block";
-  document.getElementById("vistaMisCargas").style.display = "none";
-}
 </script>
 
 </body>
