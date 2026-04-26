@@ -59,6 +59,11 @@ const tripSchema = new mongoose.Schema({
   },
 
   // 👤 CLIENTE
+  clienteId:{
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Client",
+  required: true
+},
   clienteNombre: String,
   clienteCUIT: String,
   clienteTelefono: String,
