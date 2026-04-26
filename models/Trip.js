@@ -46,6 +46,10 @@ const tripSchema = new mongoose.Schema({
     type:Boolean,
     default:false
   },
+  adelantoPagado:{
+  type:Boolean,
+  default:false
+},
 
   // 📦 ESTADO
   estado:{

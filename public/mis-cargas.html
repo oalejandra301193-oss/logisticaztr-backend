@@ -91,7 +91,7 @@ async function cargarMisCargas(){
   try{
 
     // 🔥 USAMOS EL ENDPOINT CORRECTO
-    const res = await fetch(`/trips/mis-cargas/${clienteId}`);
+    const res = await fetch(`/trips/cliente/${clienteId}`);
     const viajes = await res.json();
 
     if(!viajes.length){
@@ -123,7 +123,7 @@ async function cargarMisCargas(){
             : `<img src="https://via.placeholder.com/40">`
           }
           <div>
-            ${v.choferNombre || "Sin chofer asignado"}
+            ${v.chofer?.nombre || "Sin chofer asignado"}
           </div>
         </div>
 
