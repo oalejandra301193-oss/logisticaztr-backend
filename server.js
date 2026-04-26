@@ -478,7 +478,11 @@ app.post("/crear-pago", async (req,res)=>{
 
 try{
 
-const { monto, tripId } = req.body;
+const { tripId } = req.body;
+
+const trip = await Trip.findById(tripId);
+
+const monto = trip.adelanto || trip.valor * 0.3;
 
 const accessToken = await getAccessToken();
 
@@ -498,8 +502,8 @@ const order = await axios({
       }
     }],
     application_context: {
-      return_url: `http://localhost:3000/pago-exitoso.html`,
-      cancel_url: `http://localhost:3000/pago-cancelado.html`
+      return_url: `https://logisticaztr-backend.onrender.com/pago-exitoso.html`,
+      cancel_url: `https://logisticaztr-backend.onrender.com/pago-cancelado.html`
     }
   }
 });

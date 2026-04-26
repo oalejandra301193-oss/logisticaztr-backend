@@ -137,7 +137,7 @@ async function cargarMisCargas(){
 
         ${
           !v.adelantoPagado
-          ? `<button class="pagar" onclick="pagarAdelanto('${v._id}', ${v.valor})">💰 Pagar adelanto</button>`
+          ? `<button class="pagar" onclick="pagarAdelanto('${v._id}')">💰 Pagar adelanto</button>`
           : `<span>✅ Adelanto pagado</span>`
         }
 
@@ -187,7 +187,7 @@ async function eliminarCarga(id){
 // PAGAR ADELANTO
 // ======================
 
-async function pagarAdelanto(id, monto){
+async function pagarAdelanto(id){
 
   const res = await fetch("/crear-pago",{
     method:"POST",
@@ -195,19 +195,20 @@ async function pagarAdelanto(id, monto){
       "Content-Type":"application/json"
     },
     body: JSON.stringify({
-      monto,
-      tripId:id
+      tripId:id,
+      monto: 0 // no importa, backend calcula
     })
   });
 
   const data = await res.json();
 
   if(!data.url){
+    console.log(data);
     alert("Error en pago");
     return;
   }
 
-  window.location = data.url;
+  window.location.href = data.url;
 }
 
 // ======================
