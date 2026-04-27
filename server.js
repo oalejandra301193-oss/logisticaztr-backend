@@ -496,7 +496,6 @@ const montoNum = trip.adelanto && trip.adelanto > 0
   ? Number(trip.adelanto)
   : valor * 0.3;
 
-// 🔥 CLAVE PAYPAL
 const monto = montoNum.toFixed(2);
 
 const accessToken = await getAccessToken();
@@ -533,17 +532,20 @@ const link = order.data.links.find(l=> l.rel==="approve").href;
 
 res.json({ url: link });
 
-}catch(err){
-console.error(err);
-res.status(500).json({
-  error:"Error creando pago",
-  detalle: err.response?.data || err.message
-});
+} catch(err){   // 🔥 ESTE ERA EL ERROR
+  console.error("🔥 ERROR PAYPAL COMPLETO:");
+
+  if(err.response){
+    console.error("DATA:", err.response.data);
+    console.error("STATUS:", err.response.status);
+  }else{
+    console.error(err);
+  }
+
+  res.status(500).json({
+    error:"Error creando pago",
+    detalle: err.response?.data || err.message
+  });
 }
 
 });
-
-
-
-
-
