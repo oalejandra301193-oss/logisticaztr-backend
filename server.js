@@ -482,7 +482,22 @@ const { tripId } = req.body;
 
 const trip = await Trip.findById(tripId);
 
-const monto = trip.adelanto || trip.valor * 0.3;
+if(!trip){
+  return res.status(404).json({error:"Viaje no encontrado"});
+}
+
+const valor = Number(trip.valor);
+
+if(!valor || valor <= 0){
+  return res.status(400).json({error:"Valor inválido"});
+}
+
+const montoNum = trip.adelanto && trip.adelanto > 0
+  ? Number(trip.adelanto)
+  : valor * 0.3;
+
+// 🔥 CLAVE PAYPAL
+const monto = montoNum.toFixed(2);
 
 const accessToken = await getAccessToken();
 
@@ -520,7 +535,10 @@ res.json({ url: link });
 
 }catch(err){
 console.error(err);
-res.status(500).send("Error creando pago");
+res.status(500).json({
+  error:"Error creando pago",
+  detalle: err.response?.data || err.message
+});
 }
 
 });
