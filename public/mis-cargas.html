@@ -135,8 +135,7 @@ async function cargarMisCargas(){
           : ""
         }
 
-        ${
-          !v.adelantoPagado
+        ${!v.adelantoPagado
           ? `<button class="pagar" onclick="pagarAdelanto('${v._id}')">💰 Pagar adelanto</button>`
           : `<span>✅ Adelanto pagado</span>`
         }
@@ -189,26 +188,35 @@ async function eliminarCarga(id){
 
 async function pagarAdelanto(id){
 
-  const res = await fetch("/crear-pago",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      tripId:id,
-      monto: 0 // no importa, backend calcula
-    })
-  });
+  console.log("CLICK PAGO", id); // 🔥 DEBUG
 
-  const data = await res.json();
+  try{
 
-  if(!data.url){
-    console.log(data);
-    alert("Error en pago");
-    return;
+    const res = await fetch("/crear-pago",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        tripId:id
+      })
+    });
+
+    const data = await res.json();
+
+    console.log("RESPUESTA:", data); // 🔥 DEBUG
+
+    if(!data.url){
+      alert("Error en pago");
+      return;
+    }
+
+    window.location.href = data.url;
+
+  }catch(err){
+    console.error(err);
+    alert("Error conectando con servidor");
   }
-
-  window.location.href = data.url;
 }
 
 // ======================
