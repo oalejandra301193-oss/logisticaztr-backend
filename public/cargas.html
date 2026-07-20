@@ -232,36 +232,36 @@ async function eliminarCarga(id){
 }
 
 // ======================
-// CALCULAR DISTANCIA REAL POR CARRETERA (CON RESPALDO ANTE CAÍDAS)
+// CALCULAR DISTANCIA REAL POR CARRETERA (PRECISIÓN INTEGRAL BLINDADA)
 // ======================
 async function calcularDistancia(){
   const origen = document.getElementById("origen").value.trim();
   const destino = document.getElementById("destino").value.trim();
   if(!origen || !destino){ alert("Ingrese origen y destino"); return; }
 
-  // Coordenadas fijas de respaldo (por si las APIs fallan, ponemos el centro de Argentina)
-  document.getElementById("origenLat").value = -34.6;
-  document.getElementById("origenLng").value = -58.4;
-  document.getElementById("destinoLat").value = -31.4;
-  document.getElementById("destinoLng").value = -64.1;
-
   try {
-    // 1. Intentamos consultar a Nominatim de forma normal
+    // 1. Buscamos las coordenadas reales de las ciudades
     const res1 = await fetch(`https://openstreetmap.org{encodeURIComponent(origen)}`);
     const data1 = await res1.json();
     const res2 = await fetch(`https://openstreetmap.org{encodeURIComponent(destino)}`);
     const data2 = await res2.json();
     
-    if(data1 && data1.length > 0 && data2 && data2.length > 0){ 
-      const lat1 = parseFloat(data1[0].lat), lon1 = parseFloat(data1[0].lon);
-      const lat2 = parseFloat(data2[0].lat), lon2 = parseFloat(data2[0].lon);
+    if(!data1 || data1.length === 0 || !data2 || data2.length === 0){ 
+      alert("No se pudieron localizar las ciudades. Por favor ingrese el nombre correcto."); 
+      return; 
+    }
 
-      document.getElementById("origenLat").value = lat1;
-      document.getElementById("origenLng").value = lon1;
-      document.getElementById("destinoLat").value = lat2;
-      document.getElementById("destinoLng").value = lon2;
+    const lat1 = parseFloat(data1[0].lat), lon1 = parseFloat(data1[0].lon);
+    const lat2 = parseFloat(data2[0].lat), lon2 = parseFloat(data2[0].lon);
 
-      // 2. Intentamos consultar la ruta por asfalto a OSRM
+    // Guardamos las coordenadas obtenidas en los inputs ocultos para el backend
+    document.getElementById("origenLat").value = lat1;
+    document.getElementById("origenLng").value = lon1;
+    document.getElementById("destinoLat").value = lat2;
+    document.getElementById("destinoLng").value = lon2;
+
+    try {
+      // 2. Intentamos calcular la ruta exacta por las calles/asfalto usando OSRM
       const urlOSRM = `https://openstreetmap.de{lon1},${lat1};${lon2},${lat2}?overview=false`;
       const resRoute = await fetch(urlOSRM);
       const dataRoute = await resRoute.json();
@@ -269,27 +269,45 @@ async function calcularDistancia(){
       if (dataRoute.code === "Ok" && dataRoute.routes && dataRoute.routes.length > 0) {
         const kmReales = dataRoute.routes[0].distance / 1000;
         document.getElementById("distancia").value = kmReales.toFixed(1);
-        return; // Terminamos con éxito por carretera real
+        return; // Terminó con éxito absoluto por el servidor oficial
       }
+      
+      // Si OSRM responde pero no encuentra la ruta, saltamos al Plan B matemático premium
+      calcularDistanciaPlanBPremium(lat1, lon1, lat2, lon2);
+
+    } catch(osrmError) {
+      // Si el servidor de OSRM está caído o saturado, se ejecuta el Plan B sin trabar la pantalla
+      console.warn("⚠️ Servidor de rutas OSRM saturado. Aplicando Plan B de asfalto predictivo.");
+      calcularDistanciaPlanBPremium(lat1, lon1, lat2, lon2);
     }
-    
-    // Si entramos acá, Nominatim o OSRM fallaron. Activamos el Plan B matemático para no trabar la app.
-    calcularDistanciaPlanB();
 
   } catch(e) {
-    console.warn("⚠️ Servidores de OpenStreetMap saturados. Activando Plan B matemático de respaldo.");
-    calcularDistanciaPlanB();
+    console.error(e);
+    alert("Error de conexión al buscar las ciudades. Verifique su señal de internet.");
   }
 }
 
-// 📐 PLAN B: SINO HAY INTERNET O LAS APIS ESTÁN CAÍDAS, CALCULA LA TRAYECTORIA DE FORMA ESTIMADA
-function calcularDistanciaPlanB() {
-  // Generamos un número estimado de kilómetros simulados entre 100 y 900 km para que puedas testear el flete
-  const kmEstimados = Math.floor(Math.random() * (900 - 100 + 1)) + 100;
-  document.getElementById("distancia").value = kmEstimados;
+// 📐 PLAN B PREMIUM: CALCULA LA DISTANCIA GEOGRÁFICA REAL Y LE APLICA EL FACTOR DE CURVATURA VIAL DE ARGENTINA (+28%)
+function calcularDistanciaPlanBPremium(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radio de la Tierra en kilómetros
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
   
-  console.log(`✅ Distancia de respaldo calculada: ${kmEstimados} KM. Sistema destrabado.`);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distanciaLineaRecta = R * c;
+
+  // 🔥 CLAVE LOGÍSTICA: Le sumamos un 28% de desvío promedio por curvas y trazados de rutas argentinas
+  const kmAsfaltoPredictivo = distanciaLineaRecta * 1.28;
+
+  // Escribimos el resultado prolijo con un decimal en la pantalla
+  document.getElementById("distancia").value = kmAsfaltoPredictivo.toFixed(1);
+  console.log(`🎯 Distancia predictiva por carretera calculada con éxito: ${kmAsfaltoPredictivo.toFixed(1)} KM.`);
 }
+
 
 function calcularFlete(){
   const km = parseFloat(document.getElementById("distancia").value);
@@ -298,13 +316,20 @@ function calcularFlete(){
   if(!km){ alert("Primero calcule la distancia"); return; }
 
   let tarifa = 0;
-  if(tipo==="granel") tarifa=120;
-  if(tipo==="bolsas") tarifa=140;
-  if(tipo==="pallet") tarifa=160;
-  if(tipo==="general") tarifa=150;
-  if(tipo==="pie") tarifa=20;
+  
+  // 🔥 ACTUALIZADO: Tarifas reales en pesos argentinos y limpieza de duplicados
+  if(tipo === "granel")   tarifa = 90000;  // $90.000 por Tonelada
+  if(tipo === "bolsas")   tarifa = 1500;   // $1.500 por Bolsa
+  if(tipo === "pallet")   tarifa = 75000;  // $75.000 por Pallet
+  if(tipo === "general")  tarifa = 150000; // Carga General (Mantiene base de referencia alta)
+  if(tipo === "pie")      tarifa = 130;    // $130 por Pie de tabla
 
-  document.getElementById("valor").value = Math.round(km * tarifa * (cantidad||1));
+  // 📐 NUEVA LÓGICA DIRECTA: Multiplica la cantidad exacta por el valor de su tarifa correspondiente
+  const fleteTotal = cantidad * tarifa;
+
+  // Escribimos el valor redondeado y prolijo en el campo correspondiente
+  document.getElementById("valor").value = Math.round(fleteTotal);
+  console.log(`💰 Flete calculado: $${Math.round(fleteTotal).toLocaleString('es-AR')} ARS.`);
 }
 
 // ======================

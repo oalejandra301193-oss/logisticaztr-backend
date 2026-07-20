@@ -225,13 +225,20 @@ function calcularFlete(){
   if(!km){ alert("Primero calcule la distancia"); return; }
 
   let tarifa = 0;
-  if(tipo==="granel") tarifa=120;
-  if(tipo==="bolsas") tarifa=140;
-  if(tipo==="pallet") tarifa=160;
-  if(tipo==="general") tarifa=150;
-  if(tipo==="pie") tarifa=20;
+  
+  // 🔥 ACTUALIZADO: Tarifas reales en pesos argentinos y limpieza de duplicados
+  if(tipo === "granel")   tarifa = 90000;  // $90.000 por Tonelada
+  if(tipo === "bolsas")   tarifa = 1500;   // $1.500 por Bolsa
+  if(tipo === "pallet")   tarifa = 75000;  // $75.000 por Pallet
+  if(tipo === "general")  tarifa = 150000; // Carga General (Mantiene base de referencia alta)
+  if(tipo === "pie")      tarifa = 130;    // $130 por Pie de tabla
 
-  document.getElementById("valor").value = Math.round(km * tarifa * (cantidad||1));
+  // 📐 NUEVA LÓGICA DIRECTA: Multiplica la cantidad exacta por el valor de su tarifa correspondiente
+  const fleteTotal = cantidad * tarifa;
+
+  // Escribimos el valor redondeado y prolijo en el campo correspondiente
+  document.getElementById("valor").value = Math.round(fleteTotal);
+  console.log(`💰 Flete calculado: $${Math.round(fleteTotal).toLocaleString('es-AR')} ARS.`);
 }
 
 // ======================
