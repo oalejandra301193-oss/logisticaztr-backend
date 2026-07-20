@@ -58,12 +58,13 @@ const tripSchema = new mongoose.Schema({
     default:"PENDIENTE"
   },
 
-  // 👤 CLIENTE
+    // 👤 CLIENTE
   clienteId:{
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "Client",
-  required: true
-},
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Client",
+    required: false // ➔ CAMBIADO A FALSE (Ahora permite publicar sin registrarse)
+  },
+
   clienteNombre: String,
   clienteCUIT: String,
   clienteTelefono: String,
