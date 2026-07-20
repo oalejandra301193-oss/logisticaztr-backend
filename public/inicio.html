@@ -6,7 +6,7 @@
   <title>Logística ZTR - Bienvenido</title>
 
   <style>
-    /* Reset básico */
+    /* Reset general */
     * {
       margin: 0;
       padding: 0;
@@ -14,44 +14,52 @@
       font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
+    /* Fondo de pantalla ultra oscuro para la PC */
     body {
-      background: #090d16; /* Fondo ultra oscuro de fondo para la PC */
+      background: #090d16; 
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       margin: 0;
+      padding: 20px;
     }
 
-    /* 📱 CONTENEDOR MÓVIL HÍBRIDO (Tamaño celular en PC / Pantalla completa en celular) */
+    /* 📱 CONTENEDOR CELULAR (Fijo con forma de teléfono flotante en la PC) */
     .celular-container {
       width: 100%;
-      max-width: 410px; /* Ancho perfecto de celular moderno */
-      height: 100vh;    /* En celular toma el alto completo de la pantalla */
-      max-height: 840px; /* En PC se limita a una altura de smartphone elegante */
-      background: #090d16; /* Color de fondo idéntico a tu foto del móvil */
-      
-      /* Si quieres activar la foto del camión de fondo más adelante, descomenta la línea de abajo borrando las barras: */
-      /* background: linear-gradient(to bottom, rgba(9, 13, 22, 0.7), rgba(9, 13, 22, 0.95)), url("https://unsplash.com"); background-size: cover; background-position: center; */
-      
+      max-width: 390px;     /* Ancho real de un smartphone moderno */
+      height: 740px;        /* Alto fijo para simular el celular en la PC */
+      background: #090d16;  /* Fondo negro mate idéntico a tu foto del móvil */
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 45px 25px 25px 25px;
+      padding: 40px 25px 25px 25px;
       position: relative;
       overflow: hidden;
+      border-radius: 32px;  /* Bordes redondeados de smartphone */
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); /* Sombra flotante premium */
     }
 
-    /* En pantallas de PC añadimos bordes redondeados y sombra para que parezca un celular flotando */
-    @media (min-height: 841px) and (min-width: 411px) {
+    /* 📱 ADAPTACIÓN AUTOMÁTICA PARA EL CELULAR REAL */
+    /* Cuando detecta que la pantalla mide menos de 480px (un móvil), elimina los bordes y toma el 100% */
+    @media (max-width: 480px) {
+      body {
+        padding: 0;
+      }
       .celular-container {
-        border-radius: 32px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        padding: 50px 25px 30px 25px;
       }
     }
 
-    /* Superior: Encabezado */
+    /* Superior: Identidad visual */
     .header-branding {
       text-align: center;
       z-index: 2;
@@ -59,20 +67,20 @@
 
     h1 {
       color: white;
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 800;
       letter-spacing: 0.5px;
     }
 
     .sub {
       color: #9ca3af;
-      font-size: 14px;
+      font-size: 13px;
       margin-top: 6px;
       font-weight: 500;
       letter-spacing: 0.3px;
     }
 
-    /* 🔥 LOGO CENTRAL CORPORATIVO "ZTR" - DISEÑO EN TEXTO IDENTICO A TU CAPTURA */
+    /* 🔥 LOGO CENTRAL "ZTR" - TEXTO CSS IDENTICO A TU CAPTURA */
     .logo-central-container {
       display: flex;
       justify-content: center;
@@ -83,20 +91,20 @@
 
     .logo-badge {
       background: linear-gradient(135deg, #1d4ed8, #0b1329);
-      width: 130px;
-      height: 130px;
-      border-radius: 32px; /* Esquinas curvas suaves como en la foto */
+      width: 120px;
+      height: 120px;
+      border-radius: 30px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      box-shadow: 0 10px 35px rgba(37, 99, 235, 0.45), 
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.45), 
                   0 0 0 6px rgba(255, 255, 255, 0.03);
       border: 2px solid rgba(255, 255, 255, 0.15);
     }
 
     .logo-texto-ztr {
-      font-size: 36px;
+      font-size: 34px;
       font-weight: 900;
       color: white;
       letter-spacing: 2px;
@@ -119,13 +127,13 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
 
     .btn-perfil {
       width: 100%;
       padding: 16px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       border: none;
       border-radius: 14px;
@@ -136,11 +144,11 @@
       transition: all 0.2s ease-in-out;
     }
 
-    /* 🟠 BOTÓN NUEVO: Publicar sin registrarse (Exclusivo Clientes) */
+    /* 🟠 Botón: Publicar sin registrarse */
     .publicar-anonimo {
-      background: #f59e0b; /* Color naranja/ámbar llamativo */
+      background: #f59e0b;
       color: white;
-      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
     }
 
     .publicar-anonimo:hover {
@@ -148,11 +156,11 @@
       transform: translateY(-2px);
     }
 
-    /* 🟢 Botón Cliente Normal Registrado */
+    /* 🟢 Botón: Cliente Registrado */
     .cliente {
-      background: #10b981; /* Verde esmeralda idéntico a tu foto */
+      background: #10b981;
       color: white;
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
     }
 
     .cliente:hover {
@@ -160,11 +168,11 @@
       transform: translateY(-2px);
     }
 
-    /* 🔵 Botón Chofer Obligatorio */
+    /* 🔵 Botón: Chofer */
     .chofer {
-      background: #3b82f6; /* Azul brillante idéntico a tu foto */
+      background: #3b82f6;
       color: white;
-      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25);
     }
 
     .chofer:hover {
@@ -219,10 +227,10 @@
       </div>
     </div>
 
-    <!-- Grupo de ingresos con tus nuevas reglas de negocio -->
+    <!-- Grupo de ingresos unificado -->
     <div class="buttons-group">
       
-      <!-- Opción A: Cliente publica directo y rápido (va directo al portal sin validar token de login) -->
+      <!-- Opción A: Publicar directo sin registro -->
       <button class="btn-perfil publicar-anonimo" onclick="window.location='/cliente-portal.html'">
         Publicar Carga Rápida
       </button>
@@ -250,5 +258,6 @@
 
 </body>
 </html>
+
 
 
