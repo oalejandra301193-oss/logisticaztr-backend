@@ -86,85 +86,80 @@ input, select{ width:100%; padding:8px; margin-top:5px; margin-bottom:10px; bord
 
 <script>
 // ======================
-// CREAR CARGA
+// CREAR CARGA (REPARADO Y CONVERTIDO A NÚMERO)
 // ======================
 async function crearCarga(){
+  const clienteId = localStorage.getItem("clienteId");
 
-const clienteId = localStorage.getItem("clienteId");
+  if(!clienteId){
+    alert("Tenés que iniciar sesión");
+    return;
+  }
 
-if(!clienteId){
-  alert("Tenés que iniciar sesión");
-  return;
+  // TRAER DATOS DEL CLIENTE
+  const resCliente = await fetch("/clientes/" + clienteId);
+  const cliente = await resCliente.json();
+
+  const producto = document.getElementById("producto").value;
+  const origen = document.getElementById("origen").value;
+  const destino = document.getElementById("destino").value;
+  const distancia = document.getElementById("distancia").value;
+  const valor = document.getElementById("valor").value;
+  const tipo = document.getElementById("tipoCarga").value;
+  const cantidad = document.getElementById("cantidad").value;
+
+  const origenLat = document.getElementById("origenLat").value;
+  const origenLng = document.getElementById("origenLng").value;
+  const destinoLat = document.getElementById("destinoLat").value;
+  const destinoLng = document.getElementById("destinoLng").value;
+
+  if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad||!origenLat||!destinoLat){
+    alert("⚠ Completa todos los datos y calcula la distancia antes de publicar");
+    return;
+  }
+
+  const data = {
+    producto,
+    origen,
+    destino,
+    distanciaKm: Number(distancia), // 🔥 FORZADO A NÚMERO
+    valor: Number(valor),           // 🔥 FORZADO A NÚMERO
+    tipoCarga: tipo,
+    cantidad: Number(cantidad),     // 🔥 FORZADO A NÚMERO
+    clienteId: String(clienteId),
+
+    // 🔥 CORREGIDO: Las coordenadas se envían convertidas a Number para cumplir con el esquema de Mongoose
+    origenLat: Number(origenLat),
+    origenLng: Number(origenLng),
+    destinoLat: Number(destinoLat),
+    destinoLng: Number(destinoLng),
+
+    clienteNombre: cliente.nombre,
+    clienteCUIT: cliente.cuit,
+    clienteTelefono: cliente.telefono,
+    clienteComercio: cliente.comercio,
+    direccionCarga: cliente.direccionCarga,
+    direccionDescarga: cliente.direccionDescarga,
+    estado:"PENDIENTE"
+  };
+
+  const res = await fetch("/trips",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  });
+
+  if(!res.ok){
+    const error = await res.text();
+    console.log("ERROR BACK:", error);
+    alert("❌ Error al crear carga. Verifique la consola.");
+    return;
+  }
+
+  alert("✅ Carga enviada para aprobación");
+  window.location.href = "mis-cargas.html";
 }
 
-// 🔥 TRAER DATOS DEL CLIENTE
-const resCliente = await fetch("/clientes/" + clienteId);
-const cliente = await resCliente.json();
-
-const producto = document.getElementById("producto").value;
-const origen = document.getElementById("origen").value;
-const destino = document.getElementById("destino").value;
-const distancia = document.getElementById("distancia").value;
-const valor = document.getElementById("valor").value;
-const tipo = document.getElementById("tipoCarga").value;
-const cantidad = document.getElementById("cantidad").value;
-
-// 🔒 OBTENER COORDENADAS DESDE LOS CAMPOS OCULTOS
-const origenLat = document.getElementById("origenLat").value;
-const origenLng = document.getElementById("origenLng").value;
-const destinoLat = document.getElementById("destinoLat").value;
-const destinoLng = document.getElementById("destinoLng").value;
-
-if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad||!origenLat||!destinoLat){
-  alert("⚠ Completa todos los datos y calcula la distancia antes de publicar");
-  return;
-}
-
-const data = {
-  producto,
-  origen,
-  destino,
-  distanciaKm: distancia,
-  valor,
-  tipoCarga: tipo,
-  cantidad,
-  clienteId: String(clienteId),
-
-  // 🔒 PASAR LAS COORDENADAS REQUISITO PARA EL NUEVO BACKEND
-  origenLat,
-  origenLng,
-  destinoLat,
-  destinoLng,
-
-  // 🔥 DATOS DEL PERFIL
-  clienteNombre: cliente.nombre,
-  clienteCUIT: cliente.cuit,
-  clienteTelefono: cliente.telefono,
-  clienteComercio: cliente.comercio,
-
-  direccionCarga: cliente.direccionCarga,
-  direccionDescarga: cliente.direccionDescarga,
-
-  estado:"PENDIENTE"
-};
-
-const res = await fetch("/trips",{
-  method:"POST",
-  headers:{"Content-Type":"application/json"},
-  body:JSON.stringify(data)
-});
-
-if(!res.ok){
-  const error = await res.text();
-  console.log("ERROR BACK:", error);
-  alert("❌ Error al crear carga");
-  return;
-}
-
-alert("✅ Carga enviada para aprobación");
-window.location.href = "mis-cargas.html";
-
-}
 
 // ======================
 // ELIMINAR
