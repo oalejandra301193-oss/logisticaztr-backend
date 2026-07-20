@@ -80,7 +80,7 @@ async function distancia(lat1, lon1, lat2, lon2) {
     if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
     
     // 🔥 CORREGIDO: URL oficial y bien estructurada (Longitud primero, luego Latitud)
-    const url = `https://project-osrm.org{lon1},${lat1};${lon2},${lat2}?overview=false`;
+    const url = `https://openstreetmap.de{lon1},${lat1};${lon2},${lat2}?overview=false`;
     
     const response = await fetch(url);
     const data = await response.json();
