@@ -31,6 +31,15 @@ body{
 button{
   padding:8px;
   margin-top:10px;
+  border:none;
+  border-radius:6px;
+  background:#16a34a;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover {
+  background:#15803d;
 }
 </style>
 
@@ -55,177 +64,154 @@ let markers = [];
 
 // 🔹 INICIALIZAR MAPA
 function iniciarMapa(lat,lng){
+  map = L.map('map').setView([lat,lng],10);
 
-map = L.map('map').setView([lat,lng],10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19
+  }).addTo(map);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-maxZoom:19
-}).addTo(map);
-
-miMarker = L.marker([lat,lng]).addTo(map)
-.bindPopup("🚛 Tu ubicación")
-.openPopup();
-
+  miMarker = L.marker([lat,lng]).addTo(map)
+    .bindPopup("🚛 Tu ubicación")
+    .openPopup();
 }
 
 // 🔹 ACTUALIZAR UBICACIÓN EN MAPA
 function actualizarMiUbicacion(lat,lng){
-if(miMarker){
-miMarker.setLatLng([lat,lng]);
-}
+  if(miMarker){
+    miMarker.setLatLng([lat,lng]);
+  }
 }
 
-// 🔹 OBTENER UBICACIÓN
+// 🔹 OBTENER UBICACIÓN EN TIEMPO REAL
 navigator.geolocation.getCurrentPosition(async (pos)=>{
+  try{
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
 
-try{
+    iniciarMapa(lat,lng);
 
-const lat = pos.coords.latitude;
-const lng = pos.coords.longitude;
+    const choferId = localStorage.getItem("choferId");
 
-iniciarMapa(lat,lng);
+    // 🔴 VALIDACIÓN
+    if(!choferId){
+      alert("Falta choferId en localStorage");
+      return;
+    }
 
-const choferId = localStorage.getItem("choferId");
+    // 🔹 GUARDAR UBICACIÓN ACTUAL DEL CHOFER EN EL BACKEND
+    await fetch("/trips/location",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        lat,
+        lng,
+        driverId:choferId
+      })
+    });
 
-// 🔴 VALIDACIÓN
-if(!choferId){
-alert("Falta choferId en localStorage");
-return;
-}
+    // 🔹 CARGAR CARGAS FILTRADAS
+    cargarCargas(choferId);
 
-// 🔹 GUARDAR UBICACIÓN
-await fetch("/trips/location",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-lat,
-lng,
-driverId:choferId
-})
-});
-
-// 🔹 CARGAR CARGAS
-cargarCargas(choferId);
-
-}catch(error){
-
-console.error("❌ Error ubicación:", error);
-
-}
-
+  }catch(error){
+    console.error("❌ Error ubicación:", error);
+  }
 });
 
 // 🔹 CARGAR CARGAS CERCANAS
 async function cargarCargas(choferId){
+  try{
+    const res = await fetch("/trips/cargas-cercanas/"+choferId);
 
-try{
+    // 🔴 VALIDACIÓN
+    if(!res.ok){
+      throw new Error("Error HTTP " + res.status);
+    }
 
-const res = await fetch("/trips/cargas-cercanas/"+choferId);
+    const viajes = await res.json();
+    let html = "";
 
-// 🔴 VALIDACIÓN
-if(!res.ok){
-throw new Error("Error HTTP " + res.status);
+    // 🔹 LIMPIAR MARCADORES ANTERIORES PARA EVITAR SOBRECARGA
+    if (map) {
+      markers.forEach(m=>map.removeLayer(m));
+    }
+    markers = [];
+
+    viajes.forEach(v=>{
+      if(!v.origenLat || !v.origenLng) return;
+
+      // 🔹 AGREGAR MARCADOR DE CARGA AL MAPA LEAFLET
+      if (map) {
+        const marker = L.marker([v.origenLat, v.origenLng])
+          .addTo(map)
+          .bindPopup(`<b>Carga: ${v.producto}</b><br>Destino: ${v.destino}`);
+        markers.push(marker);
+      }
+
+      // 🔹 LISTADO DE TARJETAS VISUALES
+      // 🔥 CORREGIDO: v.distancia cambiado por v.distanciaKm que es la propiedad real del backend
+      html += `
+        <div class="card">
+          📦 <b>${v.producto || "-"}</b><br>
+          📍 Origen: ${v.origen || "-"} ➔ Destino: ${v.destino || "-"}<br>
+          💰 Flete: $${v.valor || 0}<br>
+          📏 Recorrido total: ${v.distanciaKm ? v.distanciaKm.toFixed(1) : 0} km<br>
+
+          <button onclick="postular('${v._id}')">
+            Postularme al viaje
+          </button>
+        </div>
+      `;
+    });
+
+    // 🔴 SIN RESULTADOS
+    if(html === ""){
+      html = "<p>No hay cargas cercanas disponibles por el momento</p>";
+    }
+
+    document.getElementById("lista").innerHTML = html;
+
+  }catch(error){
+    console.error("❌ Error cargando cargas:", error);
+    document.getElementById("lista").innerHTML = "<p>Error cargando cargas</p>";
+  }
 }
 
-const viajes = await res.json();
-
-let html = "";
-
-// 🔹 LIMPIAR MARCADORES
-markers.forEach(m=>map.removeLayer(m));
-markers = [];
-
-viajes.forEach(v=>{
-
-if(!v.origenLat || !v.origenLng) return;
-
-// 🔹 MARCADOR
-const marker = L.marker([v.origenLat, v.origenLng])
-.addTo(map)
-.bindPopup("📦 Carga disponible");
-
-markers.push(marker);
-
-// 🔹 LISTADO
-html += `
-<div class="card">
-
-📦 <b>${v.producto || "-"}</b><br>
-📍 Zona aproximada<br>
-💰 $${v.valor || 0}<br>
-📏 ${v.distancia ? v.distancia.toFixed(1) : 0} km<br>
-
-<button onclick="postular('${v._id}')">
-Postularme
-</button>
-
-</div>
-`;
-
-});
-
-// 🔴 SIN RESULTADOS
-if(html === ""){
-html = "<p>No hay cargas cercanas</p>";
-}
-
-document.getElementById("lista").innerHTML = html;
-
-}catch(error){
-
-console.error("❌ Error cargando cargas:", error);
-
-document.getElementById("lista").innerHTML =
-"<p>Error cargando cargas</p>";
-
-}
-
-}
-
-// 🔹 POSTULARSE
+// 🔹 POSTULARSE A LA OFERTA
 async function postular(id){
+  try{
+    const res = await fetch("/trips/postular/"+id,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        nombre: localStorage.getItem("nombre"),
+        telefono: localStorage.getItem("telefono"),
+        dni: localStorage.getItem("dni"),
+        patente1: localStorage.getItem("patente1")
+      })
+    });
 
-try{
-
-const res = await fetch("/trips/postular/"+id,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-nombre: localStorage.getItem("nombre"),
-telefono: localStorage.getItem("telefono"),
-dni: localStorage.getItem("dni"),
-patente1: localStorage.getItem("patente1")
-})
-});
-
-if(res.ok){
-alert("✅ Postulación enviada");
-}else{
-alert("❌ Error al postularte");
+    if(res.ok){
+      alert("✅ Postulación enviada con éxito");
+    }else{
+      alert("❌ Error al postularte");
+    }
+  }catch(error){
+    console.error("❌ Error postulación:", error);
+    alert("Error de conexión con el servidor");
+  }
 }
 
-}catch(error){
-
-console.error("❌ Error postulación:", error);
-alert("Error de conexión");
-
-}
-
-}
-
-// 🔄 ACTUALIZAR CARGAS CADA 15s
+// 🔄 ACTUALIZAR EL MAPA Y LISTADO AUTOMÁTICAMENTE CADA 15 SEGUNDOS
 setInterval(()=>{
-
-const choferId = localStorage.getItem("choferId");
-if(choferId){
-cargarCargas(choferId);
-}
-
-},15000);
+  const choferId = localStorage.getItem("choferId");
+  if(choferId){
+    cargarCargas(choferId);
+  }
+}, 15000);
 
 </script>
 

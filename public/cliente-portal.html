@@ -67,7 +67,13 @@ input, select{ width:100%; padding:8px; margin-top:5px; margin-bottom:10px; bord
 </select>
 <input id="cantidad" placeholder="Cantidad (toneladas / bultos / pallets / pies)">
 
-<button onclick="calcularDistancia()">Calcular distancia</button>
+<!-- 🔒 CAMPOS INTERNOS OCULTOS PARA GUARDAR COORDENADAS GEOGRÁFICAS -->
+<input type="hidden" id="origenLat">
+<input type="hidden" id="origenLng">
+<input type="hidden" id="destinoLat">
+<input type="hidden" id="destinoLng">
+
+<button onclick="calcularDistancia()">Calcular distancia por carretera</button>
 <button onclick="calcularFlete()">Calcular flete</button>
 <button onclick="crearCarga()">Publicar carga</button>
 <button onclick="window.location='app-cliente.html'">
@@ -103,8 +109,14 @@ const valor = document.getElementById("valor").value;
 const tipo = document.getElementById("tipoCarga").value;
 const cantidad = document.getElementById("cantidad").value;
 
-if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad){
-  alert("⚠ Completa todos los datos");
+// 🔒 OBTENER COORDENADAS DESDE LOS CAMPOS OCULTOS
+const origenLat = document.getElementById("origenLat").value;
+const origenLng = document.getElementById("origenLng").value;
+const destinoLat = document.getElementById("destinoLat").value;
+const destinoLng = document.getElementById("destinoLng").value;
+
+if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad||!origenLat||!destinoLat){
+  alert("⚠ Completa todos los datos y calcula la distancia antes de publicar");
   return;
 }
 
@@ -112,12 +124,17 @@ const data = {
   producto,
   origen,
   destino,
-  distanciaKm:distancia,
+  distanciaKm: distancia,
   valor,
-  tipoCarga:tipo,
+  tipoCarga: tipo,
   cantidad,
-
   clienteId: String(clienteId),
+
+  // 🔒 PASAR LAS COORDENADAS REQUISITO PARA EL NUEVO BACKEND
+  origenLat,
+  origenLng,
+  destinoLat,
+  destinoLng,
 
   // 🔥 DATOS DEL PERFIL
   clienteNombre: cliente.nombre,
@@ -139,7 +156,7 @@ const res = await fetch("/trips",{
 
 if(!res.ok){
   const error = await res.text();
-  console.log("ERROR BACK:", error); // 🔥 CLAVE
+  console.log("ERROR BACK:", error);
   alert("❌ Error al crear carga");
   return;
 }
@@ -158,30 +175,45 @@ async function eliminarCarga(id){
 }
 
 // ======================
-// Calcular distancia y flete
+// CALCULAR DISTANCIA REAL POR CARRETERA (OSRM + NOMINATIM)
 // ======================
 async function calcularDistancia(){
   const origen = document.getElementById("origen").value;
   const destino = document.getElementById("destino").value;
   if(!origen || !destino){ alert("Ingrese origen y destino"); return; }
 
-  const res1 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${origen}`);
+  // 1. Buscamos coordenadas del texto origen y destino
+  const res1 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(origen)}`);
   const data1 = await res1.json();
-  const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${destino}`);
+  const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destino)}`);
   const data2 = await res2.json();
-  if(!data1[0] || !data2[0]){ alert("No se pudo calcular la distancia"); return; }
+  if(!data1[0] || !data2[0]){ alert("No se encontraron las ciudades ingresadas"); return; }
 
-  const lat1=parseFloat(data1[0].lat), lon1=parseFloat(data1[0].lon);
-  const lat2=parseFloat(data2[0].lat), lon2=parseFloat(data2[0].lon);
+  const lat1 = parseFloat(data1[0].lat), lon1 = parseFloat(data1[0].lon);
+  const lat2 = parseFloat(data2[0].lat), lon2 = parseFloat(data2[0].lon);
 
-  const R = 6371;
-  const dLat = (lat2-lat1) * Math.PI/180;
-  const dLon = (lon2-lon1) * Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
-  const c = 2 * Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  const distancia = R * c;
+  // Guardamos las coordenadas obtenidas en los inputs ocultos para el formulario
+  document.getElementById("origenLat").value = lat1;
+  document.getElementById("origenLng").value = lon1;
+  document.getElementById("destinoLat").value = lat2;
+  document.getElementById("destinoLng").value = lon2;
 
-  document.getElementById("distancia").value = Math.round(distancia);
+  try {
+    // 2. Consultamos a OSRM para saber la distancia exacta conduciendo por asfalto
+    const urlOSRM = `https://project-osrm.org{lon1},${lat1};${lon2},${lat2}?overview=false`;
+    const resRoute = await fetch(urlOSRM);
+    const dataRoute = await resRoute.json();
+
+    if (dataRoute.code === "Ok" && dataRoute.routes.length > 0) {
+      const kmReales = dataRoute.routes[0].distance / 1000;
+      document.getElementById("distancia").value = kmReales.toFixed(1);
+    } else {
+      alert("No se pudo calcular la ruta terrestre específica");
+    }
+  } catch(e) {
+    console.error(e);
+    alert("Error de conexión al servidor de mapas");
+  }
 }
 
 function calcularFlete(){
@@ -201,30 +233,30 @@ function calcularFlete(){
 }
 
 // ======================
-// PAGAR ADELANTO (REAL)
+// PAGAR ADELANTO (CONEXIÓN BACKEND NUEVA)
 // ======================
-async function pagarAdelanto(id, monto){
+async function pagarAdelanto(id, tipoPago){
+  // tipoPago puede recibir "comision" o "adelanto"
+  const res = await fetch("/api/payments/crear-pago",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      tripId: id,
+      tipo: tipoPago 
+    })
+  });
 
-const res = await fetch("/crear-pago",{
-  method:"POST",
-  headers:{
-    "Content-Type":"application/json"
-  },
-  body: JSON.stringify({
-    monto,
-    tripId:id
-  })
-});
+  const data = await res.json();
 
-const data = await res.json();
+  if(!data.id){
+    alert("Error generando orden de pago de PayPal");
+    return;
+  }
 
-if(!data.url){
-  alert("Error en pago");
-  return;
-}
-
-window.location = data.url;
-
+  // Aquí rediriges al flujo de checkout usando el ID recibido
+  alert("Orden de pago creada en PayPal con ID: " + data.id);
 }
 
 // ======================
@@ -238,29 +270,21 @@ async function verViaje(){
 }
 
 async function puntuar(id, rating){
+  await fetch("/trips/rating-chofer",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      tripId:id,
+      rating
+    })
+  });
 
-await fetch("/trips/rating-chofer",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-tripId:id,
-rating
-})
-});
-
-alert("Gracias por calificar");
-
-cargarMisCargas();
+  alert("Gracias por calificar");
+  cargarMisCargas();
 }
 
-// ======================
-// Inicializar
-// ======================
-cargarCargas();
-
 </script>
-
 </body>
 </html>

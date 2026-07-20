@@ -1,17 +1,139 @@
-<h2>Seguimiento de carga</h2>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Seguimiento de Carga - Logística ZTR</title>
 
-<input id="id" placeholder="ID del viaje">
+<!-- 🌍 Estilos para el mapa interactivo -->
+<link rel="stylesheet" href="https://unpkg.com"/>
 
-<button onclick="ver()">Ver viaje</button>
-
-<script>
-
-async function ver(){
-
-const id=document.getElementById("id").value
-
-window.location="/app-cliente.html?trip="+id
-
+<style>
+body{
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  padding:20px;
 }
 
+#map{
+  height:400px;
+  border-radius:10px;
+  margin-top:20px;
+  display:none; /* Se muestra solo cuando ponen un ID válido */
+}
+
+.card {
+  background:#1e293b;
+  padding:15px;
+  margin-top:15px;
+  border-radius:10px;
+  display:none;
+}
+
+input{ width:100%; padding:8px; margin-top:5px; margin-bottom:10px; border-radius:6px; border:none; }
+button{ padding:10px; border:none; border-radius:6px; background:#2563eb; color:white; cursor:pointer; }
+button:hover{ background:#1d4ed8; }
+</style>
+</head>
+
+<body>
+
+<h2>🔍 Seguimiento de Carga en Tiempo Real</h2>
+
+<div class="card" style="display:block;">
+  <input id="idViaje" placeholder="Ingrese el ID del viaje de carga">
+  <button onclick="iniciarSeguimiento()">Iniciar Seguimiento</button>
+</div>
+
+<!-- 📦 Detalles informativos del camión -->
+<div id="detallesViaje" class="card"></div>
+
+<!-- 🗺️ Mapa de Leaflet -->
+<div id="map"></div>
+
+<!-- 🌍 Librería del mapa -->
+<script src="https://unpkg.com"></script>
+
+<script>
+let map;
+let camionMarker;
+let intervaloSeguimiento;
+
+async function iniciarSeguimiento() {
+  const id = document.getElementById("idViaje").value.trim();
+  if(!id) { alert("Por favor, ingrese un ID de viaje válido"); return; }
+
+  // Frenamos cualquier seguimiento anterior si el usuario cambia de ID
+  if(intervaloSeguimiento) clearInterval(intervaloSeguimiento);
+
+  // Primera consulta para armar el mapa y traer datos
+  await actualizarPosicionCamion(id);
+
+  // 🔄 Consulta automática al backend cada 10 segundos para ver si el camión avanzó
+  intervaloSeguimiento = setInterval(() => {
+    actualizarPosicionCamion(id);
+  }, 10000);
+}
+
+async function actualizarPosicionCamion(id) {
+  try {
+    const res = await fetch("/trips/" + id);
+    if(!res.ok) { alert("No se encontró ningún viaje con ese ID"); return; }
+    
+    const v = await res.json();
+    console.log("Datos de seguimiento:", v);
+
+    // Mostramos los paneles ocultos
+    document.getElementById("map").style.display = "block";
+    document.getElementById("detallesViaje").style.display = "block";
+
+    // Mostramos info útil en la tarjeta
+    document.getElementById("detallesViaje").innerHTML = `
+      📦 <b>Producto:</b> ${v.producto || "-"}<br>
+      🏁 <b>Ruta:</b> ${v.origen} ➔ ${v.destino}<br>
+      📏 <b>Distancia Vial:</b> ${v.distanciaKm || 0} km<br>
+      ⚠️ <b>Estado Actual:</b> <span style="color:#10b981; font-weight:bold;">${v.estado}</span>
+    `;
+
+    // 🗺️ LÓGICA DEL MAPA
+    // Si el chofer todavía no empezó el viaje o no tiene última ubicación, usamos el origen de la carga
+    let latActual = v.origenLat;
+    let lngActual = v.origenLng;
+
+    // Si tu modelo guarda la ubicación actual del chofer dentro del viaje (ej: v.ubicacionActual):
+    if(v.ubicaciones && v.ubicaciones.length > 0) {
+      const ultimaUbi = v.ubicaciones[v.ubicaciones.length - 1];
+      latActual = ultimaUbi.lat;
+      lngActual = ultimaUbi.lng;
+    }
+
+    if(!latActual || !lngActual) {
+      alert("El viaje no posee coordenadas geográficas cargadas.");
+      return;
+    }
+
+    // Inicializar el mapa Leaflet la primera vez
+    if (!map) {
+      map = L.map('map').setView([latActual, lngActual], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+      }).addTo(map);
+      
+      camionMarker = L.marker([latActual, lngActual]).addTo(map)
+        .bindPopup("🚛 <b>Ubicación del Camión</b>")
+        .openPopup();
+    } else {
+      // Si el mapa ya existía, solo movemos el marcador suavemente al nuevo punto
+      camionMarker.setLatLng([latActual, lngActual]);
+      map.setView([latActual, lngActual]);
+    }
+
+  } catch(error) {
+    console.error("❌ Error en seguimiento:", error);
+  }
+}
 </script>
+
+</body>
+</html>
+
