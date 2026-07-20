@@ -82,24 +82,27 @@ router.post("/", async (req, res) => {
     // 🔹 BUSCAR CLIENTE
     let client = await Client.findOne({ cuit: clienteCUITLimpio });
 
-    // 🔴 SI NO EXISTE → CREAR
-    if (!client) {
-      client = new Client({
-        nombre: clienteNombre,
-        comercio: clienteComercio,
-        cuit: clienteCUITLimpio,
-        telefono: clienteTelefono,
-        direccion: direccionCarga,
-        viajes: 1
-      });
-    } else {
-      // 🔹 SI EXISTE → ACTUALIZAR (IMPORTANTE)
-      client.nombre = clienteNombre;
-      client.comercio = clienteComercio;
-      client.telefono = clienteTelefono;
-      client.direccion = direccionCarga;
-      client.viajes += 1;
-    }
+    // 🔴 SI NO EXISTE → CREAR (CORREGIDO CON VARIABLES REALES DE CLIENT.JS)
+if (!client) {
+  client = new Client({
+    nombre: clienteNombre,
+    comercio: clienteComercio,
+    cuit: clienteCUITLimpio,
+    telefono: clienteTelefono,
+    direccionCarga: direccionCarga,       // 🔥 REPARADO: Campo real del modelo
+    direccionDescarga: direccionDescarga, // 🔥 REPARADO: Campo real del modelo
+    viajes: 1
+  });
+} else {
+  // 🔹 SI EXISTE → ACTUALIZAR
+  client.nombre = clienteNombre;
+  client.comercio = clienteComercio;
+  client.telefono = clienteTelefono;
+  client.direccionCarga = direccionCarga;       // 🔥 REPARADO: Campo real del modelo
+  client.direccionDescarga = direccionDescarga; // 🔥 REPARADO: Campo real del modelo
+  client.viajes += 1;
+}
+
 
     await client.save();
 
@@ -272,5 +275,78 @@ router.get("/clientes", async (req, res) => {
     res.status(500).json({ error: "Error" });
   }
 });
+
+// ==========================================
+// 🚛 1. GUARDAR UBICACIÓN EN TIEMPO REAL DEL CHOFER
+// ==========================================
+router.post("/location", async (req, res) => {
+  try {
+    const { lat, lng, driverId } = req.body;
+
+    if (!driverId || !lat || !lng) {
+      return res.status(400).json({ error: "Faltan datos de ubicación" });
+    }
+
+    // Buscamos al chofer en su modelo correspondiente y actualizamos su GPS
+    await Driver.findByIdAndUpdate(driverId, {
+      ultimaUbicacion: {
+        lat: Number(lat),
+        lng: Number(lng),
+        fecha: new Date()
+      }
+    });
+
+    res.json({ ok: true, mensaje: "GPS del transportista actualizado" });
+  } catch (error) {
+    console.error("❌ Error guardando ubicación:", error);
+    res.status(500).json({ error: "Error de servidor en ubicación" });
+  }
+});
+
+// ==========================================
+// 🚛 2. LEER CARGAS CERCANAS TERRESTRES (OSRM) PARA EL RADAR DEL CHOFER
+// ==========================================
+router.get("/cargas-cercanas/:choferId", async (req, res) => {
+  try {
+    const chofer = await Driver.findById(req.params.choferId);
+    if (!chofer || !chofer.ultimaUbicacion || !chofer.ultimaUbicacion.lat) {
+      return res.status(400).json({ error: "El chofer no posee coordenadas GPS activas" });
+    }
+
+    // Buscamos todas las cargas que estén aprobadas y publicadas en el mercado
+    const cargasDisponibles = await Trip.find({ estado: "PUBLICADO" });
+    const ofertasCercanas = [];
+
+    // Recuperamos la función de mapas terrestre que declaramos en server.js
+    const calcularDistancia = req.app.get("calcularDistancia");
+
+    // Recorremos las cargas evaluando la ruta vial de asfalto hacia cada una
+    for (const carga of cargasDisponibles) {
+      if (carga.origenLat && carga.origenLng) {
+        
+        const distCarretera = await calcularDistancia(
+          carga.origenLat,
+          carga.origenLng,
+          chofer.ultimaUbicacion.lat,
+          chofer.ultimaUbicacion.lng
+        );
+
+        // Si la carga le queda a menos de 150 km por carretera, se la mostramos en su radar
+        if (distCarretera > 0 && distCarretera < 150) {
+          // Inyectamos dinámicamente los km viales calculados para que los lea el frontend
+          const cargaData = carga.toObject();
+          cargaData.distanciaKm = distCarretera; 
+          ofertasCercanas.push(cargaData);
+        }
+      }
+    }
+
+    res.json(ofertasCercanas);
+  } catch (error) {
+    console.error("❌ Error en cargas cercanas del chofer:", error);
+    res.status(500).json({ error: "Error procesando el radar de ofertas" });
+  }
+});
+
 
 module.exports = router;
