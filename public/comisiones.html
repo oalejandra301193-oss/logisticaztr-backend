@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Comisiones - LogisticaZTR</title>
+<title>Comisiones - Logística ZTR</title>
 <style>
 body{
   background:#0f172a;
@@ -10,36 +10,64 @@ body{
   font-family:Arial;
   padding:20px;
 }
+h2 {
+  margin-bottom:20px;
+}
 .card{
   background:#1e293b;
   padding:15px;
   margin-bottom:10px;
   border-radius:10px;
+  border-left: 5px solid #64748b;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+.pagada {
+  border-left-color: #10b981; /* Verde si ya cobraste la comisión */
+}
+.pendiente {
+  border-left-color: #ef4444; /* Rojo si la comisión está pendiente de cobro */
+}
+.badge {
+  float: right;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+.badge-pagada { background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }
+.badge-pendiente { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+
+.no-comisiones {
+  padding: 20px;
+  background: #1e293b;
+  border-radius: 10px;
+  text-align: center;
+  color: #9ca3af;
 }
 </style>
 </head>
 
 <body>
 
-<h2>💸 Comisiones</h2>
-<div id="lista"></div>
+<h2>💸 Control de Comisiones del Sistema (5%)</h2>
+<div id="lista">Evaluando transacciones financieras...</div>
 
 <script>
-const API = "https://logisticaztr-backend.onrender.com";
 const token = localStorage.getItem("token");
 
-// 🔒 VALIDACIÓN ADMIN
+// 🔒 VALIDACIÓN ADMINISTRATIVA DE ENTRADA
 if(!token){
-  alert("No autorizado");
+  alert("Acceso denegado: No autorizado");
   window.location = "/login-admin.html";
 }
 
 // =======================
-// CARGAR COMISIONES
+// CARGAR HISTORIAL DE COMISIONES
 // =======================
 async function cargar(){
   try{
-    const res = await fetch(`${API}/trips`, {
+    // 🔥 CORREGIDO: URL absoluta removida para pasar a ruta relativa nativa /trips compatible con localhost
+    const res = await fetch("/trips", {
       headers: {
         "Authorization": "Bearer " + token
       }
@@ -49,29 +77,51 @@ async function cargar(){
 
     const viajes = await res.json();
     let html = "";
+    let contadorComisiones = 0;
 
     viajes.forEach(v=>{
-      if(v.valor){
+      // 🔥 OPTIMIZADO: Solo calculamos comisiones sobre viajes que ya salieron al mercado o se finalizaron
+      if(v.valor && (v.estado === "PUBLICADO" || v.estado === "ASIGNADO" || v.estado === "EN_VIAJE" || v.estado === "FINALIZADO")){
+        contadorComisiones++;
+        
+        // Calculamos el 5% neto de la comisión de la plataforma
         const comision = (v.valor * 0.05).toFixed(2);
+        
+        // Evaluamos el estado de cobro real inyectado en tu modelo Trip.js
+        const estaPagada = v.comisionPagada === true;
+        const claseCard = estaPagada ? "pagada" : "pendiente";
+        const claseBadge = estaPagada ? "badge-pagada" : "badge-pendiente";
+        const textoBadge = estaPagada ? "COBRADA" : "PENDIENTE DE COBRO";
+
         html += `
-        <div class="card">
-          📦 <b>Producto:</b> ${v.producto || "-"}<br>
-          💰 <b>Valor carga:</b> $${v.valor || 0}<br>
-          💸 <b>Comisión 5%:</b> $${comision}<br>
-          🧾 <small>Detalle: 5% del valor total de la carga</small>
+        <div class="card ${claseCard}">
+          <span class="badge ${claseBadge}">${textoBadge}</span>
+          📦 <b>Carga Asociada:</b> ${v.producto || "-"}<br>
+          📍 <b>Trayecto Vial:</b> ${v.origen} ➔ ${v.destino}<br>
+          💰 <b>Valor Neto del Flete:</b> $${v.valor.toLocaleString('es-AR')}<br>
+          💸 <span style="font-weight:bold; color:#60a5fa;">Comisión Retenida (5%):</span> $${parseFloat(comision).toLocaleString('es-AR')}<br>
+          
+          <hr style="border-color:#374151; margin:8px 0;">
+          👨‍✈️ <b>Chofer Responsable DNI:</b> ${v.choferDni || v.chofer?.dni || "-"}<br>
+          👤 <b>Razón Social Cliente:</b> ${v.clienteNombre || "-"}
         </div>
         `;
       }
     });
 
+    if(contadorComisiones === 0) {
+      html = `<div class="no-comisiones">📋 No se registran fletes activos en el mercado para liquidar comisiones.</div>`;
+    }
+
     document.getElementById("lista").innerHTML = html;
 
   }catch(err){
-    console.error(err);
-    document.getElementById("lista").innerHTML = "❌ Error cargando comisiones";
+    console.error("❌ Error liquidando comisiones de Mongoose:", err);
+    document.getElementById("lista").innerHTML = "❌ Error crítico cargando comisiones de la base de datos";
   }
 }
 
+// Ejecución inicial de arranque automático
 cargar();
 </script>
 

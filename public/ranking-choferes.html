@@ -1,101 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Ranking de Choferes</title>
 
 <style>
 body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:20px;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
 }
-
+h2 {
+  margin-bottom:20px;
+}
 .card{
-background:#1e293b;
-padding:15px;
-margin-bottom:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border-left: 5px solid #64748b;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
-
 .top{
-color:#22c55e;
-font-size:18px;
-font-weight:bold;
+  color:#22c55e;
+  font-size:18px;
+  font-weight:bold;
+  border-left-color: #22c55e !important;
+}
+.oro { border-left-color: #f59e0b; } /* Primer puesto dorado */
+.estrellas { color: #f59e0b; font-weight: bold; }
+.no-datos {
+  padding: 20px;
+  background: #1e293b;
+  border-radius: 10px;
+  text-align: center;
+  color: #9ca3af;
 }
 </style>
-
 </head>
 
 <body>
 
-<h2>🏆 Ranking de Choferes</h2>
+<h2>🏆 Podio y Ranking de Choferes (Métricas de Servicio)</h2>
 
-<div id="lista">Cargando...</div>
+<div id="lista">Evaluando promedios de la flota...</div>
 
 <script>
 
+// Cargar métricas de agregación del ranking desde el backend
 async function cargar(){
+  try{
+    // 🔥 CORREGIDO: Ruta adaptada al endpoint oficial '/ranking' estipulado en tu server.js
+    const res = await fetch("/ranking");
 
-try{
+    if(!res.ok){
+      throw new Error("Error HTTP " + res.status);
+    }
 
-const res = await fetch("/trips/ranking-choferes");
+    const ranking = await res.json();
+    let html = "";
 
-// 🔴 VALIDACIÓN
-if(!res.ok){
-throw new Error("Error HTTP " + res.status);
+    // 🔴 CONTROL SI NO HAY RESTRISTROS PROCESADOS
+    if(!ranking || ranking.length === 0){
+      html = "<div class='no-datos'>📋 No se registran calificaciones de viajes finalizados para procesar el podio.</div>";
+      document.getElementById("lista").innerHTML = html;
+      return;
+    }
+
+    ranking.forEach((r, index)=>{
+      const esPrimero = index === 0;
+      const claseCard = esPrimero ? "top oro" : "";
+
+      // 🔥 EXPLICACIÓN: Como tu agregación en server.js agrupa por DNI (_id: "$choferDni"),
+      // mostramos el documento de identidad o el promedio de forma elegante.
+      const promedioRating = r.promedio ? parseFloat(r.promedio).toFixed(1) : "0.0";
+
+      html += `
+        <div class="card ${claseCard}">
+          <div style="font-size: 16px; font-weight: bold;">
+            #${index + 1} 👨‍✈️ Transportista (DNI / Legajo): <span style="color:#60a5fa;">${r._id || "Anónimo"}</span>
+          </div>
+          <br>
+          <span class="estrellas">⭐ Reputación Promedio:</span> ${promedioRating} / 5.0
+        </div>
+      `;
+    });
+
+    document.getElementById("lista").innerHTML = html;
+
+  } catch(error){
+    console.error("❌ Error cargando ranking de MongoDB:", error);
+    document.getElementById("lista").innerHTML = "<div class='no-datos'>❌ Error al sincronizar el podio de reputación.</div>";
+  }
 }
 
-const ranking = await res.json();
-
-let html = "";
-
-// 🔴 SI NO HAY DATOS
-if(!ranking || ranking.length === 0){
-html = "<p>No hay datos de ranking todavía</p>";
-document.getElementById("lista").innerHTML = html;
-return;
-}
-
-ranking.forEach((r,index)=>{
-
-html += `
-<div class="card">
-
-<div class="${index===0 ? "top" : ""}">
-#${index+1} 👨‍✈️ ${r._id || "Sin nombre"}
-</div>
-
-<br>
-
-🚚 Viajes: ${r.viajes || 0}
-<br>
-📏 Km recorridos: ${Math.round(r.km || 0)}
-<br>
-⭐ Rating: ${r.rating ? r.rating.toFixed(1) : "Sin datos"}
-
-</div>
-`;
-
-});
-
-document.getElementById("lista").innerHTML = html;
-
-}catch(error){
-
-console.error("❌ Error cargando ranking:", error);
-
-document.getElementById("lista").innerHTML =
-"<p>Error cargando ranking</p>";
-
-}
-
-}
-
-// 🔄 ACTUALIZAR CADA 15 SEGUNDOS
+// 🔄 ACTUALIZACIÓN AUTOMÁTICA EN TIEMPO REAL (Cada 15 segundos re-evalúa el podio)
 setInterval(cargar, 15000);
 
+// Lanzamiento inicial de arranque
 cargar();
 
 </script>

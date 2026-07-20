@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Cargas pendientes - ZTR</title>
@@ -16,17 +16,31 @@ body{
   padding:15px;
   margin-bottom:10px;
   border-radius:10px;
+  border-left: 5px solid #f59e0b; /* Borde naranja de advertencia/pendiente */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
 button{
-  padding:6px 10px;
+  padding:8px 12px;
   margin-top:10px;
   margin-right:5px;
   border:none;
   border-radius:6px;
   cursor:pointer;
+  font-weight: bold;
+  transition: background 0.2s;
 }
 .aprobar{background:#16a34a;color:white;}
+.aprobar:hover{background:#15803d;}
 .rechazar{background:#dc2626;color:white;}
+.rechazar:hover{background:#b91c1c;}
+
+.no-cargas {
+  padding: 20px;
+  background: #1e293b;
+  border-radius: 10px;
+  text-align: center;
+  color: #9ca3af;
+}
 </style>
 </head>
 
@@ -34,68 +48,81 @@ button{
 
 <h2>📦 Cargas pendientes de aprobación</h2>
 
-<div id="lista"></div>
+<div id="lista">Cargando fletes pendientes...</div>
 
 <script>
 
-// Cargar viajes pendientes
+// Cargar viajes en estado PENDIENTE
 async function cargar(){
   try{
     const res = await fetch("/trips");
     const viajes = await res.json();
 
     let html = "";
+    let contadorPendientes = 0;
 
     viajes.forEach(v => {
       if(v.estado === "PENDIENTE"){
+        contadorPendientes++;
         html += `
           <div class="card">
-            <b>${v.producto}</b><br>
-            ${v.origen} → ${v.destino}<br>
-            💰 $${v.valor}<br>
-            👤 ${v.clienteNombre || "-"}<br><br>
-            <button class="aprobar" onclick="aprobar('${v._id}')">Aprobar</button>
-            <button class="rechazar" onclick="rechazar('${v._id}')">Rechazar</button>
+            <b>📦 Producto:</b> ${v.producto || "-"}<br>
+            📍 <b>Ruta:</b> ${v.origen} ➔ ${v.destino}<br>
+            📏 <b>Distancia Terrestre:</b> ${v.distanciaKm || 0} km<br>
+            💰 <b>Valor estimado:</b> $${v.valor}<br>
+            👤 <b>Cliente Solicitante:</b> ${v.clienteNombre || "-"}<br><br>
+            
+            <button class="aprobar" onclick="aprobar('${v._id}', '${v.producto}')">Aprobar y Publicar</button>
+            <button class="rechazar" onclick="rechazar('${v._id}', '${v.producto}')">Rechazar Flete</button>
           </div>
         `;
       }
     });
 
+    // Si el contador es 0, mostramos un mensaje controlado en vez de dejar la pantalla vacía
+    if(contadorPendientes === 0) {
+      html = `<div class="no-cargas">🎉 No hay cargas pendientes de aprobación por el momento.</div>`;
+    }
+
     document.getElementById("lista").innerHTML = html;
 
   }catch(err){
-    console.error("Error cargando cargas pendientes:", err);
-    document.getElementById("lista").innerHTML = "<p>❌ Error al cargar las cargas pendientes.</p>";
+    console.error("❌ Error cargando cargas pendientes:", err);
+    document.getElementById("lista").innerHTML = "<p>❌ Error crítico al sincronizar datos pendientes de MongoDB.</p>";
   }
 }
 
-// Aprobar carga
-async function aprobar(id){
+// Aprobar carga (Cambia estado a PUBLICADO y notifica al sistema)
+async function aprobar(id, producto){
   try{
     const res = await fetch(`/trips/${id}/aprobar`, { method:"POST" });
     if(res.ok){
-      cargar();
-    }else{
-      alert("Error al aprobar la carga");
+      alert(`✅ Carga de "${producto}" aprobada con éxito. Ya está visible para los choferes.`);
+      cargar(); // Refresca el listado de inmediato
+    }else {
+      alert("❌ Error en el servidor al intentar aprobar la carga.");
     }
   }catch(err){
-    console.error(err);
-    alert("Error al aprobar la carga");
+    console.error("❌ Error en función aprobar:", err);
+    alert("Error de conexión al procesar la aprobación.");
   }
 }
 
-// Rechazar carga
-async function rechazar(id){
+// Rechazar carga (Cambia estado a RECHAZADO)
+async function rechazar(id, producto){
+  if(!confirm(`¿Está seguro de que desea rechazar la carga de "${producto}"?`)) return;
+
   try{
     const res = await fetch(`/trips/rechazar/${id}`, { method:"PUT" });
     if(res.ok){
-      cargar();
+      alert(`🚫 Carga de "${producto}" rechazada correctamente.`);
+      cargar(); // Refresca el listado de inmediato
     }else{
-      alert("Error al rechazar la carga");
+      alert("❌ Error en el servidor al intentar rechazar la carga.");
     }
   }catch(err){
-    console.error(err);
-    alert("Error al rechazar la carga");
+    console.error("❌ Error en función rechazar:", err);
+    alert("Error de conexión al procesar el rechazo.");
   }
 }
 

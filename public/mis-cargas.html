@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Mis Cargas - Logistica ZTR</title>
@@ -70,16 +70,14 @@ button{
 ⬅ Volver a publicar
 </button>
 
-<div id="contenedor"></div>
+<div id="contenedor">Cargando tus fletes...</div>
 
 <script>
 
 // ======================
 // CARGAR MIS CARGAS
 // ======================
-
 async function cargarMisCargas(){
-
   const clienteId = localStorage.getItem("clienteId");
 
   if(!clienteId){
@@ -89,8 +87,6 @@ async function cargarMisCargas(){
   }
 
   try{
-
-    // 🔥 USAMOS EL ENDPOINT CORRECTO
     const res = await fetch(`/trips/cliente/${clienteId}`);
     const viajes = await res.json();
 
@@ -102,17 +98,19 @@ async function cargarMisCargas(){
     let html = "";
 
     viajes.forEach(v=>{
-
       let estadoClass="publicado";
       if(v.estado==="EN_VIAJE") estadoClass="en_viaje";
       if(v.estado==="FINALIZADO") estadoClass="finalizado";
 
+      // 🔥 CORREGIDO: Usamos la variable directa choferNombre del modelo Trip.js para evitar el error de asignación
+      const nombreChoferAsignado = v.choferNombre || v.chofer?.nombre || "Sin chofer asignado";
+
       html+=`
       <div class="card">
-
         <b>📦 ${v.producto}</b><br>
         📍 ${v.origen} → ${v.destino}<br>
         💰 $${v.valor}<br>
+        📏 Distancia: ${v.distanciaKm || 0} km<br>
 
         Estado: <span class="estado ${estadoClass}">${v.estado}</span>
 
@@ -123,7 +121,7 @@ async function cargarMisCargas(){
             : `<img src="https://via.placeholder.com/40">`
           }
           <div>
-            ${v.chofer?.nombre || "Sin chofer asignado"}
+            👨‍✈️ <b>Chofer:</b> ${nombreChoferAsignado}
           </div>
         </div>
 
@@ -136,28 +134,27 @@ async function cargarMisCargas(){
         }
 
         ${!v.adelantoPagado
-          ? `<button class="pagar" onclick="pagarAdelanto('${v._id}')">💰 Pagar adelanto</button>`
-          : `<span>✅ Adelanto pagado</span>`
+          ? `<button class="pagar" onclick="pagarAdelanto('${v._id}')">💰 Pagar flete (PayPal)</button>`
+          : `<span>✅ Adelanto de flete pagado exitosamente</span>`
         }
 
         ${
           v.estado === "EN_VIAJE"
-          ? `<button class="mapa" onclick="verMapa('${v._id}')">📍 Ver en mapa</button>`
+          ? `<button class="mapa" onclick="verMapa('${v._id}')">🛰️ Rastrear GPS en vivo</button>`
           : ""
         }
 
         ${
           v.estado === "FINALIZADO"
           ? `
-          <br>
-          Puntuar chofer:<br>
+          <br><br>
+          <b>Calificar el servicio del transportista:</b><br>
           <button onclick="puntuar('${v._id}',5)">⭐⭐⭐⭐⭐</button>
           <button onclick="puntuar('${v._id}',4)">⭐⭐⭐⭐</button>
           <button onclick="puntuar('${v._id}',3)">⭐⭐⭐</button>
           `
           : ""
         }
-
       </div>
       `;
     });
@@ -165,97 +162,91 @@ async function cargarMisCargas(){
     document.getElementById("contenedor").innerHTML = html;
 
   }catch(err){
-    console.error(err);
-    document.getElementById("contenedor").innerHTML = "❌ Error cargando cargas";
+    console.error("❌ Error en visor de cargas:", err);
+    document.getElementById("contenedor").innerHTML = "❌ Error cargando cargas de MongoDB Atlas";
   }
 }
 
 // ======================
 // ELIMINAR
 // ======================
-
 async function eliminarCarga(id){
-  if(!confirm("Eliminar carga?")) return;
-
+  if(!confirm("¿Desea eliminar de forma permanente esta carga flete?")) return;
   await fetch("/trips/"+id,{method:"DELETE"});
-
   cargarMisCargas();
 }
 
 // ======================
-// PAGAR ADELANTO
+// PAGAR ADELANTO (REPARADO Y CONECTADO A LA API DE PAYPAL MODERNA)
 // ======================
-
 async function pagarAdelanto(id){
-
-  console.log("CLICK PAGO", id); // 🔥 DEBUG
+  console.log("⚡ Iniciando solicitud de pago PayPal para viaje:", id);
 
   try{
-
-    const res = await fetch("/crear-pago",{
+    // 🔥 CORREGIDO: Apunta a la ruta oficial unificada pasando el tipo correcto de transacción
+    const res = await fetch("/api/payments/crear-pago",{
       method:"POST",
       headers:{
         "Content-Type":"application/json"
       },
       body: JSON.stringify({
-        tripId:id
+        tripId: id,
+        tipo: "adelanto" 
       })
     });
 
     const data = await res.json();
+    console.log("Respuesta PayPal:", data);
 
-    console.log("RESPUESTA:", data); // 🔥 DEBUG
-
-    if(!data.url){
-      alert("Error en pago");
+    // 🔥 CORREGIDO: Valida la inyección del id del checkout en vez del url obsoleto
+    if(!data.id){
+      alert("Error generando orden interna en los servidores de PayPal");
       return;
     }
 
-    window.location.href = data.url;
+    // 🔥 SOLUCIÓN: Redirección directa hacia la interfaz oficial de pagos en modo de prueba (Sandbox)
+    window.location.href = `https://paypal.com{data.id}`;
 
   }catch(err){
     console.error(err);
-    alert("Error conectando con servidor");
+    alert("Error de red intentando conectar con la pasarela de pagos");
   }
 }
 
 // ======================
-// MAPA (redirige)
+// MAPA (UNIFICADO AL RASTREADOR REAL LEAFLET)
 // ======================
-
 function verMapa(id){
-  window.location.href = `mapa-cliente.html?tripId=${id}`;
+  // 🔥 CORREGIDO: Redirige hacia tu archivo de mapas interactivos unificado pasando el id por parámetro de URL
+  window.location.href = `seguimiento.html?id=${id}`;
 }
 
 // ======================
 // PUNTUAR
 // ======================
-
 async function puntuar(id, rating){
+  try {
+    await fetch("/trips/rating-chofer",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        tripId:id,
+        rating
+      })
+    });
 
-  await fetch("/trips/rating-chofer",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      tripId:id,
-      rating
-    })
-  });
-
-  alert("Gracias por calificar");
-
-  cargarMisCargas();
+    alert("¡Muchas gracias por calificar al transportista!");
+    cargarMisCargas();
+  } catch(e) {
+    console.error(e);
+  }
 }
 
-// ======================
-// INIT
-// ======================
-
+// Inicialización de arranque de sesión
 cargarMisCargas();
 
 </script>
-
 </body>
 </html>

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>App Chofer ZTR</title>
@@ -8,33 +7,54 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="/manifest.json">
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- Leaflet oficial estable -->
+<link rel="stylesheet" href="https://unpkg.com"/>
+<script src="https://unpkg.com"></script>
 
 <style>
 body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:20px;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  padding:20px;
 }
 
 .card{
-background:#1e293b;
-padding:15px;
-margin:10px 0;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin:10px 0;
+  border-radius:10px;
 }
 
 input{
-display:block;
-margin:5px 0;
-padding:8px;
+  display:block;
+  margin:5px 0;
+  padding:8px;
+  width: 100%;
+  border-radius: 6px;
+  border: none;
 }
 
 button{
-padding:10px;
-margin-top:10px;
+  padding:10px 14px;
+  margin-top:10px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+button:hover { background: #1d4ed8; }
+
+.btn-postular { background: #16a34a; }
+.btn-postular:hover { background: #15803d; }
+
+#mapa {
+  height:300px;
+  border-radius:10px;
+  margin-top: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 </style>
 </head>
@@ -45,249 +65,253 @@ margin-top:10px;
 
 <h3>Mi perfil</h3>
 
-<div id="formPerfil">
-<input id="nombre" placeholder="Nombre">
-<input id="apellido" placeholder="Apellido">
-<input id="dni" placeholder="DNI">
-<input id="telefono" placeholder="Teléfono">
-<input id="patente1" placeholder="Patente 1">
-<input id="patente2" placeholder="Patente 2">
-<input id="patente3" placeholder="Patente 3">
-<button onclick="guardarPerfil()">Guardar perfil</button>
+<div id="formPerfil" class="card">
+  <input id="nombre" placeholder="Nombre">
+  <input id="apellido" placeholder="Apellido">
+  <input id="dni" placeholder="DNI">
+  <input id="telefono" placeholder="Teléfono">
+  <input id="patente1" placeholder="Patente 1 (Chasis)">
+  <input id="patente2" placeholder="Patente 2 (Acoplado)">
+  <input id="patente3" placeholder="Patente 3 (Opcional)">
+  <button onclick="guardarPerfil()">Guardar perfil</button>
 </div>
 
-<h3>Foto</h3>
-<input type="file" id="foto">
-<button onclick="subirFoto()">Subir foto</button>
+<h3>Foto de Perfil / Carnet</h3>
+<div class="card">
+  <input type="file" id="foto">
+  <button onclick="subirFoto()">Subir foto</button>
+</div>
 
 <div id="miPerfil"></div>
 
-<h3>📦 Cargas disponibles</h3>
-<div id="lista"></div>
+<h3>📦 Radar de Cargas Disponibles (Ruta Real)</h3>
+<div id="lista">Cargando ofertas cercanas terrestres...</div>
 
-<div id="mapa" style="height:300px;"></div>
+<div id="mapa"></div>
 
 <script>
 
 let mapa;
 let markers = [];
 
-// 🔹 UBICACIÓN
-navigator.geolocation.getCurrentPosition(pos=>{
-localStorage.setItem("lat", pos.coords.latitude);
-localStorage.setItem("lng", pos.coords.longitude);
-});
+// 🔹 INICIALIZAR MAPA CONTROLADO
+function iniciarMapa(lat, lng){
+  if(mapa) return; // Evita duplicar el mapa si se ejecuta dos veces
 
-// 🔹 MAPA
-function iniciarMapa(lat,lng){
+  mapa = L.map("mapa").setView([lat, lng], 10);
 
-mapa = L.map("mapa").setView([lat,lng],10);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19
+  }).addTo(mapa);
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-maxZoom:19
-}).addTo(mapa);
-
-L.marker([lat,lng]).addTo(mapa).bindPopup("Tu ubicación");
-
+  L.marker([lat, lng]).addTo(mapa).bindPopup("🚛 Tu ubicación actual");
 }
 
-// 🔹 DISTANCIA REAL (km)
-function distancia(lat1,lng1,lat2,lng2){
-
-const R=6371;
-
-const dLat=(lat2-lat1)*Math.PI/180;
-const dLng=(lng2-lng1)*Math.PI/180;
-
-const a=
-Math.sin(dLat/2)*Math.sin(dLat/2)+
-Math.cos(lat1*Math.PI/180)*
-Math.cos(lat2*Math.PI/180)*
-Math.sin(dLng/2)*Math.sin(dLng/2);
-
-return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-
-}
-
-// 🔹 CARGAR PERFIL
+// 🔹 CARGAR PERFIL DEL CHOFER
 async function mostrarPerfil(){
+  const id = localStorage.getItem("choferId");
+  if(!id) return;
 
-const id = localStorage.getItem("choferId");
-if(!id) return;
+  try {
+    // 🔥 CORREGIDO: Cambiado de /choferes/ a /drivers/ que es tu ruta real de server.js
+    const res = await fetch("/drivers/" + id);
+    const d = await res.json();
 
-const res = await fetch("/choferes/"+id);
-const d = await res.json();
+    // Guardamos en local para usar al postularse
+    localStorage.setItem("nombre", d.nombre || "");
+    localStorage.setItem("telefono", d.telefono || "");
+    localStorage.setItem("dni", d.dni || "");
+    localStorage.setItem("patente1", d.patente1 || "");
 
-localStorage.setItem("nombre", d.nombre || "");
-localStorage.setItem("telefono", d.telefono || "");
-localStorage.setItem("dni", d.dni || "");
-localStorage.setItem("patente1", d.patente1 || "");
+    // Autorellenamos los inputs por comodidad
+    document.getElementById("nombre").value = d.nombre || "";
+    document.getElementById("apellido").value = d.apellido || "";
+    document.getElementById("dni").value = d.dni || "";
+    document.getElementById("telefono").value = d.telefono || "";
+    document.getElementById("patente1").value = d.patente1 || "";
+    document.getElementById("patente2").value = d.patente2 || "";
+    document.getElementById("patente3").value = d.patente3 || "";
 
-document.getElementById("miPerfil").innerHTML=`
-<div class="card">
-<b>${d.nombre || ""} ${d.apellido || ""}</b><br>
-📞 ${d.telefono || "-"}
-</div>
-`;
-
+    document.getElementById("miPerfil").innerHTML=`
+      <div class="card" style="border-left: 5px solid #3b82f6;">
+        👨‍✈️ <b>${d.nombre || ""} ${d.apellido || ""}</b><br>
+        📞 Teléfono: ${d.telefono || "-"}<br>
+        🪪 DNI: ${d.dni || "-"}<br>
+        🚛 Patente: ${d.patente1 || "-"}
+      </div>
+    `;
+  } catch(e) {
+    console.error("Error cargando perfil del chofer", e);
+  }
 }
 
-// 🔹 GUARDAR PERFIL
+// 🔹 GUARDAR PERFIL (ACTUALIZAR)
 async function guardarPerfil(){
+  const id = localStorage.getItem("choferId");
+  if(!id) { alert("Inicie sesión como chofer primero"); return; }
 
-const id = localStorage.getItem("choferId");
+  const data={
+    nombre: document.getElementById("nombre").value,
+    apellido: document.getElementById("apellido").value,
+    dni: document.getElementById("dni").value,
+    telefono: document.getElementById("telefono").value,
+    patente1: document.getElementById("patente1").value,
+    patente2: document.getElementById("patente2").value,
+    patente3: document.getElementById("patente3").value
+  };
 
-const data={
-nombre: nombre.value,
-apellido: apellido.value,
-dni: dni.value,
-telefono: telefono.value,
-patente1: patente1.value,
-patente2: patente2.value,
-patente3: patente3.value
-};
+  try {
+    // 🔥 CORREGIDO: Ruta alineada con tu backend Express /drivers/
+    const res = await fetch(`/drivers/${id}/perfil`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(data)
+    });
 
-const res = await fetch("/choferes/"+id+"/perfil",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify(data)
-});
-
-if(res.ok){
-alert("Perfil guardado");
-location.reload();
+    if(res.ok){
+      alert("✅ Perfil de chofer actualizado con éxito");
+      mostrarPerfil();
+    } else {
+      alert("❌ Error guardando datos en el servidor");
+    }
+  } catch(e) {
+    console.error(e);
+  }
 }
 
-}
-
-// 🔹 CARGAR CARGAS
+// 🔹 CARGAR CARGAS CON EL NUEVO RADAR ASÍNCRONO DEL BACKEND
 async function cargarCargas(){
+  const choferId = localStorage.getItem("choferId");
+  if(!choferId) return;
 
-const res = await fetch("/trips");
-const viajes = await res.json();
+  try {
+    // 🔥 REEMPLAZADO: En vez de hacer Haversine en el navegador, consultamos el radar vial real 
+    // que inyectamos en tu routes/trips.js utilizando OSRM por carretera
+    const res = await fetch("/trips/cargas-cercanas/" + choferId);
+    const lista = await res.json();
 
-const lat = Number(localStorage.getItem("lat"));
-const lng = Number(localStorage.getItem("lng"));
+    // Limpiar marcadores viejos
+    if (mapa) {
+      markers.forEach(m => mapa.removeLayer(m));
+    }
+    markers = [];
 
-let lista = [];
+    let html = "";
 
-viajes.forEach(v=>{
+    if(!lista.length) {
+      document.getElementById("lista").innerHTML = "<p>No hay cargas disponibles cerca de tu posición por carretera.</p>";
+      return;
+    }
 
-if(v.estado === "PUBLICADO" && v.origenLat){
+    lista.forEach(v => {
+      // 📦 Dibujar marcador de carga disponible en el mapa Leaflet
+      if (mapa && v.origenLat && v.origenLng) {
+        const marker = L.marker([parseFloat(v.origenLat), parseFloat(v.origenLng)])
+          .addTo(mapa)
+          .bindPopup(`<b>Carga: ${v.producto}</b><br>Destino: ${v.destino}`);
+        markers.push(marker);
+      }
 
-const dist = distancia(
-lat,lng,
-v.origenLat,
-v.origenLng
-);
+      // Estructurar tarjeta de oferta
+      html += `
+        <div class="card" style="border-left: 5px solid #16a34a;">
+          📦 <b>${v.producto}</b><br>
+          📍 <b>Origen flete:</b> ${v.origen} ➔ <b>Destino:</b> ${v.destino}<br>
+          💰 <b>Valor del Viaje:</b> $${v.valor}<br>
+          📏 <b>Distancia Vial Real:</b> ${v.distanciaKm ? v.distanciaKm.toFixed(1) : 0} km<br>
 
-lista.push({...v,distancia:dist});
+          <button class="btn-postular" onclick="postular('${v._id}')">
+            🚚 Postularme al flete
+          </button>
+        </div>
+      `;
+    });
 
+    document.getElementById("lista").innerHTML = html;
+
+  } catch(err) {
+    console.error("Error cargando radar de ofertas:", err);
+    document.getElementById("lista").innerHTML = "<p>❌ Error sincronizando el radar de ofertas.</p>";
+  }
 }
 
-});
-
-// ordenar
-lista.sort((a,b)=>a.distancia - b.distancia);
-
-// limpiar mapa
-markers.forEach(m=>mapa.removeLayer(m));
-markers=[];
-
-let html="";
-
-lista.forEach(v=>{
-
-// mapa
-const marker = L.marker([v.origenLat,v.origenLng])
-.addTo(mapa)
-.bindPopup("📦 Carga disponible");
-
-markers.push(marker);
-
-// html
-html+=`
-<div class="card">
-
-📦 ${v.producto}<br>
-📍 Zona aproximada<br>
-💰 $${v.valor}<br>
-📏 ${v.distancia.toFixed(1)} km<br>
-
-<button onclick="postular('${v._id}')">
-Postularme
-</button>
-
-</div>
-`;
-
-});
-
-document.getElementById("lista").innerHTML = html;
-
-}
-
-// 🔹 POSTULAR
+// 🔹 POSTULARSE AL VIAJE (Se envía hacia el backend corregido)
 async function postular(id){
+  try {
+    const res = await fetch("/trips/postular/" + id, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        nombre: localStorage.getItem("nombre"),
+        telefono: localStorage.getItem("telefono"),
+        dni: localStorage.getItem("dni"),
+        patente1: localStorage.getItem("patente1")
+      })
+    });
 
-const res = await fetch("/trips/postular/"+id,{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-nombre: localStorage.getItem("nombre"),
-telefono: localStorage.getItem("telefono"),
-dni: localStorage.getItem("dni"),
-patente1: localStorage.getItem("patente1")
-})
-});
-
-if(res.ok){
-alert("Postulación enviada");
+    if(res.ok){
+      alert("✅ ¡Postulación enviada correctamente al cliente flete!");
+    } else {
+      alert("❌ Ocurrió un problema al enviar la postulación");
+    }
+  } catch(e) {
+    alert("Error de red");
+  }
 }
 
-}
-
-// 🔹 FOTO
+// 🔹 SUBIR FOTO CHOFER
 async function subirFoto(){
+  const input = document.getElementById("foto");
+  if(!input.files[0]){ alert("Seleccioná una foto primero"); return; }
 
-const input = document.getElementById("foto");
+  const formData = new FormData();
+  // 🔥 CORREGIDO: Clave adaptada a lo que procesa tu Multer en el backend
+  formData.append("foto", input.files[0]);
 
-if(!input.files[0]){
-alert("Seleccioná una foto");
-return;
+  const id = localStorage.getItem("choferId");
+
+  try {
+    const res = await fetch(`/drivers/${id}/foto`, {
+      method:"POST",
+      body:formData
+    });
+
+    if(res.ok){
+      alert("✅ Foto de perfil cargada con éxito");
+      location.reload();
+    } else {
+      alert("Error subiendo el archivo");
+    }
+  } catch(e) {
+    console.error(e);
+  }
 }
 
-const formData = new FormData();
-formData.append("archivo", input.files[0]);
+// ======================
+// 🔄 CICLO DE INICIALIZACIÓN UNIFICADO Y SEGURO
+// ======================
+navigator.geolocation.getCurrentPosition(async (pos) => {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
 
-const id = localStorage.getItem("choferId");
+  // Guardamos las coordenadas iniciales del teléfono
+  localStorage.setItem("lat", lat);
+  localStorage.setItem("lng", lng);
 
-const res = await fetch("/choferes/"+id+"/foto",{
-method:"POST",
-body:formData
+  // Levantamos el mapa y el radar de fletes en orden secuencial sin desbordes
+  iniciarMapa(lat, lng);
+  
+  // Ejecutamos el perfil primero para asegurar las variables en localStorage
+  await mostrarPerfil();
+  
+  // Teniendo las coordenadas y el choferId, lanzamos el radar vial
+  cargarCargas();
+}, (err) => {
+  console.error("GPS Denegado o bloqueado por el dispositivo móvil:", err);
+  alert("Por favor habilite los permisos de ubicación GPS para ver las cargas en su zona.");
 });
-
-if(res.ok){
-alert("Foto subida");
-location.reload();
-}
-
-}
-
-// 🔹 INIT
-navigator.geolocation.getCurrentPosition(pos=>{
-
-const lat = pos.coords.latitude;
-const lng = pos.coords.longitude;
-
-iniciarMapa(lat,lng);
-cargarCargas();
-
-});
-
-mostrarPerfil();
 
 </script>
-
 </body>
 </html>
+

@@ -1,130 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Choferes postulados</title>
 
 <style>
 body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:20px;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
 }
 
 .card{
-background:#1e293b;
-padding:15px;
-margin-bottom:15px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:15px;
+  border-radius:10px;
+  border-left: 5px solid #2563eb;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
 
 button{
-margin-top:10px;
-padding:8px 12px;
-border:none;
-border-radius:6px;
-cursor:pointer;
+  margin-top:10px;
+  padding:10px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight: bold;
+  transition: background 0.2s;
 }
 
 .aceptar{
-background:#2ecc71;
-color:white;
+  background:#16a34a;
+  color:white;
+}
+.aceptar:hover {
+  background: #15803d;
 }
 
+.no-postulaciones {
+  padding: 20px;
+  background: #1e293b;
+  border-radius: 10px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.chofer-row {
+  border-top: 1px solid #334155;
+  margin-top: 10px;
+  padding-top: 10px;
+}
 </style>
 
 </head>
 
 <body>
 
-<h2>📋 Choferes postulados</h2>
+<h2>📋 Choferes postulados a las Cargas</h2>
 
-<div id="lista"></div>
+<div id="lista">Sincronizando postulaciones activas...</div>
 
 <script>
 
+// Cargar viajes publicados o pendientes que posean transportistas anotados
 async function cargar(){
+  try{
+    const res = await fetch("/trips");
+    const viajes = await res.json();
 
-try{
+    let html = "";
+    let contadorPostulaciones = 0;
 
-const res = await fetch("/trips");
-const viajes = await res.json();
+    viajes
+      .filter(v => v.estado === "PUBLICADO" || v.estado === "PENDIENTE")
+      .forEach(v=>{
+        if(!v.postulaciones || v.postulaciones.length === 0) return;
+        contadorPostulaciones++;
 
-let html = "";
+        html += `
+          <div class="card">
+            <b>📦 Producto flete:</b> ${v.producto || "-"}<br>
+            📍 <b>Ruta terrestre:</b> ${v.origen} ➔ ${v.destino}<br>
+            💰 <b>Valor estimado:</b> $${v.valor}<br>
+            distancia Vial: ${v.distanciaKm || 0} km<br>
+        `;
 
-// 🔥 SOLO VIAJES PUBLICADOS O PENDIENTES
-viajes
-.filter(v => v.estado === "PUBLICADO" || v.estado === "PENDIENTE")
-.forEach(v=>{
+        v.postulaciones.forEach(p=>{
+          html += `
+            <div class="chofer-row">
+              👤 <b>Nombre Chofer:</b> ${p.nombre || "-"}<br>
+              📞 <b>Teléfono:</b> ${p.telefono || "-"}<br>
+              🪪 <b>DNI:</b> ${p.dni || "-"}<br>
+              🚛 <b>Patente Chasis:</b> ${p.patente1 || "-"}<br>
 
-if(!v.postulaciones || v.postulaciones.length === 0) return;
+              <button class="aceptar" onclick="aceptar('${v._id}', '${p.nombre}', '${p.telefono}', '${p.dni}', '${p.patente1}')">
+                ✅ Asignar este Chofer al Viaje
+              </button>
+            </div>
+          `;
+        });
 
-html += `
-<div class="card">
-<b>📦 ${v.producto}</b><br>
-📍 ${v.origen} → ${v.destino}<br>
-💰 $${v.valor}<br><br>
-`;
+        html += `</div>`;
+      });
 
-v.postulaciones.forEach(p=>{
+    document.getElementById("lista").innerHTML = html || '<div class="no-postulaciones">📋 No hay transportistas postulados a ninguna carga por el momento.</div>';
 
-html += `
-<div style="border-top:1px solid #334155;margin-top:10px;padding-top:10px;">
-👤 ${p.nombre}<br>
-📞 ${p.telefono}<br>
-🚛 ${p.patente1 || "-"}<br>
-
-<button class="aceptar" onclick="aceptar('${v._id}','${p.nombre}','${p.telefono}','${p.dni}','${p.patente1}')">
-✅ Aceptar chofer
-</button>
-</div>
-`;
-
-});
-
-html += `</div>`;
-
-});
-
-document.getElementById("lista").innerHTML = html || "No hay postulaciones";
-
-}catch(err){
-console.error(err);
-alert("Error cargando postulaciones");
+  } catch(err){
+    console.error("❌ Error cargando postulaciones:", err);
+    document.getElementById("lista").innerHTML = "❌ Error al conectar con el servidor de postulaciones";
+  }
 }
 
+// 🔥 ACEPTAR Y ASIGNAR CHOFER (CORREGIDO A JSON SINCRO)
+async function aceptar(id, nombre, telefono, dni, camion){
+  try {
+    // 🔥 CORREGIDO: Modificado a formato JSON e inyectando los campos requeridos por tu modelo Trip.js
+    const payload = {
+      estado: "ASIGNADO", // Cambiamos el estado para sacarlo del mercado de ofertas
+      choferNombre: nombre,
+      choferDni: dni,
+      chofer: {
+        nombre: nombre,
+        dni: dni,
+        telefono: telefono,
+        camion: camion
+      }
+    };
+
+    // Reutilizamos el endpoint nativo de actualización del viaje pasando el ID
+    const res = await fetch("/trips/" + id, {
+      method: "POST", // O PUT según requiera tu router.post de actualización por id
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if(res.ok) {
+      alert(`✅ Chofer "${nombre}" asignado correctamente al manifiesto del viaje.`);
+      cargar(); // Refresca la lista de forma automática
+    } else {
+      alert("❌ El servidor rechazó la asignación del chofer");
+    }
+
+  } catch(err){
+    console.error("❌ Error en función aceptar:", err);
+    alert("Error de red al intentar asignar al transportista");
+  }
 }
 
-// 🔥 ACEPTAR CHOFER
-async function aceptar(id,nombre,telefono,dni,camion){
-
-try{
-
-await fetch("/trips/aceptar-chofer/"+id,{
-method:"POST",
-headers:{
-"Content-Type":"application/x-www-form-urlencoded"
-},
-body:new URLSearchParams({
-nombre,
-telefono,
-dni,
-camion
-})
-});
-
-alert("Chofer asignado");
-
-cargar();
-
-}catch(err){
-console.error(err);
-alert("Error al aceptar");
-}
-
-}
-
+// Ejecución inicial de arranque
 cargar();
 
 </script>

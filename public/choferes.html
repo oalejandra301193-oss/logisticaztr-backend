@@ -1,197 +1,200 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
-
 <meta charset="UTF-8">
-<title>Choferes</title>
+<title>Choferes Registrados - Administración</title>
 
 <style>
-
 body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:20px;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  padding:20px;
 }
 
 .card{
-background:#1e293b;
-padding:15px;
-margin:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin:10px 0;
+  border-radius:10px;
+  border-left: 5px solid #3b82f6;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
 
-img{
-width:80px;
-height:80px;
-object-fit:cover;
-border-radius:50%;
-margin-bottom:10px;
+.avatar-container {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 10px;
+}
+
+img, svg {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 button{
-padding:8px;
-margin-top:5px;
+  padding:8px 12px;
+  margin-top:5px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+button:hover { background: #1d4ed8; }
+
+input[type="file"] {
+  background: #0f172a;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  color: #9ca3af;
+  font-size: 13px;
 }
 
+.documento-link {
+  display: inline-block;
+  margin-top: 6px;
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: 600;
+}
+.documento-link:hover { text-decoration: underline; }
 </style>
-
 </head>
 
 <body>
 
-<h2>🚛 Choferes registrados</h2>
+<h2>🚛 Panel de Choferes Registrados</h2>
 
-<div id="lista"></div>
+<div id="lista">Cargando legajos de choferes...</div>
 
 <script>
 
 const token = localStorage.getItem("token");
 
-// 🔒 VALIDACIÓN ADMIN
+// 🔒 VALIDACIÓN DE SESIÓN ADMINISTRATIVA
 if(!token){
-alert("No autorizado");
-window.location = "/login-admin.html";
+  alert("Acceso denegado: No autorizado");
+  window.location = "/login-admin.html";
 }
 
 // =======================
-// CARGAR CHOFERES
+// CARGAR LISTADO DE CHOFERES
 // =======================
-
 async function cargar(){
+  try{
+    // 🔥 CORREGIDO: Ruta alineada con el prefijo /drivers del backend
+    const res = await fetch("/drivers");
 
-try{
+    if(!res.ok){
+      throw new Error("Error obteniendo choferes");
+    }
 
-const res = await fetch("/drivers");
+    const drivers = await res.json();
+    let html = "";
 
-if(!res.ok){
-throw new Error("Error obteniendo choferes");
+    if(!drivers.length) {
+      document.getElementById("lista").innerHTML = "<p>No hay choferes registrados en la base de datos.</p>";
+      return;
+    }
+
+    drivers.forEach(d=>{
+      
+      // 🔥 CORREGIDO: En vez de un link externo que se rompe, si no hay foto renderizamos el avatar SVG en limpio de forma nativa
+      const renderAvatar = d.foto
+        ? `<img src="/uploads/choferes/${d.foto}">`
+        : `<svg viewBox="0 0 100 100" xmlns="http://w3.org" style="background:#5c6b8d;"><circle cx="50" cy="40" r="22" fill="#f1f5f9"/><path d="M16 85C16 68 31 58 50 58S84 68 84 85Z" fill="#f1f5f9"/></svg>`;
+
+      html+=`
+        <div class="card">
+          <div class="avatar-container">${renderAvatar}</div>
+          
+          <b>👨‍✈️ Transportista:</b> ${d.nombre || "Sin nombre"} ${d.apellido || ""}<br>
+          🪪 <b>DNI:</b> ${d.dni || "-"}<br>
+          📞 <b>Teléfono:</b> ${d.telefono || "-"}<br>
+          🚛 <b>Patente Chasis:</b> ${d.patente1 || "-"}<br>
+          🚛 <b>Patente Acoplado:</b> ${d.patente2 || "-"}<br>
+          🚛 <b>Patente Auxiliar:</b> ${d.patente3 || "-"}<br>
+          🟢 <b>En Servicio/Disponible:</b> ${d.disponible ? "SÍ" : "NO"}
+          
+          <br><br>
+          
+          <div style="background: #0f172a; padding: 12px; border-radius: 8px;">
+            <b>📂 Documentación del Chofer (CNRT / Seguros)</b><br><br>
+            <input type="file" id="file-${d._id}">
+            <button onclick="subirArchivo('${d._id}', '${d.nombre || 'Chofer'}')">📤 Subir Documento</button>
+            <br><br>
+            <div id="docs-${d._id}">
+              ${
+                d.archivos && d.archivos.length > 0
+                ? d.archivos.map(a =>
+                  `📄 <a class="documento-link" href="/uploads/choferes/${a}" target="_blank">Ver archivo guardado</a><br>`
+                ).join("")
+                : "<i>Sin documentación adjunta en este legajo</i>"
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    document.getElementById("lista").innerHTML = html;
+
+  } catch(err){
+    console.error("❌ Error listando legajos:", err);
+    document.getElementById("lista").innerHTML = "❌ Error al cargar legajos de choferes";
+  }
 }
 
-const drivers = await res.json();
-
-let html = "";
-
-drivers.forEach(d=>{
-
-const foto = d.foto
-? "/uploads/choferes/" + d.foto
-: "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
-html+=`
-
-<div class="card">
-
-<img src="${foto}">
-
-<br>
-
-<b>${d.nombre || "Sin nombre"} ${d.apellido || ""}</b>
-
-<br>
-
-🪪 DNI: ${d.dni || "-"}
-
-<br>
-
-📞 Tel: ${d.telefono || "-"}
-
-<br>
-
-🚛 Patente 1: ${d.patente1 || "-"}
-
-<br>
-
-🚛 Patente 2: ${d.patente2 || "-"}
-
-<br>
-
-🚛 Patente 3: ${d.patente3 || "-"}
-
-<br>
-
-🟢 Disponible: ${d.disponible ? "SI" : "NO"}
-
-<br><br>
-
-<input type="file" id="file-${d._id}">
-<button onclick="subirArchivo('${d._id}')">📤 Subir archivo</button>
-
-<br><br>
-
-<div>
-
-${
-d.archivos && d.archivos.length > 0
-? d.archivos.map(a =>
-`<a href="/uploads/choferes/${a}" target="_blank">📄 Ver archivo</a><br>`
-).join("")
-: "Sin archivos"
-}
-
-</div>
-
-</div>
-
-`;
-
-});
-
-document.getElementById("lista").innerHTML = html;
-
-}catch(err){
-
-console.error(err);
-alert("Error cargando choferes");
-
-}
-
-}
-
+// Inicialización de arranque
 cargar();
 
 // =======================
-// SUBIR ARCHIVO (ADMIN)
+// SUBIR ARCHIVO ADMINISTRATIVO (REPARADO Y SIN CONFLICTO MULTIPART)
 // =======================
+async function subirArchivo(id, nombreChofer){
+  const input = document.getElementById("file-"+id);
 
-async function subirArchivo(id){
+  if(!input.files[0]){
+    alert("Por favor, seleccione un archivo válido de su computadora");
+    return;
+  }
 
-const input = document.getElementById("file-"+id);
+  const formData = new FormData();
+  // Sincronizado con el campo 'archivo' o 'foto' que procesa tu Multer en backend
+  formData.append("archivo", input.files[0]);
 
-if(!input.files[0]){
-alert("Seleccioná un archivo");
-return;
-}
+  try{
+    // 🔥 CORREGIDO: Ruta adaptada a /drivers/ e inyección limpia de credenciales de Multer
+    const res = await fetch(`/drivers/${id}/archivo`, {
+      method:"POST",
+      headers:{
+        // 🔒 IMPORTANTE: Al enviar FormData, NO se debe forzar la cabecera 'Content-Type' 
+        // para que el navegador autocalcule la frontera multipart de forma exitosa.
+        "Authorization": "Bearer " + token
+      },
+      body: formData
+    });
 
-const formData = new FormData();
-formData.append("archivo", input.files[0]);
+    if(res.ok){
+      alert(`✅ Documentación cargada con éxito en el legajo de: ${nombreChofer}`);
+      cargar(); // Refresca el panel para ver el nuevo link inmediatamente
+    } else {
+      alert("❌ El servidor rechazó el archivo. Verifique el formato o tamaño.");
+    }
 
-try{
-
-const res = await fetch("/choferes/"+id+"/archivo",{
-method:"POST",
-headers:{
-"Authorization": "Bearer " + token
-},
-body:formData
-});
-
-if(res.ok){
-alert("Archivo subido");
-cargar();
-}else{
-alert("Error al subir archivo");
-}
-
-}catch(err){
-console.error(err);
-alert("Error de conexión");
-}
-
+  } catch(err){
+    console.error("❌ Error en la subida binaria:", err);
+    alert("Error de conexión al procesar el archivo multipart");
+  }
 }
 
 </script>
 
 </body>
 </html>
+

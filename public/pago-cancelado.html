@@ -1,17 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Pago cancelado</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pago Cancelado - Logística ZTR</title>
+  
+  <!-- Iconos modernos para refinar el estado de la cancelación -->
+  <link rel="stylesheet" href="https://cloudflare.com">
+
+  <style>
+    /* Reset básico e inicialización de pantalla */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: #090d16; /* Fondo oscuro unificado en PC */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+    .celular-container {
+      width: 100%;
+      max-width: 390px;
+      height: 740px;
+      background: #111827; /* Gris azulado profundo mate */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 25px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+      text-align: center;
+    }
+
+    /* Adaptación para smartphones reales */
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .celular-container {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+      }
+    }
+
+    .icono-estado {
+      font-size: 64px;
+      margin-bottom: 25px;
+      color: #ef4444; /* Rojo de cancelación/alerta */
+    }
+
+    h2 {
+      color: white;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #9ca3af;
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 30px;
+      padding: 0 10px;
+    }
+
+    /* Botón moderno de retorno flete */
+    button {
+      width: 100%;
+      max-width: 280px;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      background: #374151; /* Gris oscuro neutro para cancelación */
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    button:hover { background: #4b5563; transform: translateY(-1px); }
+    button:active { transform: translateY(1px); }
+  </style>
 </head>
+<body>
 
-<body style="font-family:Arial; background:#0f172a; color:white; text-align:center; padding:40px;">
-
-<h2>❌ Pago cancelado</h2>
-
-<button onclick="window.location.href='mis-cargas.html'">
-Volver
-</button>
+  <!-- 📱 CONTENEDOR CELULAR INTEGRADO -->
+  <div class="celular-container">
+    <div class="icono-estado"><i class="fa-solid fa-circle-xmark"></i></div>
+    <h2>Pago Cancelado</h2>
+    <p>La operación de cobro a través de PayPal fue interrumpida por el usuario. El viaje mantendrá su estado actual en la base de datos hasta que se complete el adelanto.</p>
+    
+    <button onclick="window.location.href='mis-cargas.html'">
+      <i class="fa-solid fa-arrow-left"></i> Volver a Mis Cargas
+    </button>
+  </div>
 
 </body>
 </html>

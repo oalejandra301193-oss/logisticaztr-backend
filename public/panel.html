@@ -1,222 +1,236 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Panel LogisticaZTR</title>
 
 <style>
-
 body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
 }
 
 header{
-background:#020617;
-padding:20px;
-font-size:24px;
-text-align:center;
+  background:#020617;
+  padding:20px;
+  font-size:24px;
+  text-align:center;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #1e293b;
 }
 
 .container{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:20px;
-padding:30px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+  padding:30px;
 }
 
 .card{
-background:#1e293b;
-padding:25px;
-border-radius:12px;
-text-align:center;
-cursor:pointer;
-transition:0.3s;
+  background:#1e293b;
+  padding:25px;
+  border-radius:12px;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.25s ease-in-out;
+  border: 1px solid rgba(255,255,255,0.02);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
 
 .card:hover{
-background:#334155;
-transform:scale(1.05);
+  background:#2563eb; /* Efecto azul institucional al pasar el mouse */
+  transform:scale(1.03);
+  box-shadow: 0 10px 20px rgba(37,99,235,0.2);
+}
+
+/* Estilo para destacar tarjetas que contienen indicadores numéricos */
+.card-contador {
+  cursor: default;
+  background: #111827;
+  border-top: 4px solid #3b82f6;
+}
+.card-contador:hover {
+  background: #111827;
+  transform: none;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
 
 .numero{
-font-size:40px;
-font-weight:bold;
-margin-top:10px;
+  font-size:40px;
+  font-weight:bold;
+  margin-top:10px;
+  color: #3b82f6;
 }
 
 .titulo{
-font-size:14px;
-opacity:0.7;
+  font-size:13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+  font-weight: 600;
 }
-
 </style>
-
 </head>
 
 <body>
 
 <header>
-🚚 Panel de Operaciones LogisticaZTR
+  🚚 Centro de Control y Operaciones Globales Logística ZTR
 </header>
 
 <div class="container">
 
-<!-- MAPA -->
-<div class="card" onclick="abrir('mapa.html')">
-📍 Mapa en vivo
-</div>
+  <!-- 📊 BLOQUE DE INDICADORES DE MONITOREO EN TIEMPO REAL -->
+  <div class="card card-contador">
+    <div class="titulo">Camiones en Viaje</div>
+    <div id="viajesActivos" class="numero">0</div>
+  </div>
 
-<!-- CONTADORES -->
-<div class="card">
-<div class="titulo">Viajes activos</div>
-<div id="viajesActivos" class="numero">0</div>
-</div>
+  <div class="card card-contador">
+    <div class="titulo">Flota Registrada</div>
+    <div id="choferes" class="numero">0</div>
+  </div>
 
-<div class="card">
-<div class="titulo">Choferes</div>
-<div id="choferes" class="numero">0</div>
-</div>
+  <div class="card card-contador">
+    <div class="titulo">Clientes Registrados</div>
+    <div id="clientes" class="numero">0</div>
+  </div>
 
-<div class="card">
-<div class="titulo">Clientes</div>
-<div id="clientes" class="numero">0</div>
-</div>
+  <div class="card card-contador">
+    <div class="titulo">Ofertas Publicadas</div>
+    <div id="cargasPublicadas" class="numero">0</div>
+  </div>
 
-<div class="card">
-<div class="titulo">Cargas publicadas</div>
-<div id="cargasPublicadas" class="numero">0</div>
-</div>
+  <div class="card card-contador" style="border-top-color: #f59e0b;">
+    <div class="titulo">Espera de Aprobación</div>
+    <div id="pendientes" class="numero" style="color: #f59e0b;">0</div>
+  </div>
 
-<div class="card">
-<div class="titulo">Pendientes aprobación</div>
-<div id="pendientes" class="numero">0</div>
-</div>
+  <!-- 🛠️ BOTONERA DE ACCESO DIRECTO ADMINISTRATIVO -->
+  
+  <!-- 🔥 CORREGIDO: Redirige hacia tu archivo de mapas interactivo unificado Leaflet -->
+  <div class="card" onclick="abrir('seguimiento.html')" style="background: #1d4ed8; font-weight: bold;">
+    📍 Visor GPS en vivo
+  </div>
 
-<!-- BOTONES PRINCIPALES -->
+  <div class="card" onclick="abrir('cargas-publicadas.html')">
+    📦 Cargas publicadas
+  </div>
 
-<div class="card" onclick="abrir('cargas-publicadas.html')">
-📦 Cargas publicadas
-</div>
+  <div class="card" onclick="abrir('cargas-pendientes.html')">
+    ⏳ Cargas pendientes
+  </div>
 
-<div class="card" onclick="abrir('cargas-pendientes.html')">
-⏳ Cargas pendientes
-</div>
+  <div class="card" onclick="abrir('viajes-activos.html')">
+    🚚 Cargas en viaje
+  </div>
 
-<div class="card" onclick="abrir('viajes-activos.html')">
-🚚 Cargas en viaje
-</div>
+  <div class="card" onclick="abrir('cargas-finalizadas.html')">
+    ✅ Cargas finalizadas
+  </div>
 
-<div class="card" onclick="abrir('cargas-finalizadas.html')">
-✅ Cargas finalizadas
-</div>
+  <!-- 🔥 CORREGIDO: Enlace ajustado a tu archivo real choferes-postulados.html -->
+  <div class="card" onclick="abrir('choferes-postulados.html')">
+    📋 Choferes postulados
+  </div>
 
-<div class="card" onclick="abrir('postulaciones-choferes.html')">
-📋 Choferes postulados
-</div>
+  <div class="card" onclick="abrir('choferes-activos.html')">
+    🟢 Choferes activos
+  </div>
 
-<div class="card" onclick="abrir('choferes-activos.html')">
-🟢 Choferes activos
-</div>
+  <div class="card" onclick="abrir('choferes.html')">
+    👨‍✈️ Todos los choferes
+  </div>
 
-<div class="card" onclick="abrir('choferes.html')">
-👨‍✈️ Todos los choferes
-</div>
+  <div class="card" onclick="abrir('clientes-activos.html')">
+    👥 Clientes Activos
+  </div>
 
-<div class="card" onclick="abrir('clientes.html')">
-👤 Clientes
-</div>
+  <div class="card" onclick="abrir('clientes.html')">
+    👤 Legajos Clientes
+  </div>
 
-<div class="card" onclick="abrir('ranking-choferes.html')">
-🏆 Ranking choferes
-</div>
+  <div class="card" onclick="abrir('ranking-choferes.html')">
+    🏆 Ranking choferes
+  </div>
 
-<div class="card" onclick="abrir('ranking-clientes.html')">
-🏆 Ranking clientes
-</div>
+  <div class="card" onclick="abrir('ranking-clientes.html')">
+    🏆 Ranking clientes
+  </div>
 
-<div class="card" onclick="abrir('flota.html')">
-🚛 Flota
-</div>
+  <div class="card" onclick="abrir('flota.html')">
+    🚛 Mapa de Flota
+  </div>
 
-<div class="card" onclick="abrir('finanzas.html')">
-💰 Finanzas
-</div>
+  <!-- 🔥 CORREGIDO: Enlace unificado a comisiones.html donde concentras la liquidación financiera -->
+  <div class="card" onclick="abrir('comisiones.html')">
+    💸 Liquidación y Comisiones
+  </div>
 
-<div class="card" onclick="abrir('estadisticas.html')">
-📊 Estadísticas
-</div>
-
-<div class="card" onclick="abrir('empresa.html')">
-🏢 Empresa
-</div>
-
-<div class="card" onclick="abrir('postulaciones.html')">
-📨 Postulaciones
-</div>
-
-<div class="card" onclick="abrir('comisiones.html')">
-💸 Comisiones
-</div>
+  <div class="card" onclick="abrir('postulaciones.html')">
+    📨 Historial Postulaciones
+  </div>
 
 </div>
 
 <script>
-
 function abrir(p){
-window.location = p;
+  window.location = p;
 }
 
-// 🔥 CARGAR DATOS DEL DASHBOARD
+// ==========================================
+// 🔹 CARGAR MÉTRICAS GENERALES EN TIEMPO REAL
+// ==========================================
 async function cargarDashboard(){
+  try {
+    // 🔥 CORREGIDO: URL absoluta de Render removida para pasar a ruta relativa nativa /trips
+    const res = await fetch("/trips");
+    const viajes = await res.json();
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/trips");
-const viajes = await res.json();
+    let activos = 0;
+    let pendientes = 0;
+    let publicadas = 0;
 
-let activos = 0;
-let pendientes = 0;
-let publicadas = 0;
+    let choferes = new Set();
+    let clientes = new Set();
 
-let choferes = new Set();
-let clientes = new Set();
+    viajes.forEach(v=>{
+      if(v.estado === "EN_VIAJE") activos++;
+      if(v.estado === "PENDIENTE") pendientes++;
+      if(v.estado === "PUBLICADO") publicadas++;
 
-viajes.forEach(v=>{
+      // 🔥 CORREGIDO: Mapeado al campo directo choferDni estipulado en Trip.js para procesar los conteos reales
+      if(v.choferDni){
+        choferes.add(v.choferDni);
+      }
 
-if(v.estado === "EN_VIAJE") activos++;
+      if(v.clienteCUIT){
+        clientes.add(v.clienteCUIT);
+      }
+    });
 
-if(v.estado === "PENDIENTE") pendientes++;
+    // Actualización dinámica de los nodos de la interfaz
+    document.getElementById("viajesActivos").innerText = activos;
+    document.getElementById("pendientes").innerText = pendientes;
+    document.getElementById("cargasPublicadas").innerText = publicadas;
 
-if(v.estado === "PUBLICADO"){
-publicadas++;
+    document.getElementById("choferes").innerText = choferes.size;
+    document.getElementById("clientes").innerText = clientes.size;
+
+  } catch(e) {
+    console.error("❌ Error actualizando contadores del dashboard:", e);
+  }
 }
 
-if(v.chofer?.dni){
-choferes.add(v.chofer.dni);
-}
-
-if(v.clienteCUIT){
-clientes.add(v.clienteCUIT);
-}
-
-});
-
-// actualizar UI
-document.getElementById("viajesActivos").innerText = activos;
-document.getElementById("pendientes").innerText = pendientes;
-document.getElementById("cargasPublicadas").innerText = publicadas;
-
-document.getElementById("choferes").innerText = choferes.size;
-document.getElementById("clientes").innerText = clientes.size;
-
-}
-
+// Ejecución de arranque inicial al abrir el panel
 cargarDashboard();
 
+// Bucle estable y controlado de refresco de métricas cada 5 segundos
 setInterval(cargarDashboard, 5000);
 
 </script>
-
 </body>
 </html>

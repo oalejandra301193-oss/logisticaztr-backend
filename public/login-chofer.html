@@ -1,169 +1,284 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Chofer - Logística ZTR</title>
+  
+  <!-- Iconos modernos para refinar los campos de texto -->
+  <link rel="stylesheet" href="https://cloudflare.com">
 
-<meta charset="UTF-8">
-<title>Login Chofer - LogisticaZTR</title>
+  <style>
+    /* Reset básico e inicialización */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    body {
+      background: #090d16; /* Fondo oscuro unificado en PC */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
 
-<style>
+    /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+    .celular-container {
+      width: 100%;
+      max-width: 390px;
+      height: 740px;
+      background: #090d16;
+      
+      /* Imagen de camión de fondo difuminado suave para mantener consistencia */
+      background: linear-gradient(to bottom, rgba(9, 13, 22, 0.65), rgba(9, 13, 22, 0.98)), 
+                  url("https://unsplash.com");
+      background-size: cover;
+      background-position: center;
+      
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 45px 25px 25px 25px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    }
 
-body{
+    /* Adaptación para pantallas de teléfonos reales */
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .celular-container {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        padding: 55px 25px 30px 25px;
+      }
+    }
 
-margin:0;
-font-family:'Poppins',sans-serif;
+    /* Superior: Identidad visual */
+    .header-branding {
+      text-align: center;
+      z-index: 2;
+    }
 
-height:100vh;
+    .logo-mini {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 15px auto;
+      box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+    }
 
-display:flex;
-align-items:center;
-justify-content:center;
+    .logo-mini span {
+      font-size: 20px;
+      font-weight: 900;
+      color: white;
+      letter-spacing: 0.5px;
+    }
 
-background:
-linear-gradient(rgba(0,0,0,0.75),rgba(0,0,0,0.75)),
-url("https://images.unsplash.com/photo-1601584115197-04ecc0da31d7");
+    h2 {
+      color: white;
+      font-size: 24px;
+      font-weight: 800;
+    }
 
-background-size:cover;
-background-position:center;
+    .sub {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-top: 4px;
+    }
 
-color:white;
+    /* Centro: Formulario e Inputs */
+    .body-login {
+      z-index: 2;
+      width: 100%;
+      margin-top: -40px;
+    }
 
-}
+    .form-group {
+      margin-bottom: 16px;
+      position: relative;
+    }
 
-.login-box{
+    .form-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 16px;
+      transition: color 0.3s;
+    }
 
-background:rgba(0,0,0,0.85);
+    input {
+      width: 100%;
+      background: #1f2937;
+      border: 1px solid #374151;
+      padding: 14px 14px 14px 45px;
+      border-radius: 12px;
+      color: white;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.3s;
+    }
 
-padding:40px;
+    input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    }
 
-border-radius:12px;
+    input:focus + i {
+      color: #3b82f6;
+    }
 
-width:320px;
+    /* Botonera */
+    button {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
 
-text-align:center;
+    .btn-ingresar {
+      background: #3b82f6;
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+    .btn-ingresar:hover { background: #2563eb; transform: translateY(-1px); }
 
-box-shadow:0 0 20px rgba(0,0,0,0.5);
+    .btn-volver {
+      background: rgba(31, 41, 55, 0.6);
+      color: #9ca3af;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      padding: 8px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .btn-volver:hover { background: #1f2937; color: white; }
 
-}
+    /* Footer: Registro */
+    .footer-login {
+      text-align: center;
+      z-index: 2;
+    }
 
-h2{
-margin-top:0;
-}
+    .footer-login p {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
 
-input{
+    .registro {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .registro:hover { background: #059669; transform: translateY(-1px); }
 
-width:100%;
-
-padding:12px;
-
-margin-top:10px;
-
-border:none;
-
-border-radius:6px;
-
-}
-
-button{
-
-width:100%;
-
-padding:12px;
-
-margin-top:15px;
-
-border:none;
-
-border-radius:6px;
-
-background:#2980b9;
-
-color:white;
-
-font-size:16px;
-
-cursor:pointer;
-
-}
-
-button:hover{
-opacity:0.9;
-}
-
-.registro{
-
-background:#27ae60;
-
-}
-
-</style>
-
+    button:active { transform: translateY(1px); }
+  </style>
 </head>
-
 <body>
 
-<div class="login-box">
+  <!-- 📱 CONTENEDOR CELULAR UNIFICADO -->
+  <div class="celular-container">
+    
+    <!-- Superior: Encabezado -->
+    <div class="header-branding">
+      <div class="logo-mini"><span>ZTR</span></div>
+      <h2>Ingreso Chofer</h2>
+      <p class="sub">Acceso al radar y control de viajes</p>
+    </div>
 
-<h2>🚚 Ingreso Chofer</h2>
+    <!-- Centro: Formulario -->
+    <div class="body-login">
+      <div class="form-group">
+        <input id="email" type="email" placeholder="Correo electrónico">
+        <i class="fa-solid fa-envelope"></i>
+      </div>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+      <div class="form-group">
+        <input id="password" type="password" placeholder="Contraseña">
+        <i class="fa-solid fa-lock"></i>
+      </div>
 
-<button onclick="loginChofer()">Ingresar</button>
+      <button class="btn-ingresar" onclick="loginChofer()">Ingresar</button>
+      
+      <button class="btn-volver" onclick="window.location='/inicio.html'">
+        <i class="fa-solid fa-arrow-left"></i> Volver al Inicio
+      </button>
+    </div>
 
-<p>No tenés cuenta?</p>
+    <!-- Inferior: Crear Cuenta -->
+    <div class="footer-login">
+      <p>¿No tenés una cuenta de transportista?</p>
+      <button class="registro" onclick="window.location='/registro-chofer.html'">
+        Registrarme como Chofer
+      </button>
+    </div>
 
-<button class="registro"
-onclick="window.location='/registro-chofer.html'">
-Registrarme
-</button>
+  </div>
 
-</div>
+  <script>
+    // ==========================================
+    // EJECUTAR INICIO DE SESIÓN ASÍNCRONO
+    // ==========================================
+    async function loginChofer(){
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
 
-<script>
+      if(!email || !password){
+        alert("Por favor, complete su email y contraseña");
+        return;
+      }
 
-async function loginChofer(){
+      try {
+        // 🔥 CORREGIDO: Removida la URL absoluta para que sea una ruta relativa nativa /api/auth/
+        const res = await fetch("/api/auth/chofer/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
 
-const email = document.getElementById("email").value
-const password = document.getElementById("password").value
+        if(!res.ok){
+          alert("El correo electrónico o la contraseña son incorrectos");
+          return;
+        }
 
-if(!email || !password){
-alert("Complete email y contraseña")
-return
-}
+        const data = await res.json();
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/chofer/login",{
+        // Almacenamos credenciales firmadas en el storage local
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("choferId", data.id);
 
-method:"POST",
+        // Redirección inmediata hacia tu visor unificado
+        window.location = "/app-chofer.html";
 
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-email,
-password
-})
-
-})
-
-if(!res.ok){
-alert("Email o contraseña incorrectos")
-return
-}
-
-const data = await res.json()
-
-localStorage.setItem("token",data.token)
-localStorage.setItem("choferId",data.id)
-
-window.location="/app-chofer.html"
-
-}
-
-</script>
+      } catch(err) {
+        console.error("❌ Error en autenticación:", err);
+        alert("Error de red intentando conectar con el servidor de seguridad");
+      }
+    }
+  </script>
 
 </body>
 </html>

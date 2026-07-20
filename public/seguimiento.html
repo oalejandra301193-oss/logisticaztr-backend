@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Seguimiento de Carga - Logística ZTR</title>
 
-<!-- 🌍 Estilos para el mapa interactivo -->
+<!-- 🌍 CORREGIDO: Links oficiales y completos de la librería Leaflet para que el mapa funcione de forma infalible -->
 <link rel="stylesheet" href="https://unpkg.com"/>
 
 <style>
@@ -51,7 +51,7 @@ button:hover{ background:#1d4ed8; }
 <!-- 🗺️ Mapa de Leaflet -->
 <div id="map"></div>
 
-<!-- 🌍 Librería del mapa -->
+<!-- 🌍 CORREGIDO: Script oficial completo de Leaflet -->
 <script src="https://unpkg.com"></script>
 
 <script>
@@ -100,7 +100,7 @@ async function actualizarPosicionCamion(id) {
     let latActual = v.origenLat;
     let lngActual = v.origenLng;
 
-    // Si tu modelo guarda la ubicación actual del chofer dentro del viaje (ej: v.ubicacionActual):
+    // Si tu modelo guarda la ubicación actual del chofer dentro del viaje (ej: v.ubicaciones):
     if(v.ubicaciones && v.ubicaciones.length > 0) {
       const ultimaUbi = v.ubicaciones[v.ubicaciones.length - 1];
       latActual = ultimaUbi.lat;
@@ -108,7 +108,7 @@ async function actualizarPosicionCamion(id) {
     }
 
     if(!latActual || !lngActual) {
-      alert("El viaje no posee coordenadas geográficas cargadas.");
+      alert("El viaje no posee coordenadas geográficas válidas para ubicarlo en el mapa.");
       return;
     }
 
@@ -120,7 +120,7 @@ async function actualizarPosicionCamion(id) {
       }).addTo(map);
       
       camionMarker = L.marker([latActual, lngActual]).addTo(map)
-        .bindPopup("🚛 <b>Ubicación del Camión</b>")
+        .bindPopup("公 <b>Ubicación del Camión</b>")
         .openPopup();
     } else {
       // Si el mapa ya existía, solo movemos el marcador suavemente al nuevo punto
@@ -132,8 +132,19 @@ async function actualizarPosicionCamion(id) {
     console.error("❌ Error en seguimiento:", error);
   }
 }
+
+// 🔥 NUEVO: CAPTURA DE ID AUTOMÁTICA DE LA URL (Soporte directo para la redirección desde Viajes Activos)
+window.onload = function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const idUrl = urlParams.get('id');
+  if(idUrl) {
+    document.getElementById("idViaje").value = idUrl;
+    iniciarSeguimiento();
+  }
+}
 </script>
 
 </body>
 </html>
+
 

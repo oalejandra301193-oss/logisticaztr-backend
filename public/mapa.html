@@ -1,138 +1,142 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
-
 <meta charset="UTF-8">
 <title>Mapa Logístico</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com"/>
+<script src="https://unpkg.com"></script>
 
 <style>
 body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:20px;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  padding:20px;
 }
 
 #mapa{
-height:500px;
-width:100%;
-border-radius:10px;
+  height:600px; /* Un poco más alto para mejor visibilidad de despacho */
+  width:100%;
+  border-radius:10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 </style>
-
 </head>
 
 <body>
 
-<h2>🗺️ Mapa Logístico</h2>
+<h2>🗺️ Centro de Monitoreo: Mapa Logístico</h2>
 
 <div id="mapa"></div>
 
 <script>
 
-// 🔹 MAPA BASE
-let mapa = L.map("mapa").setView([-34.6,-58.4],6);
+// 🔹 MAPA BASE (Centrado en Argentina de forma predeterminada)
+let mapa = L.map("mapa").setView([-34.6,-58.4], 6);
 
-L.tileLayer(
-'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-{ maxZoom:19 }
-).addTo(mapa);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+  maxZoom:19 
+}).addTo(mapa);
 
-// 🔹 ICONO CAMIÓN (FIX REAL)
-const camionIcon = L.icon({
-iconUrl:"https://cdn-icons-png.flaticon.com/512/1995/1995470.png",
-iconSize:[35,35]
-});
-
-// 🔹 ARRAYS PARA CONTROLAR MARCADORES
+// 🔹 ARRAYS PARA CONTROLAR MARCADORES DINÁMICOS
 let cargasMarkers = [];
-let camiones = {};
+let marcadoresCamiones = {}; // Objeto asociativo { choferId: marcador }
 
-// 🔹 CARGAS PUBLICADAS (FIX)
+// ==========================================
+// 🔹 1. RENDERIZAR CARGAS PUBLICADAS DISPONIBLES
+// ==========================================
 async function cargarMapaCargas(){
+  try{
+    const res = await fetch("/trips/mapa-cargas");
+    const cargas = await res.json();
 
-try{
+    // Limpiar marcadores anteriores para evitar duplicaciones
+    cargasMarkers.forEach(m => mapa.removeLayer(m));
+    cargasMarkers = [];
 
-// 🔥 usar endpoint correcto
-const res = await fetch("/trips/mapa-cargas");
-const cargas = await res.json();
+    cargas.forEach(c=>{
+      if(!c.lat || !c.lng) return;
 
-// limpiar anteriores
-cargasMarkers.forEach(m=>mapa.removeLayer(m));
-cargasMarkers = [];
+      // Inyectamos marcador de carga (marcador azul estándar nativo e infalible)
+      const marker = L.marker([parseFloat(c.lat), parseFloat(c.lng)]).addTo(mapa);
+      marker.bindPopup(`
+        <b>📦 Carga Disponible</b><br>
+        <b>Producto:</b> ${c.producto || "-"}<br>
+        <b>Flete:</b> $${c.valor ? c.valor.toLocaleString('es-AR') : 0}
+      `);
 
-cargas.forEach(c=>{
+      cargasMarkers.push(marker);
+    });
 
-if(!c.lat || !c.lng) return;
-
-const marker = L.marker([c.lat, c.lng])
-.addTo(mapa)
-.bindPopup(`
-📦 ${c.producto || "-"}<br>
-💰 $${c.valor}
-`);
-
-cargasMarkers.push(marker);
-
-});
-
-}catch(err){
-console.error("Error cargando cargas:", err);
+  } catch(err) {
+    console.error("❌ Error cargando cargas en el mapa:", err);
+  }
 }
 
-}
-
-// 🔹 CAMIONES EN TIEMPO REAL
+// ==========================================
+// 🔹 2. RENDERIZAR FLOTA DE CAMIONES EN TIEMPO REAL (REPARADO)
+// ==========================================
 async function cargarCamiones(){
+  try{
+    // 🔥 CORREGIDO: Cambiado de /trips a /drivers para leer la ubicacion real de Driver.js
+    const res = await fetch("/drivers");
+    const choferes = await res.json();
 
-try{
+    let idsNuevos = new Set();
 
-const res = await fetch("/trips");
-const viajes = await res.json();
+    choferes.forEach(d=>{
+      // 🔥 CORREGIDO: Evaluamos el GPS real guardado en el array del modelo de choferes
+      if(d.ultimaUbicacion && d.ultimaUbicacion.lat && d.ultimaUbicacion.lng){
+        
+        const lat = parseFloat(d.ultimaUbicacion.lat);
+        const lng = parseFloat(d.ultimaUbicacion.lng);
+        idsNuevos.add(d._id);
 
-viajes.forEach(v=>{
+        if(!isNaN(lat) && !isNaN(lng)) {
+          
+          if(marcadoresCamiones[d._id]){
+            // Si el camión ya estaba en pantalla, solo movemos su posición suavemente
+            marcadoresCamiones[d._id].setLatLng([lat, lng]);
+          } else {
+            // Si es la primera vez que se reporta el camión, creamos su marcador nativo
+            // Para asegurar que cargue de una, usamos el marcador por defecto y le ponemos un popup descriptivo
+            const marker = L.marker([lat, lng]).addTo(mapa);
+            marker.bindPopup(`
+              <b>🚛 Camión en Ruta</b><br>
+              <b>Chofer:</b> ${d.nombre || "Chofer"} ${d.apellido || ""}<br>
+              <b>DNI:</b> ${d.dni || "-"}<br>
+              <b>Patente:</b> ${d.patente1 || "-"}<br>
+              <b>Estado:</b> <span style="color:${d.disponible ? '#10b981':'#ef4444'}; font-weight:bold;">${d.disponible ? 'Disponible':'Ocupado'}</span>
+            `);
+            
+            marcadoresCamiones[d._id] = marker;
+          }
+        }
+      }
+    });
 
-if(!v.ultimaUbicacion) return;
+    // 3. LIMPIEZA AUTOMÁTICA: Si un chofer se desconecta, removemos su camión del mapa
+    for (let id in marcadoresCamiones) {
+      if (!idsNuevos.has(id)) {
+        mapa.removeLayer(marcadoresCamiones[id]);
+        delete marcadoresCamiones[id];
+      }
+    }
 
-const lat = v.ultimaUbicacion.lat;
-const lng = v.ultimaUbicacion.lng;
-
-// crear o actualizar
-if(!camiones[v._id]){
-
-camiones[v._id] = L.marker(
-[lat,lng],
-{icon:camionIcon}
-).addTo(mapa);
-
-camiones[v._id].bindPopup(
-"🚛 " + (v.chofer?.nombre || "Chofer")
-);
-
-}else{
-
-camiones[v._id].setLatLng([lat,lng]);
-
+  } catch(err) {
+    console.error("❌ Error sincronizando camiones en el mapa:", err);
+  }
 }
 
-});
-
-}catch(err){
-console.error("Error camiones:", err);
-}
-
-}
-
-// 🔹 INICIO
+// ==========================================
+// 🔹 CICLO DE ARRANQUE Y REFRESH AUTOMÁTICO
+// ==========================================
 cargarMapaCargas();
 cargarCamiones();
 
-// 🔁 REFRESH
-setInterval(cargarCamiones, 3000);
+// Sincronización continua cada 5 segundos para monitoreo estable
+setInterval(cargarCamiones, 5000);
 
 </script>
 

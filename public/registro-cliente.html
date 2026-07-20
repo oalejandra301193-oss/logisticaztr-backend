@@ -1,114 +1,291 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro Cliente - Logística ZTR</title>
+  
+  <!-- Iconos modernos para refinar los campos de entrada -->
+  <link rel="stylesheet" href="https://cloudflare.com">
 
-<meta charset="UTF-8">
-<title>Registro Cliente</title>
+  <style>
+    /* Reset básico e inicialización */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
 
-<style>
+    body {
+      background: #090d16; /* Fondo oscuro unificado en PC */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
 
-body{
-margin:0;
-font-family:Arial;
-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
-background:#0f172a;
-color:white;
-}
+    /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+    .celular-container {
+      width: 100%;
+      max-width: 390px;
+      height: 740px;
+      background: #090d16;
+      
+      /* Fondo difuminado corporativo de camión pesado para mantener la simetría visual de la marca */
+      background: linear-gradient(to bottom, rgba(9, 13, 22, 0.75), rgba(9, 13, 22, 0.98)), 
+                  url("https://unsplash.com");
+      background-size: cover;
+      background-position: center;
+      
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px 25px 25px 25px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    }
 
-.container{
-background:#1e293b;
-padding:30px;
-border-radius:12px;
-width:90%;
-max-width:400px;
-box-shadow:0 0 20px rgba(0,0,0,0.5);
-}
+    /* Adaptación fluida para smartphones reales de clientes */
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .celular-container {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        padding: 45px 25px 30px 25px;
+      }
+    }
 
-h2{
-margin-bottom:20px;
-}
+    /* Superior: Identidad visual */
+    .header-branding {
+      text-align: center;
+      z-index: 2;
+    }
 
-input{
-width:100%;
-padding:14px;
-margin:10px 0;
-border:none;
-border-radius:6px;
-font-size:16px;
-}
+    h2 {
+      color: white;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
 
-button{
-width:100%;
-padding:14px;
-background:#2ecc71;
-color:white;
-border:none;
-border-radius:6px;
-font-size:16px;
-cursor:pointer;
-}
+    .sub {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-top: 4px;
+    }
 
-button:hover{
-background:#27ae60;
-}
-</style>
+    /* Centro: Bloque scrollable interno por si el teclado táctil despliega y tapa los campos */
+    .body-registration {
+      z-index: 2;
+      width: 100%;
+      flex: 1;
+      overflow-y: auto;
+      margin: 15px 0;
+      padding-right: 2px;
+    }
+    .body-registration::-webkit-scrollbar { width: 4px; }
+    .body-registration::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
+    .form-group {
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .form-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 15px;
+      transition: color 0.3s;
+    }
+
+    input {
+      width: 100%;
+      background: #1f2937;
+      border: 1px solid #374151;
+      padding: 13px 14px 13px 45px;
+      border-radius: 12px;
+      color: white;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    input:focus {
+      border-color: #10b981; /* Foco verde de registro corporativo */
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+    }
+
+    input:focus + i {
+      color: #10b981;
+    }
+
+    /* Botonera de acciones inferior */
+    .footer-actions {
+      z-index: 2;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-crear {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn-crear:hover { background: #059669; transform: translateY(-1px); }
+
+    .btn-cancelar {
+      background: transparent;
+      color: #9ca3af;
+      border: 1px solid #374151;
+      font-size: 13px;
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .btn-cancelar:hover { background: #1f2937; color: white; }
+
+    button:active { transform: translateY(1px); }
+  </style>
 </head>
-
 <body>
 
-<div class="container">
+  <!-- 📱 CONTENEDOR VIRTUAL SMARTPHONE -->
+  <div class="celular-container">
+    
+    <!-- Superior: Encabezado -->
+    <div class="header-branding">
+      <h2>Registro de Cliente</h2>
+      <p class="sub">Creá tu cuenta comercial para publicar fletes de carga</p>
+    </div>
 
-<h2>Registro de Cliente</h2>
+    <!-- Centro: Formulario Modular Scrollable -->
+    <div class="body-registration">
+      <div class="form-group">
+        <input id="nombre" type="text" placeholder="Razón Social / Nombre Empresa">
+        <i class="fa-solid fa-building"></i>
+      </div>
 
-<input id="nombre" placeholder="Nombre o empresa">
-<input id="cuit" placeholder="CUIT">
-<input id="telefono" placeholder="Teléfono">
-<input id="email" placeholder="Email">
-<input id="direccion" placeholder="Dirección comercial">
-<input id="password" type="password" placeholder="Contraseña">
+      <div class="form-group">
+        <input id="cuit" type="text" placeholder="Número de CUIT corporativo">
+        <i class="fa-solid fa-id-card"></i>
+      </div>
 
-<button onclick="registrar()">Crear cuenta</button>
+      <div class="form-group">
+        <input id="telefono" type="tel" placeholder="Teléfono de contacto / flete">
+        <i class="fa-solid fa-phone"></i>
+      </div>
 
-</div>
+      <div class="form-group">
+        <input id="email" type="email" placeholder="Correo electrónico corporativo">
+        <i class="fa-solid fa-envelope"></i>
+      </div>
 
-<script>
+      <div class="form-group">
+        <!-- 🔥 SINCRO: Duplicamos la variable dirección comercial hacia carga/descarga base para cumplir con Mongoose -->
+        <input id="direccion" type="text" placeholder="Dirección Comercial Operativa">
+        <i class="fa-solid fa-location-dot"></i>
+      </div>
 
-async function registrar(){
+      <div class="form-group">
+        <input id="password" type="password" placeholder="Contraseña de seguridad">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+    </div>
 
-const data = {
-  nombre: document.getElementById("nombre").value,
-  cuit: document.getElementById("cuit").value,
-  telefono: document.getElementById("telefono").value,
-  direccion: document.getElementById("direccion").value,
-  email: document.getElementById("email").value,
-  password: document.getElementById("password").value
-};
+    <!-- Inferior: Botonera -->
+    <div class="footer-actions">
+      <button class="btn-crear" onclick="registrar()">
+        <i class="fa-solid fa-user-plus"></i> Crear Cuenta de Cliente
+      </button>
+      
+      <button class="btn-cancelar" onclick="window.location='/login-cliente.html'">
+        Ya tengo una cuenta, iniciar sesión
+      </button>
+    </div>
 
-const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/cliente/register",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify(data)
-});
+  </div>
 
-if(!res.ok){
-alert("Error al registrar");
-return;
-}
+  <script>
+    // ==========================================
+    // EJECUTAR REGISTRO ASÍNCRONO DE CLIENTES
+    // ==========================================
+    async function registrar(){
+      const nombre = document.getElementById("nombre").value.trim();
+      const cuit = document.getElementById("cuit").value.trim();
+      const telefono = document.getElementById("telefono").value.trim();
+      const direccion = document.getElementById("direccion").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
 
-alert("Cliente registrado correctamente");
+      if(!nombre || !cuit || !telefono || !direccion || !email || !password){
+        alert("Por favor, complete todos los campos obligatorios del registro comercial");
+        return;
+      }
 
-window.location="login-cliente.html";
+      // 🔥 CORREGIDO: Mapeadas las propiedades reales direccionCarga y direccionDescarga requeridas por tu backend unificado
+      const data = { 
+        nombre, 
+        cuit, 
+        telefono, 
+        direccionCarga: direccion, 
+        direccionDescarga: direccion, 
+        email, 
+        password 
+      };
 
-}
+      try {
+        // 🔥 CORREGIDO: Removida la URL absoluta fija hacia Render para pasar a ruta relativa nativa /api/auth/
+        const res = await fetch("/api/auth/cliente/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
 
-</script>
+        if(!res.ok){
+          const errorMsg = await res.text();
+          console.log("Falla en inserción de cuenta comercial:", errorMsg);
+          alert("Error al procesar el registro comercial. Verifique que el CUIT o Email no estén en uso.");
+          return;
+        }
+
+        alert("🎉 ¡Cuenta comercial creada con éxito! Ya podés iniciar sesión.");
+        window.location = "login-cliente.html";
+
+      } catch(err) {
+        console.error("❌ Error de red en registro:", err);
+        alert("Error de red intentando conectar con el servidor de seguridad corporativo");
+      }
+    }
+  </script>
+
 </body>
-
 </html>

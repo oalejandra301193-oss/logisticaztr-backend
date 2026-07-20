@@ -1,22 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Viajes activos</title>
 
 <style>
 body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:20px;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
 }
-
+h2 {
+  margin-bottom:20px;
+}
 .card{
-background:#1e293b;
-padding:15px;
-margin-bottom:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border-left: 5px solid #16a34a; /* Borde verde brillante que indica viaje en tránsito */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+.badge-transito {
+  float: right;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  background: #052e16;
+  color: #4ade80;
+  border: 1px solid #22c55e;
+}
+button{
+  padding:8px 14px;
+  margin-top:10px;
+  border:none;
+  border-radius:6px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor:pointer;
+  transition: background 0.2s;
+}
+button:hover {
+  background: #1d4ed8;
+}
+.no-viajes {
+  padding: 20px;
+  background: #1e293b;
+  border-radius: 10px;
+  text-align: center;
+  color: #9ca3af;
 }
 </style>
 
@@ -24,78 +59,74 @@ border-radius:10px;
 
 <body>
 
-<h2>🚛 Viajes activos</h2>
+<h2>🚛 Monitoreo de Viajes Activos</h2>
 
-<div id="lista">Cargando...</div>
+<div id="lista">Cargando camiones en ruta...</div>
 
 <script>
 
 async function cargar(){
+  try{
+    const res = await fetch("/trips");
 
-try{
+    // 🔴 VALIDAR RESPUESTA
+    if(!res.ok){
+      throw new Error("Error HTTP " + res.status);
+    }
 
-const res = await fetch("/trips");
+    const viajes = await res.json();
+    let html = "";
+    let contadorActivos = 0;
 
-// 🔴 VALIDAR RESPUESTA
-if(!res.ok){
-throw new Error("Error HTTP " + res.status);
+    viajes.forEach(v=>{
+      if(v.estado === "EN_VIAJE"){
+        contadorActivos++;
+
+        // 🔥 CORREGIDO: Buscamos el nombre en ambas variables posibles de Trip.js para asegurar que figure el transportista
+        const camioneroEnRuta = v.choferNombre || v.chofer?.nombre || "Sin asignar";
+
+        html += `
+          <div class="card">
+            <span class="badge-transito">EN RUTA</span>
+            <b>📦 Producto en tránsito:</b> ${v.producto || "-"}<br>
+            📍 <b>Trayecto:</b> ${v.origen || "-"} ➔ ${v.destino || "-"}<br>
+            📏 <b>Distancia total:</b> ${v.distanciaKm || 0} km<br>
+            💰 <b>Flete:</b> $${v.valor || 0}<br><br>
+            👨‍✈️ <b>Chofer a cargo:</b> ${camioneroEnRuta}
+
+            <br>
+            <!-- 🔥 CORREGIDO: Ahora el botón usa la función adaptada a tu archivo de mapas interactivo -->
+            <button onclick="verSeguimiento('${v._id}')">
+              📡 Monitorear GPS en vivo
+            </button>
+          </div>
+        `;
+      }
+    });
+
+    // 🔴 SI NO HAY VIAJES ACTIVOS
+    if(html === ""){
+      html = '<div class="no-viajes">🚚 En este momento no hay camiones realizando viajes activos en las rutas.</div>';
+    }
+
+    document.getElementById("lista").innerHTML = html;
+
+  }catch(error){
+    console.error("❌ Error cargando viajes activos:", error);
+    document.getElementById("lista").innerHTML = "<p>❌ Error crítico al sincronizar camiones en ruta desde MongoDB.</p>";
+  }
 }
 
-const viajes = await res.json();
-
-let html = "";
-
-viajes.forEach(v=>{
-
-if(v.estado === "EN_VIAJE"){
-
-html += `
-<div class="card">
-
-<b>${v.producto || "-"}</b><br>
-${v.origen || "-"} → ${v.destino || "-"}<br>
-
-👨‍✈️ ${v.chofer?.nombre || "Sin asignar"}
-
-<br><br>
-
-<button onclick="verMapa('${v._id}')">
-Ver en mapa
-</button>
-
-</div>
-`;
-
+// 🔹 IR AL MAPA INTERACTIVO DE SEGUIMIENTO PASANDO EL ID DEL VIAJE
+function verSeguimiento(id){
+  // 🔥 REDIRECCIÓN CORREGIDA: Apunta a tu archivo de mapas interactivo que reparamos anteriormente
+  window.location = "seguimiento.html?id=" + id;
 }
 
-});
-
-// 🔴 SI NO HAY VIAJES
-if(html === ""){
-html = "<p>No hay viajes activos</p>";
-}
-
-document.getElementById("lista").innerHTML = html;
-
-}catch(error){
-
-console.error("❌ Error cargando viajes:", error);
-
-document.getElementById("lista").innerHTML =
-"<p>Error cargando viajes</p>";
-
-}
-
-}
-
-// 🔹 IR AL MAPA CON ID
-function verMapa(id){
-window.location = "mapa.html?id=" + id;
-}
-
-// 🔄 ACTUALIZACIÓN AUTOMÁTICA (cada 10s)
+// 🔄 ACTUALIZACIÓN AUTOMÁTICA INTELIGENTE (cada 10s)
 setInterval(cargar, 10000);
 
+// Ejecución inicial de arranque
 cargar();
 
 </script>

@@ -1,123 +1,269 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Admin - Logistica ZTR</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Logística ZTR</title>
+  
+  <!-- Iconos modernos para los campos de texto -->
+  <link rel="stylesheet" href="https://cloudflare.com">
 
-<style>
+  <style>
+    /* Reset básico e inicialización */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
 
-body{
-margin:0;
-font-family:Arial;
-height:100vh;
+    body {
+      background: #090d16; /* Fondo oscuro unificado en PC */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
 
-background:url("https://images.unsplash.com/photo-1601584115197-04ecc0da31d7");
-background-size:cover;
-background-position:center;
+    /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+    .celular-container {
+      width: 100%;
+      max-width: 390px;
+      height: 740px;
+      background: #090d16;
+      
+      /* Imagen del camión pesado de fondo con overlay mate ultra oscuro */
+      background: linear-gradient(to bottom, rgba(9, 13, 22, 0.7), rgba(9, 13, 22, 0.98)), 
+                  url("https://unsplash.com");
+      background-size: cover;
+      background-position: center;
+      
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 45px 25px 25px 25px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    }
 
-display:flex;
-align-items:center;
-justify-content:center;
-}
+    /* Adaptación fluida para teléfonos reales */
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .celular-container {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        padding: 55px 25px 30px 25px;
+      }
+    }
 
-.caja{
+    /* Superior: Identidad visual */
+    .header-branding {
+      text-align: center;
+      z-index: 2;
+    }
 
-background:rgba(0,0,0,0.75);
-padding:50px;
-border-radius:12px;
-text-align:center;
-color:white;
-width:320px;
+    .logo-mini {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8); /* Azul institucional */
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 15px auto;
+      box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+    }
 
-}
+    .logo-mini span {
+      font-size: 20px;
+      font-weight: 900;
+      color: white;
+      letter-spacing: 0.5px;
+    }
 
-h1{
-font-size:32px;
-margin-bottom:10px;
-}
+    h2 {
+      color: white;
+      font-size: 24px;
+      font-weight: 800;
+    }
 
-input{
+    .sub {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-top: 4px;
+    }
 
-width:100%;
-padding:12px;
-margin:10px 0;
-border:none;
-border-radius:6px;
+    /* Centro: Formulario e Inputs */
+    .body-login {
+      z-index: 2;
+      width: 100%;
+      margin-top: -60px;
+    }
 
-}
+    .form-group {
+      margin-bottom: 16px;
+      position: relative;
+    }
 
-button{
+    .form-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 16px;
+      transition: color 0.3s;
+    }
 
-width:100%;
-padding:12px;
-background:#2ecc71;
-border:none;
-color:white;
-font-size:16px;
-border-radius:6px;
-cursor:pointer;
+    input {
+      width: 100%;
+      background: #1f2937;
+      border: 1px solid #374151;
+      padding: 14px 14px 14px 45px;
+      border-radius: 12px;
+      color: white;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.3s;
+    }
 
-}
+    input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    }
 
-button:hover{
-background:#27ae60;
-}
+    input:focus + i {
+      color: #3b82f6;
+    }
 
-</style>
+    /* Botonera */
+    button {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
 
+    .btn-ingresar {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .btn-ingresar:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+    .btn-volver {
+      background: transparent;
+      color: #6b7280;
+      border: 1px solid #374151;
+      font-size: 13px;
+      padding: 8px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .btn-volver:hover { background: #1f2937; color: white; }
+
+    button:active { transform: translateY(1px); }
+
+    /* Footer decorativo técnico */
+    .footer-login {
+      text-align: center;
+      z-index: 2;
+      font-size: 12px;
+      color: #4b5563;
+      font-weight: 600;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="caja">
+  <!-- 📱 CONTENEDOR CELULAR UNIFICADO -->
+  <div class="celular-container">
+    
+    <!-- Superior: Encabezado -->
+    <div class="header-branding">
+      <div class="logo-mini"><span>ZTR</span></div>
+      <h2>Panel Admin</h2>
+      <p class="sub">Control de operaciones globales</p>
+    </div>
 
-<h1>🚚 Logistica ZTR</h1>
-<p>Panel Administrador</p>
+    <!-- Centro: Formulario -->
+    <div class="body-login">
+      <div class="form-group">
+        <input id="email" type="email" placeholder="Usuario administrador">
+        <i class="fa-solid fa-user-shield"></i>
+      </div>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+      <div class="form-group">
+        <input id="password" type="password" placeholder="Contraseña técnica">
+        <i class="fa-solid fa-key"></i>
+      </div>
 
-<button onclick="login()">Ingresar</button>
+      <button class="btn-ingresar" onclick="login()">Ingresar al Sistema</button>
+      
+      <button class="btn-volver" onclick="window.location='/inicio.html'">
+        <i class="fa-solid fa-arrow-left"></i> Volver al Inicio
+      </button>
+    </div>
 
-</div>
+    <!-- Inferior: Credenciales de marca -->
+    <div class="footer-login">
+      <p><i class="fa-solid fa-shield-halved"></i> Terminal de Despacho Encriptada</p>
+    </div>
 
-<script>
+  </div>
 
-async function login(){
+  <script>
+    // ==========================================
+    // EJECUTAR LOGEO ASÍNCRONO DE ADMINISTRACIÓN
+    // ==========================================
+    async function login(){
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
 
-const email = document.getElementById("email").value
-const password = document.getElementById("password").value
+      if(!email || !password){
+        alert("Por favor complete los datos obligatorios de acceso");
+        return;
+      }
 
-const res = await fetch("/api/auth/login",{
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
 
-method:"POST",
+        if(!res.ok){
+          alert("Email o contraseña incorrectos");
+          return;
+        }
 
-headers:{
-"Content-Type":"application/json"
-},
+        const data = await res.json();
 
-body:JSON.stringify({
-email,
-password
-})
+        // Almacenamos el token de seguridad firmado por JWT
+        localStorage.setItem("token", data.token);
 
-})
+        // Redirección inmediata hacia la consola central
+        window.location = "/panel.html";
 
-if(!res.ok){
-alert("Email o contraseña incorrectos")
-return
-}
-
-const data = await res.json()
-
-localStorage.setItem("token",data.token)
-
-window.location="/panel.html"
-
-}
-
-</script>
+      } catch(err) {
+        console.error("❌ Error de red administrativo:", err);
+        alert("Error de red intentando conectar con el servidor de seguridad central");
+      }
+    }
+  </script>
 
 </body>
 </html>

@@ -1,41 +1,162 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Pago exitoso</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmación de Pago - Logística ZTR</title>
+  
+  <!-- Iconos modernos para refinar el estado del cobro -->
+  <link rel="stylesheet" href="https://cloudflare.com">
+
+  <style>
+    /* Reset básico e inicialización de pantalla */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: #090d16; /* Fondo oscuro unificado en PC */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+    .celular-container {
+      width: 100%;
+      max-width: 390px;
+      height: 740px;
+      background: #111827; /* Gris azulado profundo mate */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 25px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+      text-align: center;
+    }
+
+    /* Adaptación para smartphones reales */
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .celular-container {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+      }
+    }
+
+    /* Estados visuales animados en CSS */
+    .icono-estado {
+      font-size: 64px;
+      margin-bottom: 25px;
+      transition: color 0.3s;
+    }
+    .color-procesando { color: #f59e0b; } /* Amarillo/Ámbar al procesar */
+    .color-exito { color: #10b981; }      /* Verde al confirmar */
+    .color-error { color: #ef4444; }      /* Rojo si colapsa */
+
+    h2 {
+      color: white;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #9ca3af;
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 30px;
+      padding: 0 10px;
+    }
+
+    /* Botón moderno de retorno flete */
+    button {
+      width: 100%;
+      max-width: 280px;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+      transition: all 0.2s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    button:hover { background: #1d4ed8; transform: translateY(-1px); }
+    button:active { transform: translateY(1px); }
+  </style>
 </head>
+<body>
 
-<body style="font-family:Arial; background:#0f172a; color:white; text-align:center; padding:40px;">
+  <!-- 📱 CONTENEDOR CELULAR INTEGRADO -->
+  <div class="celular-container" id="panelPago">
+    <div id="loaderIcon" class="icono-estado color-procesando"><i class="fa-solid fa-spinner fa-spin-pulse"></i></div>
+    <h2 id="pagoTitulo">Procesando pago...</h2>
+    <p id="pagoSub">Por favor aguarde un instante mientras transmitimos el token de PayPal hacia MongoDB Atlas.</p>
+  </div>
 
-<h2>💰 Procesando pago...</h2>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
 
-<script>
+    if(!token){
+      // Control de error inmediato si abren la url sin parámetros de PayPal
+      document.getElementById("loaderIcon").className = "icono-estado color-error";
+      document.getElementById("loaderIcon").innerHTML = '<i class="fa-solid fa-triangle-exertion"></i>';
+      document.getElementById("pagoTitulo").innerText = "Error de Transacción";
+      document.getElementById("pagoSub").innerText = "No se ha detectado ningún token de orden válido en la solicitud de redirección.";
+    } else {
 
-const params = new URLSearchParams(window.location.search);
-const token = params.get("token");
-
-if(!token){
-  document.body.innerHTML = "❌ Error: token no encontrado";
-}else{
-
-  fetch(`/capturar-pago?token=${token}`)
-  .then(res => res.text())
-  .then(data=>{
-    document.body.innerHTML = `
-      <h2>✅ Pago confirmado</h2>
-      <p>${data}</p>
-      <button onclick="window.location.href='mis-cargas.html'">
-        Volver a mis cargas
-      </button>
-    `;
-  })
-  .catch(()=>{
-    document.body.innerHTML = "❌ Error confirmando pago";
-  });
-
-}
-
-</script>
+      // 🔥 CORREGIDO: Ajustado al endpoint real unificado de tu API de cobros /api/payments/
+      fetch(`/api/payments/capturar-pago?token=${token}`)
+      .then(res => {
+        if(!res.ok) throw new Error("Falla en backend");
+        return res.text();
+      })
+      .then(data=>{
+        // Cambiamos dinámicamente la UI a estado EXITOSO
+        document.getElementById("loaderIcon").className = "icono-estado color-exito";
+        document.getElementById("loaderIcon").innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+        document.getElementById("pagoTitulo").innerText = "¡Pago Confirmado!";
+        document.getElementById("pagoSub").innerHTML = `El flete ha sido acreditado en el sistema con éxito.<br><br><small style="color:#6b7280;">Ref: ${token}</small>`;
+        
+        // Inyectamos el botón de retorno unificado
+        const btn = document.createElement("button");
+        btn.innerHTML = '<i class="fa-solid fa-box-open"></i> Volver a Mis Cargas';
+        btn.onclick = function() { window.location.href = 'mis-cargas.html'; };
+        document.getElementById("panelPago").appendChild(btn);
+      })
+      .catch((err)=>{
+        console.error(err);
+        // Cambiamos dinámicamente la UI a estado ERRÓNEO
+        document.getElementById("loaderIcon").className = "icono-estado color-error";
+        document.getElementById("loaderIcon").innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+        document.getElementById("pagoTitulo").innerText = "Falla de Acreditación";
+        document.getElementById("pagoSub").innerText = "Ocurrió un problema al intentar capturar los fondos. Verifique los registros del servidor logístico.";
+      });
+    }
+  </script>
 
 </body>
 </html>

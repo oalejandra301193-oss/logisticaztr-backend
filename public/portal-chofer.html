@@ -1,60 +1,204 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Portal Chofer</title>
+<title>Portal Chofer - Logística ZTR</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Leaflet oficial estable -->
+<link rel="stylesheet" href="https://unpkg.com"/>
+<script src="https://unpkg.com"></script>
+
+<!-- Iconos modernos -->
+<link rel="stylesheet" href="https://cloudflare.com">
 
 <style>
-body{
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-  padding:20px;
-}
+  /* Reset general e inicialización */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
 
-#map{
-  height:300px;
-  border-radius:10px;
-  margin-bottom:20px;
-}
+  body {
+    background: #090d16; /* Fondo oscuro unificado en PC */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+  }
 
-.card{
-  background:#1e293b;
-  padding:15px;
-  margin:10px 0;
-  border-radius:10px;
-}
+  /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+  .celular-container {
+    width: 100%;
+    max-width: 390px;
+    height: 760px;
+    background: #111827; /* Gris azulado profundo mate */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    border-radius: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  }
 
-button{
-  padding:8px;
-  margin-top:10px;
-  border:none;
-  border-radius:6px;
-  background:#16a34a;
-  color:white;
-  cursor:pointer;
-}
+  /* Adaptación para pantallas de teléfonos reales */
+  @media (max-width: 480px) {
+    body { padding: 0; }
+    .celular-container {
+      max-width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+    }
+  }
 
-button:hover {
-  background:#15803d;
-}
+  /* Encabezado de la barra superior */
+  .header-app {
+    background: #1f2937;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    z-index: 10;
+  }
+
+  .header-app h2 {
+    font-size: 18px;
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* 🗺️ ÁREA DEL MAPA LEAFLET INTERACTIVO */
+  #map {
+    height: 240px;
+    width: 100%;
+    z-index: 5;
+    border-bottom: 2px solid #1f2937;
+  }
+
+  /* 📦 CUERPO SCROLLABLE PARA EL LISTADO DE OFERTAS */
+  .body-app {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background: #090d16;
+  }
+
+  .section-title {
+    font-size: 14px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  /* Tarjetas de cargas modernas estilo App móvil */
+  .card {
+    background: #1f2937;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    border-left: 5px solid #10b981; /* Detalle verde de carga disponible */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .card-header-trip {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 6px;
+  }
+
+  .card-body-trip {
+    font-size: 13px;
+    color: #9ca3af;
+    line-height: 1.5;
+  }
+
+  .card-body-trip b {
+    color: #e5e7eb;
+  }
+
+  /* Botones modernos de postulación */
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 12px;
+    border: none;
+    border-radius: 10px;
+    background: #10b981;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  button:hover { background: #059669; }
+  button:active { transform: scale(0.98); }
+
+  .no-cargas {
+    text-align: center;
+    color: #6b7280;
+    padding: 30px 10px;
+    font-size: 14px;
+  }
+
+  /* Barra de navegación inferior decorativa de la App */
+  .footer-nav {
+    background: #1f2937;
+    padding: 12px;
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
 </style>
-
 </head>
 
 <body>
 
-<h2>🚛 Portal Chofer</h2>
+  <!-- 📱 CONTENEDOR SMARTPHONE INTEGRADO -->
+  <div class="celular-container">
+    
+    <!-- Barra Superior -->
+    <div class="header-app">
+      <h2><i class="fa-solid fa-truck-moving" style="color: #3b82f6;"></i> Portal Chofer</h2>
+      <i class="fa-solid fa-signal" style="color: #10b981; font-size: 14px;"></i>
+    </div>
 
-<div id="map"></div>
+    <!-- Mapa Leaflet Integrado -->
+    <div id="map"></div>
 
-<h3>📦 Cargas cercanas</h3>
-<div id="lista">Cargando...</div>
+    <!-- Zona scrollable de ofertas de fletes -->
+    <div class="body-app">
+      <div class="section-title">📦 Ofertas de Carga Cercanas</div>
+      <div id="lista">Cargando radar viales...</div>
+    </div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Barra Inferior -->
+    <div class="footer-nav">
+      Plataforma Logística ZTR &copy; 2026
+    </div>
+
+  </div>
 
 <script>
 
@@ -62,16 +206,21 @@ let map;
 let miMarker;
 let markers = [];
 
-// 🔹 INICIALIZAR MAPA
+// 🔹 INICIALIZAR MAPA INTERACTIVO LEAFLET
 function iniciarMapa(lat,lng){
-  map = L.map('map').setView([lat,lng],10);
+  if(map) return; // Evita reinstanciar el mapa en los refrescos automáticos
+  
+  map = L.map('map', { zoomControl: false }).setView([lat,lng], 10);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     maxZoom:19
   }).addTo(map);
 
+  // Añadimos el control de zoom abajo a la derecha de forma prolija
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+
   miMarker = L.marker([lat,lng]).addTo(map)
-    .bindPopup("🚛 Tu ubicación")
+    .bindPopup("<b>🚛 Tu camión</b><br>Transmitiendo GPS activo")
     .openPopup();
 }
 
@@ -82,7 +231,7 @@ function actualizarMiUbicacion(lat,lng){
   }
 }
 
-// 🔹 OBTENER UBICACIÓN EN TIEMPO REAL
+// 🔹 OBTENER UBICACIÓN EN TIEMPO REAL DEL DISPOSITIVO
 navigator.geolocation.getCurrentPosition(async (pos)=>{
   try{
     const lat = pos.coords.latitude;
@@ -92,13 +241,14 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
 
     const choferId = localStorage.getItem("choferId");
 
-    // 🔴 VALIDACIÓN
+    // 🔴 VALIDACIÓN DE LEGADO INTERNO
     if(!choferId){
-      alert("Falta choferId en localStorage");
+      alert("Falta choferId en localStorage. Inicie sesión nuevamente.");
+      window.location.href = "login-chofer.html";
       return;
     }
 
-    // 🔹 GUARDAR UBICACIÓN ACTUAL DEL CHOFER EN EL BACKEND
+    // 🔹 TRANSMITIR COORDENADAS AL BACKEND EXPRESS EN PRODUCCIÓN
     await fetch("/trips/location",{
       method:"POST",
       headers:{
@@ -111,20 +261,23 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
       })
     });
 
-    // 🔹 CARGAR CARGAS FILTRADAS
+    // 🔹 LANZAR EL RADAR AUTOMATIZADO
     cargarCargas(choferId);
 
   }catch(error){
-    console.error("❌ Error ubicación:", error);
+    console.error("❌ Error capturando ubicación GPS:", error);
   }
+}, (err) => {
+  document.getElementById("lista").innerHTML = "<p class='no-cargas'>⚠️ Se requieren permisos de ubicación para rastrear las cargas viales.</p>";
 });
 
-// 🔹 CARGAR CARGAS CERCANAS
+// ==========================================
+// 🔹 CARGAR OFERTAS TERRESTRES DESDE EL BACKEND (OSRM)
+// ==========================================
 async function cargarCargas(choferId){
   try{
     const res = await fetch("/trips/cargas-cercanas/"+choferId);
 
-    // 🔴 VALIDACIÓN
     if(!res.ok){
       throw new Error("Error HTTP " + res.status);
     }
@@ -132,7 +285,7 @@ async function cargarCargas(choferId){
     const viajes = await res.json();
     let html = "";
 
-    // 🔹 LIMPIAR MARCADORES ANTERIORES PARA EVITAR SOBRECARGA
+    // 🔹 Limpiar marcadores viejos del mapa antes de inyectar los nuevos
     if (map) {
       markers.forEach(m=>map.removeLayer(m));
     }
@@ -141,44 +294,46 @@ async function cargarCargas(choferId){
     viajes.forEach(v=>{
       if(!v.origenLat || !v.origenLng) return;
 
-      // 🔹 AGREGAR MARCADOR DE CARGA AL MAPA LEAFLET
+      // 🔹 AGREGAR MARCADORES DINÁMICOS AL MAPA LEAFLET
       if (map) {
-        const marker = L.marker([v.origenLat, v.origenLng])
+        const marker = L.marker([parseFloat(v.origenLat), parseFloat(v.origenLng)])
           .addTo(map)
           .bindPopup(`<b>Carga: ${v.producto}</b><br>Destino: ${v.destino}`);
         markers.push(marker);
       }
 
-      // 🔹 LISTADO DE TARJETAS VISUALES
-      // 🔥 CORREGIDO: v.distancia cambiado por v.distanciaKm que es la propiedad real del backend
+      // 🔹 MAQUETADO DE LAS TARJETAS MÓVILES SINCRO
       html += `
         <div class="card">
-          📦 <b>${v.producto || "-"}</b><br>
-          📍 Origen: ${v.origen || "-"} ➔ Destino: ${v.destino || "-"}<br>
-          💰 Flete: $${v.valor || 0}<br>
-          📏 Recorrido total: ${v.distanciaKm ? v.distanciaKm.toFixed(1) : 0} km<br>
-
+          <div class="card-header-trip">📦 ${v.producto || "-"}</div>
+          <div class="card-body-trip">
+            📍 <b>Origen:</b> ${v.origen || "-"}<br>
+            🏁 <b>Destino:</b> ${v.destino || "-"}<br>
+            💰 <b>Flete Neto:</b> $${v.valor || 0}<br>
+            📏 <b>Ruta por carretera:</b> ${v.distanciaKm ? v.distanciaKm.toFixed(1) : 0} km
+          </div>
           <button onclick="postular('${v._id}')">
-            Postularme al viaje
+            <i class="fa-solid fa-clipboard-check"></i> Postularme al viaje
           </button>
         </div>
       `;
     });
 
-    // 🔴 SIN RESULTADOS
     if(html === ""){
-      html = "<p>No hay cargas cercanas disponibles por el momento</p>";
+      html = "<div class='no-cargas'>📭 No hay cargas disponibles cerca de tu posición por asfalto.</div>";
     }
 
     document.getElementById("lista").innerHTML = html;
 
   }catch(error){
     console.error("❌ Error cargando cargas:", error);
-    document.getElementById("lista").innerHTML = "<p>Error cargando cargas</p>";
+    document.getElementById("lista").innerHTML = "<p class='no-cargas'>❌ Error sincronizando el mapa de ofertas.</p>";
   }
 }
 
-// 🔹 POSTULARSE A LA OFERTA
+// ==========================================
+// 🔹 ENVIAR POSTULACIÓN DEL CHOFER AL CLIENTE
+// ==========================================
 async function postular(id){
   try{
     const res = await fetch("/trips/postular/"+id,{
@@ -195,17 +350,17 @@ async function postular(id){
     });
 
     if(res.ok){
-      alert("✅ Postulación enviada con éxito");
+      alert("✅ ¡Excelente! Tu postulación ha sido enviada con éxito.");
     }else{
-      alert("❌ Error al postularte");
+      alert("❌ Ocurrió un error al intentar procesar la postulación.");
     }
   }catch(error){
     console.error("❌ Error postulación:", error);
-    alert("Error de conexión con el servidor");
+    alert("Error de conectividad de red con el servidor");
   }
 }
 
-// 🔄 ACTUALIZAR EL MAPA Y LISTADO AUTOMÁTICAMENTE CADA 15 SEGUNDOS
+// 🔄 REFRESH AUTOMÁTICO EN SEGUNDO PLANO CADA 15 SEGUNDOS
 setInterval(()=>{
   const choferId = localStorage.getItem("choferId");
   if(choferId){
@@ -214,6 +369,6 @@ setInterval(()=>{
 }, 15000);
 
 </script>
-
 </body>
 </html>
+

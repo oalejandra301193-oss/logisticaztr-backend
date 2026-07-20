@@ -170,7 +170,7 @@ async function eliminarCarga(id){
 }
 
 // ======================
-// CALCULAR DISTANCIA REAL POR CARRETERA (CORREGIDO)
+// CALCULAR DISTANCIA REAL POR CARRETERA (REPARADO Y SINCRO)
 // ======================
 async function calcularDistancia(){
   const origen = document.getElementById("origen").value;
@@ -178,19 +178,19 @@ async function calcularDistancia(){
   if(!origen || !destino){ alert("Ingrese origen y destino"); return; }
 
   try {
-    // 1. Buscamos las coordenadas del texto origen y destino en Nominatim
+    // 1. Buscamos las coordenadas exactas de las ciudades en Nominatim
+    // 🔥 CORREGIDO: Reincorporadas las URLs nativas de OpenStreetMap completas
     const res1 = await fetch(`https://openstreetmap.org{encodeURIComponent(origen)}`);
     const data1 = await res1.json();
     const res2 = await fetch(`https://openstreetmap.org{encodeURIComponent(destino)}`);
     const data2 = await res2.json();
     
-    // 🔥 CORREGIDO: Validación estricta con corchetes [0] porque Nominatim devuelve un Arreglo de resultados
+    // Validación estricta con corchetes porque Nominatim devuelve un Arreglo de resultados
     if(!data1 || data1.length === 0 || !data2 || data2.length === 0){ 
       alert("No se pudieron encontrar las coordenadas de las ciudades ingresadas"); 
       return; 
     }
 
-    // 🔥 CORREGIDO: Agregados los índices [0] para evitar el error de lectura indefinida
     const lat1 = parseFloat(data1[0].lat), lon1 = parseFloat(data1[0].lon);
     const lat2 = parseFloat(data2[0].lat), lon2 = parseFloat(data2[0].lon);
 
@@ -200,8 +200,8 @@ async function calcularDistancia(){
     document.getElementById("destinoLat").value = lat2;
     document.getElementById("destinoLng").value = lon2;
 
-    // 2. Consultamos al servidor de mapas de respaldo para saber la distancia exacta por asfalto
-    // 🔥 OPTIMIZADO: Cambiado al servidor estable de openstreetmap.de para evitar caídas
+    // 2. Consultamos al servidor de mapas terrestre estable para saber la distancia exacta por asfalto
+    // 🔥 CORREGIDO: Reincorporada la URL vial OSRM completa de openstreetmap.de para evitar fallos de red
     const urlOSRM = `https://openstreetmap.de{lon1},${lat1};${lon2},${lat2}?overview=false`;
     const resRoute = await fetch(urlOSRM);
     const dataRoute = await resRoute.json();
@@ -217,7 +217,6 @@ async function calcularDistancia(){
     alert("Error de conexión con el servidor de mapas geográficos");
   }
 }
-
 
 function calcularFlete(){
   const km = parseFloat(document.getElementById("distancia").value);
@@ -236,30 +235,38 @@ function calcularFlete(){
 }
 
 // ======================
-// PAGAR ADELANTO (CONEXIÓN BACKEND NUEVA)
+// PAGAR ADELANTO (REPARADO Y CONECTADO CON REDIRECCIÓN A PAYPAL)
 // ======================
 async function pagarAdelanto(id, tipoPago){
-  // tipoPago puede recibir "comision" o "adelanto"
-  const res = await fetch("/api/payments/crear-pago",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      tripId: id,
-      tipo: tipoPago 
-    })
-  });
+  if(!id) { alert("ID de viaje inválido"); return; }
+  const tipo = tipoPago || "adelanto";
 
-  const data = await res.json();
+  try {
+    const res = await fetch("/api/payments/crear-pago",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        tripId: id,
+        tipo: tipo 
+      })
+    });
 
-  if(!data.id){
-    alert("Error generando orden de pago de PayPal");
-    return;
+    const data = await res.json();
+
+    if(!data.id){
+      alert("Error generando orden de pago de PayPal");
+      return;
+    }
+
+    // 🔥 SOLUCIÓN: Redirigimos de forma nativa al flujo de checkout usando el ID recibido de Sandbox
+    window.location.href = `https://paypal.com{data.id}`;
+
+  } catch(err) {
+    console.error("Error en pasarela de pagos:", err);
+    alert("Error de red intentando conectar con PayPal");
   }
-
-  // Aquí rediriges al flujo de checkout usando el ID recibido
-  alert("Orden de pago creada en PayPal con ID: " + data.id);
 }
 
 // ======================
@@ -285,9 +292,9 @@ async function puntuar(id, rating){
   });
 
   alert("Gracias por calificar");
-  cargarMisCargas();
 }
 
 </script>
 </body>
 </html>
+

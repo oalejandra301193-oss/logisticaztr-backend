@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Cargas finalizadas - ZTR</title>
@@ -11,49 +11,89 @@ body{
   font-family:Arial;
   padding:20px;
 }
+h2 {
+  margin-bottom:20px;
+}
 .card{
   background:#1e293b;
   padding:15px;
   margin-bottom:10px;
   border-radius:10px;
+  border-left: 5px solid #64748b; /* Borde gris de viaje completado/archivado */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+.badge-completado {
+  float: right;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  background: #1e293b;
+  color: #10b981;
+  border: 1px solid #10b981;
+}
+.no-viajes {
+  padding: 20px;
+  background: #1e293b;
+  border-radius: 10px;
+  text-align: center;
+  color: #9ca3af;
+}
+.estrellas {
+  color: #f59e0b;
+  font-weight: bold;
 }
 </style>
 </head>
 
 <body>
 
-<h2>✅ Viajes finalizados</h2>
+<h2>✅ Historial de Viajes Finalizados</h2>
 
-<div id="lista"></div>
+<div id="lista">Cargando historial de fletes...</div>
 
 <script>
-// Cargar viajes finalizados
+// Cargar viajes finalizados desde la base de datos
 async function cargar(){
   try{
     const res = await fetch("/trips");
     const viajes = await res.json();
 
     let html = "";
+    let contadorFinalizados = 0;
 
     viajes.forEach(v => {
       if(v.estado === "FINALIZADO"){
+        contadorFinalizados++;
+        
+        // 🔥 CORREGIDO: Buscamos el nombre del chofer en ambas variables posibles del modelo para evitar el "-"
+        const nombreDelChofer = v.choferNombre || v.chofer?.nombre || "Sin asignar";
+
         html += `
           <div class="card">
-            <b>${v.producto}</b><br>
-            ${v.origen} → ${v.destino}<br><br>
-            👤 Cliente: ${v.clienteNombre || "-"}<br>
-            🚛 Chofer: ${v.chofer?.nombre || "-"}<br><br>
-            ⭐ Calificación Chofer: ${v.ratingChofer || 0}<br>
-            ⭐ Calificación Cliente: ${v.ratingCliente || 0}
+            <span class="badge-completado">COMPLETADO</span>
+            <b>📦 Producto:</b> ${v.producto || "-"}<br>
+            📍 <b>Ruta:</b> ${v.origen} ➔ ${v.destino}<br>
+            📏 <b>Kilómetros recorridos:</b> ${v.distanciaKm || v.distanciaTotal || 0} km<br>
+            💰 <b>Flete cobrado:</b> $${v.valor || 0}<br><br>
+            👤 <b>Cliente:</b> ${v.clienteNombre || "-"}<br>
+            🚛 <b>Chofer:</b> ${nombreDelChofer}<br><br>
+            <span class="estrellas">⭐ Calificación al Chofer:</span> ${v.ratingChofer || 0} / 5<br>
+            <span class="estrellas">⭐ Calificación al Cliente:</span> ${v.ratingCliente || 0} / 5
           </div>
         `;
       }
     });
 
+    // Si el contador es 0, mostramos un aviso limpio en vez de dejar la pantalla vacía
+    if(contadorFinalizados === 0) {
+      html = `<div class="no-viajes">📋 Todavía no hay viajes finalizados registrados en el historial.</div>`;
+    }
+
     document.getElementById("lista").innerHTML = html;
   }catch(err){
-    console.error("Error cargando viajes:", err);
-    document.getElementById("lista").innerHTML = "<p>❌ Error al cargar viajes finalizados.</p>";
+    console.error("❌ Error cargando viajes finalizados:", err);
+    document.getElementById("lista").innerHTML = "<p>❌ Error crítico al conectar con el historial de MongoDB.</p>";
   }
 }
 

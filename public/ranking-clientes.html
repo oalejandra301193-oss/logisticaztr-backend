@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Ranking de Clientes - LogisticaZTR</title>
+<title>Ranking de Clientes - Logística ZTR</title>
 
 <style>
 body{
@@ -11,40 +11,57 @@ body{
   font-family:Arial;
   padding:20px;
 }
-
+h2 {
+  margin-bottom:20px;
+}
 .card{
   background:#1e293b;
   padding:15px;
   margin-bottom:10px;
   border-radius:10px;
+  border-left: 5px solid #64748b;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
-
 .top{
-  color:#22c55e;
+  color:#10b981;
   font-size:18px;
+  font-weight:bold;
+}
+.oro {
+  border-left-color: #f59e0b; /* Borde dorado premium para el primer puesto */
+}
+.no-datos {
+  padding: 20px;
+  background: #1e293b;
+  border-radius: 10px;
+  text-align: center;
+  color: #9ca3af;
 }
 </style>
 
 </head>
 <body>
 
-<h2>👤 Ranking de Clientes</h2>
+<h2>🏆 Podio y Ranking de Clientes (Métricas de Carga)</h2>
 
-<div id="lista"></div>
+<div id="lista">Evaluando volumen operativo de facturación...</div>
 
 <script>
-const API = "https://logisticaztr-backend.onrender.com";
 const token = localStorage.getItem("token");
 
-// 🔒 VALIDACIÓN ADMIN
+// 🔒 VALIDACIÓN ADMINISTRATIVA DE ENTRADA
 if(!token){
-  alert("No autorizado");
+  alert("Acceso denegado: No autorizado");
   window.location = "/login-admin.html";
 }
 
+// ==========================================
+// CALCULAR E INDIZAR MÉTRICAS DEL RANKING
+// ==========================================
 async function cargar(){
   try{
-    const res = await fetch(`${API}/trips`, {
+    // 🔥 CORREGIDO: URL absoluta de Render removida para pasar a ruta relativa nativa /trips
+    const res = await fetch("/trips", {
       headers: {
         "Authorization": "Bearer " + token
       }
@@ -53,7 +70,6 @@ async function cargar(){
     if(!res.ok) throw new Error("Error al cargar viajes");
 
     const viajes = await res.json();
-
     let clientes = {};
 
     viajes.forEach(v=>{
@@ -61,7 +77,7 @@ async function cargar(){
 
       if(!clientes[v.clienteCUIT]){
         clientes[v.clienteCUIT] = {
-          nombre: v.clienteNombre || "Sin nombre",
+          nombre: v.clienteNombre || "Cliente Anónimo",
           viajes: 0,
           total: 0
         };
@@ -71,22 +87,34 @@ async function cargar(){
       clientes[v.clienteCUIT].total += v.valor || 0;
     });
 
-    // ordenar por cantidad de viajes
-    const ranking = Object.values(clientes)
-      .sort((a,b)=> b.viajes - a.viajes);
+    // Ordenamos de mayor a menor cantidad de fletes
+    const ranking = Object.values(clientes).sort((a,b)=> b.viajes - a.viajes);
 
     let html = "";
 
-    ranking.forEach((c,index)=>{
+    if(ranking.length === 0) {
+      html = "<div class='no-datos'>📋 No se registran fletes completados en el sistema para computar métricas corporativas.</div>";
+      document.getElementById("lista").innerHTML = html;
+      return;
+    }
+
+    ranking.forEach((c, index)=>{
+      const esPrimero = index === 0;
+      const claseCard = esPrimero ? "oro" : "";
+      const claseTexto = esPrimero ? "top" : "";
+
+      // 🔥 OPTIMIZADO: Formateamos el dinero con separadores de millares nativos para una lectura gerencial prolija
+      const facturacionLimpia = c.total ? c.total.toLocaleString('es-AR') : "0";
+
       html+=`
-      <div class="card">
-        <div class="${index===0 ? "top" : ""}">
-          #${index+1} 👤 ${c.nombre}
+      <div class="card ${claseCard}">
+        <div class="${claseTexto}">
+          #${index+1} 👤 Razón Social: <b>${c.nombre}</b>
         </div>
         <br>
-        📦 Viajes: ${c.viajes}
+        📦 <b>Volumen de Operaciones:</b> ${c.viajes} fletes solicitados
         <br>
-        💰 Total gastado: $${c.total}
+        💰 <b>Inversión Total en Logística:</b> $${facturacionLimpia}
       </div>
       `;
     });
@@ -94,11 +122,12 @@ async function cargar(){
     document.getElementById("lista").innerHTML = html;
 
   }catch(err){
-    console.error(err);
-    document.getElementById("lista").innerHTML = "<p>❌ Error cargando ranking de clientes</p>";
+    console.error("❌ Error procesando ranking corporativo:", err);
+    document.getElementById("lista").innerHTML = "<div class='no-datos'>❌ Error crítico al sincronizar métricas desde MongoDB Atlas.</div>";
   }
 }
 
+// Ejecución inicial de arranque automático
 cargar();
 </script>
 

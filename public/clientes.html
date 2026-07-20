@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Clientes - LogisticaZTR</title>
+<title>Clientes - Logística ZTR</title>
 
 <style>
 body{
@@ -18,42 +17,71 @@ body{
   padding:15px;
   margin:10px 0;
   border-radius:10px;
+  border-left: 5px solid #10b981;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+
+img {
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
 button{
-  padding:6px 10px;
+  padding:8px 12px;
   margin-top:8px;
   border:none;
   border-radius:5px;
   cursor:pointer;
   background:#2563eb;
   color:white;
+  font-weight: bold;
 }
+button:hover {
+  background: #1d4ed8;
+}
+
+input[type="file"] {
+  background: #0f172a;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.doc-link {
+  display: inline-block;
+  margin-top: 5px;
+  color: #60a5fa;
+  text-decoration: none;
+}
+.doc-link:hover { text-decoration: underline; }
 </style>
 </head>
 
 <body>
 
-<h2>👤 Clientes</h2>
+<h2>👤 Panel de Fichas de Clientes Registrados</h2>
 
-<div id="lista"></div>
+<div id="lista">Sincronizando legajos corporativos...</div>
 
 <script>
-const API = "https://logisticaztr-backend.onrender.com";
 const token = localStorage.getItem("token");
 
-// 🔒 VALIDACIÓN ADMIN
+// 🔒 VALIDACIÓN ADMINISTRATIVA DE ENTRADA
 if(!token){
-  alert("No autorizado");
+  alert("Acceso denegado: No autorizado");
   window.location = "/login-admin.html";
 }
 
 // =======================
-// CARGAR CLIENTES
+// CARGAR CLIENTES REGISTRADOS
 // =======================
 async function cargar(){
   try{
-    const res = await fetch(`${API}/clientes`, {
+    // 🔥 CORREGIDO: Removida la URL absoluta cableada para usar rutas relativas nativas
+    const res = await fetch("/clientes", {
       headers: {
         "Authorization": "Bearer " + token
       }
@@ -64,83 +92,94 @@ async function cargar(){
     const clientes = await res.json();
     let html = "";
 
+    if(!clientes.length) {
+      document.getElementById("lista").innerHTML = "<p>No hay cuentas de clientes registradas en el sistema.</p>";
+      return;
+    }
+
     clientes.forEach(c=>{
-  html += `
-  <div class="card">
+      html += `
+      <div class="card">
+        ${c.logo 
+          ? `<img src="/uploads/clientes/${c.logo}" width="80" height="80"><br><br>`
+          : ""
+        }
 
-    ${c.logo 
-      ? `<img src="${API}/uploads/clientes/${c.logo}" width="80"><br><br>`
-      : ""
-    }
+        <b>Razón Social / Nombre:</b> ${c.nombre || "-"}<br>
+        🏪 <b>Comercio:</b> ${c.comercio || "-"}<br>
+        🪪 <b>CUIT:</b> ${c.cuit || "-"}<br>
+        📞 <b>Teléfono corporativo:</b> ${c.telefono || "-"}<br><br>
 
-    <b>Nombre:</b> ${c.nombre || "-"}<br>
-    <b>Comercio:</b> ${c.comercio || "-"}<br>
-    <b>CUIT:</b> ${c.cuit || "-"}<br>
-    <b>Teléfono:</b> ${c.telefono || "-"}<br>
+        🚚 <b>Dirección Base Carga:</b> ${c.direccionCarga || "-"}<br>
+        📍 <b>Dirección Base Descarga:</b> ${c.direccionDescarga || "-"}<br><br>
 
-    <b>Dirección de carga:</b> ${c.direccionCarga || "-"}<br>
-    <b>Dirección de descarga:</b> ${c.direccionDescarga || "-"}<br>
+        📊 <b>Historial de Fletes:</b> <span style="color:#10b981; font-weight:bold;">${c.viajes || 0} fletes</span><br><br>
 
-    <b>Viajes:</b> ${c.viajes || 0}<br><br>
+        <div style="background: #0f172a; padding: 12px; border-radius: 8px;">
+          <b>📂 Adjuntar Documentación Comercial (Contratos / AFIP)</b><br><br>
+          <input type="file" id="file-${c._id}">
+          <button onclick="subirArchivo('${c._id}', '${c.nombre || 'Cliente'}')">📤 Subir Documento</button><br><br>
 
-    <input type="file" id="file-${c._id}">
-    <button onclick="subirArchivo('${c._id}')">Subir archivo</button><br><br>
-
-    <div>
-    ${
-      c.archivos && c.archivos.length > 0
-      ? c.archivos.map(a =>
-        `<a href="${API}/uploads/clientes/${a}" target="_blank">📄 Ver archivo</a><br>`
-      ).join("")
-      : "Sin archivos"
-    }
-    </div>
-
-  </div>
-  `;
-});
+          <div id="docs-${c._id}">
+          ${
+            c.archivos && c.archivos.length > 0
+            ? c.archivos.map(a =>
+              `📄 <a class="doc-link" href="/uploads/clientes/${a}" target="_blank">Ver archivo adjunto</a><br>`
+            ).join("")
+            : "<i>Sin archivos cargados en el legajo comercial</i>"
+          }
+          </div>
+        </div>
+      </div>
+      `;
+    });
 
     document.getElementById("lista").innerHTML = html;
 
   }catch(err){
-    console.error(err);
-    document.getElementById("lista").innerHTML = "❌ Error cargando clientes";
+    console.error("❌ Error listando fichas comerciales:", err);
+    document.getElementById("lista").innerHTML = "❌ Error crítico cargando clientes de Mongoose";
   }
 }
 
+// Inicialización de arranque automático
 cargar();
 
 // =======================
-// SUBIR ARCHIVO (ADMIN)
+// SUBIR ARCHIVO MULTIPART (CORREGIDO SIN CONFLICTO)
 // =======================
-async function subirArchivo(id){
+async function subirArchivo(id, nombreEmpresa){
   const input = document.getElementById("file-"+id);
-  if(!input.files[0]){
-    alert("Seleccioná un archivo");
+  if(!input.files || input.files.length === 0){
+    alert("Por favor, seleccione un documento de su computadora primero");
     return;
   }
 
   const formData = new FormData();
+  // Sincronizado con la propiedad 'archivo' que procesa el Multer del backend
   formData.append("archivo", input.files[0]);
 
   try{
-    const res = await fetch(`${API}/clientes/${id}/archivo`,{
+    // 🔥 CORREGIDO: Removida la URL absoluta para procesar la subida binaria nativa
+    const res = await fetch(`/clientes/${id}/archivo`,{
       method:"POST",
       headers:{
+        // 🔒 IMPORTANTE: Al enviar FormData, NO se debe forzar 'Content-Type' manual 
+        // para asegurar que el navegador autocalcule los límites multipart
         "Authorization": "Bearer " + token
       },
       body:formData
     });
 
     if(res.ok){
-      alert("Archivo subido correctamente");
-      cargar();
+      alert(`✅ Documento cargado con éxito en la ficha comercial de: ${nombreEmpresa}`);
+      cargar(); // Refresca las tarjetas visuales
     }else{
-      alert("❌ Error al subir archivo");
+      alert("❌ El servidor rechazó el archivo. Verifique el formato o tamaño.");
     }
   }catch(err){
-    console.error(err);
-    alert("❌ Error al subir archivo");
+    console.error("❌ Error en la subida binaria comercial:", err);
+    alert("❌ Error de red intentando enviar el documento multipart");
   }
 }
 </script>

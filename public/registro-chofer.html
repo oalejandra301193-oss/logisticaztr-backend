@@ -1,139 +1,283 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-<meta charset="UTF-8">
-<title>Registro Chofer</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro Chofer - Logística ZTR</title>
+  
+  <!-- Iconos modernos para los campos de texto -->
+  <link rel="stylesheet" href="https://cloudflare.com">
 
-<style>
-/* Body oscuro y centrado */
-body {
-  margin: 0;
-  font-family: 'Arial', sans-serif;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #0f172a;
-  color: #ffffff;
-}
+  <style>
+    /* Reset básico e inicialización */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
 
-/* Contenedor centrado con sombra y bordes suaves */
-.container {
-  background: #1e293b;
-  padding: 40px 30px;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 420px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+    body {
+      background: #090d16; /* Fondo oscuro unificado en PC */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
 
-/* Título grande y centrado */
-h2 {
-  margin-bottom: 30px;
-  font-size: 26px;
-  text-align: center;
-  font-weight: 600;
-}
+    /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+    .celular-container {
+      width: 100%;
+      max-width: 390px;
+      height: 740px;
+      background: #090d16;
+      
+      /* Fondo difuminado de camión pesado para mantener la línea visual corporativa */
+      background: linear-gradient(to bottom, rgba(9, 13, 22, 0.75), rgba(9, 13, 22, 0.98)), 
+                  url("https://unsplash.com");
+      background-size: cover;
+      background-position: center;
+      
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px 25px 25px 25px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    }
 
-/* Inputs grandes y cómodos para celular */
-input {
-  width: 100%;
-  padding: 16px 14px;
-  margin: 12px 0;
-  border: none;
-  border-radius: 8px;
-  font-size: 18px;
-  background: #0f172a;
-  color: #ffffff;
-  box-sizing: border-box;
-}
+    /* Adaptación fluida para teléfonos reales */
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .celular-container {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        padding: 45px 25px 30px 25px;
+      }
+    }
 
-/* Placeholder más claro */
-input::placeholder {
-  color: #a1a1aa;
-}
+    /* Superior: Encabezado */
+    .header-branding {
+      text-align: center;
+      z-index: 2;
+    }
 
-/* Botón destacado y grande */
-button {
-  width: 100%;
-  padding: 16px;
-  margin-top: 16px;
-  background: #2ecc71;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
-}
+    h2 {
+      color: white;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
 
-button:hover {
-  background: #27ae60;
-  transform: translateY(-2px);
-}
+    .sub {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-top: 4px;
+    }
 
-/* Ajustes responsivos adicionales */
-@media (max-width: 400px) {
-  .container {
-    padding: 30px 20px;
-  }
-  h2 {
-    font-size: 24px;
-  }
-  input, button {
-    font-size: 16px;
-    padding: 14px;
-  }
-}
-</style>
+    /* Centro: Bloque scrollable interno por si el teclado móvil tapa los campos */
+    .body-registration {
+      z-index: 2;
+      width: 100%;
+      flex: 1;
+      overflow-y: auto;
+      margin: 15px 0;
+      padding-right: 2px;
+    }
+
+    /* Estilo prolijo para la barra de scroll integrada */
+    .body-registration::-webkit-scrollbar { width: 4px; }
+    .body-registration::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+    .form-group {
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .form-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 15px;
+      transition: color 0.3s;
+    }
+
+    input {
+      width: 100%;
+      background: #1f2937;
+      border: 1px solid #374151;
+      padding: 13px 14px 13px 45px;
+      border-radius: 12px;
+      color: white;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    input:focus {
+      border-color: #10b981; /* Foco verde de registro exitoso/creación */
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+    }
+
+    input:focus + i {
+      color: #10b981;
+    }
+
+    /* Botonera inferior */
+    .footer-actions {
+      z-index: 2;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-crear {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn-crear:hover { background: #059669; transform: translateY(-1px); }
+
+    .btn-cancelar {
+      background: transparent;
+      color: #9ca3af;
+      border: 1px solid #374151;
+      font-size: 13px;
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .btn-cancelar:hover { background: #1f2937; color: white; }
+
+    button:active { transform: translateY(1px); }
+  </style>
 </head>
-
 <body>
 
-<div class="container">
-  <h2>Registro de Chofer</h2>
+  <!-- 📱 CONTENEDOR CELULAR UNIFICADO -->
+  <div class="celular-container">
+    
+    <!-- Superior: Identidad visual -->
+    <div class="header-branding">
+      <h2>Registro de Chofer</h2>
+      <p class="sub">Creá tu cuenta para acceder a las ofertas de carga</p>
+    </div>
 
-  <input id="nombre" placeholder="Nombre">
-  <input id="apellido" placeholder="Apellido">
-  <input id="dni" placeholder="DNI">
-  <input id="telefono" placeholder="Teléfono">
-  <input id="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Contraseña">
+    <!-- Centro: Formulario completo scrollable para smartphone -->
+    <div class="body-registration">
+      <div class="form-group">
+        <input id="nombre" type="text" placeholder="Nombre">
+        <i class="fa-solid fa-user"></i>
+      </div>
 
-  <button onclick="registrar()">Crear cuenta</button>
-</div>
+      <div class="form-group">
+        <input id="apellido" type="text" placeholder="Apellido">
+        <i class="fa-solid fa-user-tag"></i>
+      </div>
 
-<script>
-async function registrar(){
-  const data = {
-    nombre: document.getElementById("nombre").value,
-    apellido: document.getElementById("apellido").value,
-    dni: document.getElementById("dni").value,
-    telefono: document.getElementById("telefono").value,
-    email: document.getElementById("email").value,
-    password: document.getElementById("password").value
-  };
+      <div class="form-group">
+        <input id="dni" type="text" placeholder="DNI">
+        <i class="fa-solid fa-id-card"></i>
+      </div>
 
-  const res = await fetch("https://logisticaztr-backend.onrender.com/api/auth/chofer/register", {
-    method:"POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify(data)
-  });
+      <div class="form-group">
+        <input id="telefono" type="tel" placeholder="Teléfono de contacto">
+        <i class="fa-solid fa-phone"></i>
+      </div>
 
-  if(!res.ok){
-    alert("Error al registrar");
-    return;
-  }
+      <div class="form-group">
+        <input id="email" type="email" placeholder="Correo electrónico">
+        <i class="fa-solid fa-envelope"></i>
+      </div>
 
-  alert("Chofer registrado correctamente");
-  window.location="login-chofer.html";
-}
-</script>
+      <div class="form-group">
+        <input id="password" type="password" placeholder="Contraseña de ingreso">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+    </div>
+
+    <!-- Inferior: Botones de control -->
+    <div class="footer-actions">
+      <button class="btn-crear" onclick="registrar()">
+        <i class="fa-solid fa-user-plus"></i> Crear cuenta de Chofer
+      </button>
+      
+      <button class="btn-cancelar" onclick="window.location='/login-chofer.html'">
+        Ya tengo cuenta, iniciar sesión
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // ==========================================
+    // EJECUTAR REGISTRO ASÍNCRONO EN MONGO
+    // ==========================================
+    async function registrar(){
+      const nombre = document.getElementById("nombre").value.trim();
+      const apellido = document.getElementById("apellido").value.trim();
+      const dni = document.getElementById("dni").value.trim();
+      const telefono = document.getElementById("telefono").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if(!nombre || !apellido || !dni || !telefono || !email || !password){
+        alert("Por favor, complete todos los campos obligatorios del legajo");
+        return;
+      }
+
+      const data = { nombre, apellido, dni, telefono, email, password };
+
+      try {
+        // 🔥 CORREGIDO: Ruta absoluta de Render removida para transformarla en ruta relativa nativa
+        const res = await fetch("/api/auth/chofer/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        if(!res.ok){
+          const errorMsg = await res.text();
+          console.log("Falla registro:", errorMsg);
+          alert("Error al procesar el registro. Es posible que el correo o DNI ya estén en uso.");
+          return;
+        }
+
+        alert("🎉 ¡Legajo creado con éxito! Cuenta de chofer registrada correctamente.");
+        window.location = "login-chofer.html";
+
+      } catch(err) {
+        console.error("❌ Error en conexión de registro:", err);
+        alert("Error de red intentando conectar con el servidor de seguridad");
+      }
+    }
+  </script>
 
 </body>
 </html>

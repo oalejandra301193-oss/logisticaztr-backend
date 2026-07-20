@@ -1,72 +1,205 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logística ZTR - Acceso Operaciones</title>
+  
+  <!-- Iconos modernos corporativos -->
+  <link rel="stylesheet" href="https://cloudflare.com">
 
-<meta charset="UTF-8">
-<title>Logistica ZTR</title>
+  <style>
+    /* Reset básico e inicialización */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
 
-<style>
+    body {
+      background: #090d16; /* Fondo oscuro unificado en PC */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
 
-body{
-margin:0;
-font-family:Arial;
-height:100vh;
+    /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+    .celular-container {
+      width: 100%;
+      max-width: 390px;
+      height: 740px;
+      background: #090d16;
+      
+      /* Imagen del Scania pesado en ruta nocturna con overlay esmerilado oscuro */
+      background: linear-gradient(to bottom, rgba(9, 13, 22, 0.6), rgba(9, 13, 22, 0.98)), 
+                  url("https://unsplash.com");
+      background-size: cover;
+      background-position: center;
+      
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 50px 25px 35px 25px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    }
 
-background:url("https://images.unsplash.com/photo-1601584115197-04ecc0da31d7");
-background-size:cover;
-background-position:center;
+    /* Adaptación fluida para smartphones reales */
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .celular-container {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        padding: 60px 25px 35px 25px;
+      }
+    }
 
-display:flex;
-align-items:center;
-justify-content:center;
-}
+    /* Superior: Identidad visual corporativa */
+    .header-branding {
+      text-align: center;
+      z-index: 2;
+    }
 
-.caja{
-background:rgba(0,0,0,0.7);
-padding:60px;
-border-radius:15px;
-text-align:center;
-color:white;
-}
+    h1 {
+      color: white;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
 
-h1{
-font-size:55px;
-margin-bottom:20px;
-}
+    .sub {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-top: 4px;
+      font-weight: 500;
+    }
 
-button{
-padding:15px 40px;
-font-size:20px;
-background:#2ecc71;
-border:none;
-border-radius:10px;
-color:white;
-cursor:pointer;
-}
+    /* Centro: Logo en recuadro azul iluminado unificado */
+    .logo-central-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 2;
+      margin-top: -20px;
+    }
 
-button:hover{
-background:#27ae60;
-}
+    .logo-badge {
+      background: linear-gradient(135deg, #1d4ed8, #0b1329);
+      width: 120px;
+      height: 120px;
+      border-radius: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.45), 
+                  0 0 0 6px rgba(255, 255, 255, 0.03);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+    }
 
-</style>
+    .logo-texto-ztr {
+      font-size: 34px;
+      font-weight: 900;
+      color: white;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
 
+    .logo-texto-sub {
+      font-size: 10px;
+      font-weight: 700;
+      color: #60a5fa;
+      letter-spacing: 2.5px;
+      margin-top: 8px;
+      text-transform: uppercase;
+    }
+
+    /* Centro-Abajo: Acción de Entrada */
+    .buttons-group {
+      width: 100%;
+      z-index: 2;
+      margin-bottom: 20px;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      background: #10b981; /* Verde esmeralda de panel activo */
+      color: white;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    button:hover {
+      background: #059669;
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+
+    /* Footer de control técnico */
+    .footer-section {
+      text-align: center;
+      z-index: 2;
+      font-size: 12px;
+      color: #4b5563;
+      font-weight: 600;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="caja">
+  <!-- 📱 CONTENEDOR SMARTPHONE ADAPTABLE -->
+  <div class="celular-container">
+    
+    <!-- Encabezado de Marca -->
+    <div class="header-branding">
+      <h1>LOGÍSTICA ZTR</h1>
+      <div class="sub">Terminal de Monitoreo Técnico</div>
+    </div>
 
-<h1>🚚 LOGISTICA ZTR</h1>
+    <!-- Centro: Isotipo de la Empresa ZTR -->
+    <div class="logo-central-container">
+      <div class="logo-badge">
+        <span class="logo-texto-ztr">ZTR</span>
+        <span class="logo-texto-sub">OPERACIONES</span>
+      </div>
+    </div>
 
-<p>Panel de control de operaciones</p>
+    <!-- Centro-Abajo: Acceso Directo al Dashboard -->
+    <div class="buttons-group">
+      <button onclick="window.location='panel.html'">
+        <i class="fa-solid fa-gauge-high"></i> Entrar al Panel de Control
+      </button>
+    </div>
 
-<br>
+    <!-- Sección Inferior -->
+    <div class="footer-section">
+      <p><i class="fa-solid fa-terminal"></i> Sistema de Despacho Corporativo</p>
+    </div>
 
-<button onclick="window.location='panel.html'">
-Entrar al panel
-</button>
-
-</div>
+  </div>
 
 </body>
 </html>

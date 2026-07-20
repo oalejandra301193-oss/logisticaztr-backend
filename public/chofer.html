@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Portal Chofer - Logística ZTR</title>
@@ -10,42 +9,66 @@
 
 <style>
 body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:20px;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+  padding:20px;
+}
+.card {
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 15px;
+  border-left: 5px solid #3b82f6;
 }
 button{
-padding:10px;
-margin:5px;
+  padding:12px;
+  margin:5px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
+button:hover { opacity: 0.9; }
+
+.btn-verde { background: #10b981; color: white; }
+.btn-rojo { background: #dc2626; color: white; }
+.btn-azul { background: #2563eb; color: white; }
 </style>
 
 </head>
 
 <body>
 
-<h2>🚛 Portal del Chofer</h2>
+<h2>🚛 Control de Viaje en Curso</h2>
 
-<button onclick="disponible()">🟢 Disponible</button>
-<button onclick="noDisponible()">🔴 No disponible</button>
+<div class="card" style="border-left-color: #10b981;">
+  <h4>Estado de Disponibilidad</h4>
+  <button class="btn-verde" onclick="disponible()">🟢 Quedar Disponible</button>
+  <button class="btn-rojo" onclick="noDisponible()">🔴 Fuera de Servicio</button>
+</div>
 
-<div id="tripInfo"></div>
+<div id="tripInfo">Cargando datos del flete asignado...</div>
 
 <br>
 
-<button onclick="marcarCargado()">🚛 YA CARGUÉ</button>
-<button onclick="marcarDescarga()">📦 DESCARGA REALIZADA</button>
-<button onclick="finalizarViaje()">✅ FINALIZAR VIAJE</button>
+<div class="card" style="border-left-color: #f59e0b;">
+  <h4>Acciones del Operador</h4>
+  <button class="btn-azul" onclick="marcarCargado()">🚛 INICIAR TRÁNSITO (YA CARGUÉ)</button>
+  <button class="btn-verde" onclick="finalizarViaje()">✅ FINALIZAR Y CONFIGURAR DESCARGA</button>
+</div>
 
+<!-- Conexión Socket.io nativa en Render -->
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
 
 const socket = io();
 
+// Escucha en tiempo real si el operador publica una carga en tu zona
 socket.on("nuevo-viaje",(data)=>{
-alert("🚛 Nueva carga: "+data.origen+" → "+data.destino);
+  alert("🚛 ¡Alerta de Carga Nueva en el Sistema ZTR!: "+data.origen+" → "+data.destino);
 });
 
 const params = new URLSearchParams(window.location.search);
@@ -54,166 +77,175 @@ const token = params.get("token");
 let tripActual = null;
 let watchId = null;
 
-// 🔹 CARGAR VIAJE
+// ======================
+// 🔹 1. CARGAR DATOS DEL VIAJE ASIGNADO
+// ======================
 async function cargarCarga(){
+  try {
+    const res = await fetch("/trips");
+    const viajes = await res.json();
 
-const res = await fetch("/trips");
-const viajes = await res.json();
+    // Buscamos el viaje usando la clave tokenChofer estipulada en Trip.js
+    tripActual = viajes.find(t => t.tokenChofer === token);
 
-tripActual = viajes.find(t => t.tokenChofer === token);
+    if(!tripActual){
+      document.getElementById("tripInfo").innerHTML = "<h3>❌ Enlace o Token de viaje no encontrado en el servidor.</h3>";
+      return;
+    }
 
-if(!tripActual){
-document.body.innerHTML = "❌ Viaje no encontrado";
-return;
+    mostrarViaje();
+
+    // 🔥 CORREGIDO: Ajustado al estado oficial de tu modelo "EN_VIAJE" en vez de "EN_CAMINO"
+    if(tripActual.estado === "EN_VIAJE"){
+      iniciarSeguimiento();
+    }
+  } catch(e) {
+    console.error(e);
+    document.getElementById("tripInfo").innerHTML = "❌ Error conectando a la base de datos logísticos";
+  }
 }
 
-mostrarViaje();
-
-// si ya está en camino → activar GPS
-if(tripActual.estado === "EN_CAMINO"){
-iniciarSeguimiento();
-}
-
-}
-
-// 🔹 MOSTRAR VIAJE
+// ======================
+// 🔹 2. RENDERIZAR VISTA EN PANTALLA
+// ======================
 function mostrarViaje(){
-
-document.getElementById("tripInfo").innerHTML = `
-<p><b>Producto:</b> ${tripActual.producto}</p>
-<p><b>Origen:</b> ${tripActual.origen}</p>
-<p><b>Destino:</b> ${tripActual.destino}</p>
-<p><b>Estado:</b> ${tripActual.estado}</p>
-`;
-
+  document.getElementById("tripInfo").innerHTML = `
+    <div class="card">
+      <h3>📋 Detalles del Manifiesto</h3><br>
+      <p><b>📦 Producto a Transportar:</b> ${tripActual.producto || "-"}</p>
+      <p><b>📍 Punto de Carga (Origen):</b> ${tripActual.origen || "-"}</p>
+      <p><b>🏁 Punto de Entrega (Destino):</b> ${tripActual.destino || "-"}</p>
+      <p><b>📏 Kilómetros de Ruta Vial:</b> ${tripActual.distanciaKm || 0} km</p>
+      <p><b>💰 Valor Neto del Flete:</b> $${tripActual.valor || 0}</p>
+      <p><b>⚠️ Estado Logístico Actual:</b> <span style="color:#3b82f6; font-weight:bold;">${tripActual.estado}</span></p>
+    </div>
+  `;
 }
 
-// 🔹 GPS TRACKING LIMPIO
+// ======================
+// 🔹 3. GPS TRACKING ACTIVO (HISTORIAL DE UBICACIONES EN TRIP.JS)
+// ======================
 function iniciarSeguimiento(){
+  if(!navigator.geolocation){
+    alert("El dispositivo móvil no posee hardware GPS compatible");
+    return;
+  }
 
-if(!navigator.geolocation){
-alert("GPS no disponible");
-return;
+  // watchPosition envía las coordenadas automáticamente cada vez que el camión se mueve en la ruta
+  watchId = navigator.geolocation.watchPosition(async pos=>{
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+
+    try {
+      // 🔥 REPARADO: Como no tenías endpoints por token, reutilizamos tu ruta segura /location 
+      // pasándole el ID real del viaje para que inyecte la coordenada en el array "ubicaciones" de Trip.js
+      await fetch("/trips/location", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+          lat: parseFloat(lat),
+          lng: parseFloat(lng),
+          driverId: tripActual._id // Le pasamos el ID del flete para actualizar su historial GPS
+        })
+      });
+      console.log("📍 GPS enviado con éxito hacia el tracking de la carga");
+    } catch(err) {
+      console.error(err);
+    }
+  }, (err) => {
+    console.error("GPS error:", err);
+  }, {
+    enableHighAccuracy: true
+  });
 }
 
-watchId = navigator.geolocation.watchPosition(async pos=>{
-
-const lat = pos.coords.latitude;
-const lng = pos.coords.longitude;
-
-// guardar ubicación del viaje
-await fetch(`/trips/token/${token}/ubicacion`,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({lat,lng})
-});
-
-console.log("📍 Ubicación enviada");
-
-},{
-enableHighAccuracy:true
-});
-
-}
-
-// 🔹 MARCAR CARGA
+// ======================
+// 🔹 4. MARCAR EN TRANSITO (YA CARGUÉ)
+// ======================
 async function marcarCargado(){
+  try {
+    // 🔥 CORREGIDO: Redirigido al endpoint de actualización nativo pasándole el estado oficial "EN_VIAJE"
+    const res = await fetch(`/trips/${tripActual._id}`, {
+      method: "POST", // Reutiliza el endpoint de actualización enviando la estructura
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estado: "EN_VIAJE" })
+    });
 
-await fetch(`/trips/token/${token}/estado`,{
-method:"PUT",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({estado:"EN_CAMINO"})
-});
+    tripActual.estado = "EN_VIAJE";
+    mostrarViaje();
+    iniciarSeguimiento(); // Encendemos el rastreo GPS en segundo plano
 
-tripActual.estado="EN_CAMINO";
-mostrarViaje();
-
-iniciarSeguimiento();
-
-alert("🚛 En camino");
-
+    alert("🚛 El camión ha iniciado el tránsito. Buen viaje.");
+  } catch(e) {
+    console.error(e);
+  }
 }
 
-// 🔹 MARCAR DESCARGA
-async function marcarDescarga(){
-
-if(watchId){
-navigator.geolocation.clearWatch(watchId);
-}
-
-await fetch(`/trips/token/${token}/estado`,{
-method:"PUT",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({estado:"ENTREGADO"})
-});
-
-tripActual.estado="ENTREGADO";
-mostrarViaje();
-
-alert("📦 Entregado");
-
-}
-
-// 🔹 FINALIZAR
+// ======================
+// 🔹 5. FINALIZAR VIAJE COMPLETO
+// ======================
 async function finalizarViaje(){
+  if(!tripActual?._id){ alert("ID de flete no identificado"); return; }
 
-if(!tripActual?._id){
-alert("Error: sin ID");
-return;
+  if(watchId){
+    navigator.geolocation.clearWatch(watchId); // Apagamos el consumo de batería del GPS
+  }
+
+  try {
+    // 🔥 CORREGIDO: Apunta al endpoint de cierre real que declaramos en trips.js
+    const res = await fetch(`/trips/finalizar/${tripActual._id}`, {
+      method:"POST"
+    });
+
+    if(res.ok) {
+      alert("✅ Flete finalizado con éxito. El viaje se ha archivado.");
+      window.location.reload();
+    } else {
+      alert("Error cerrando el viaje en el servidor");
+    }
+  } catch(e) {
+    console.error(e);
+  }
 }
 
-await fetch(`/trips/finalizar/${tripActual._id}`,{
-method:"POST"
-});
-
-alert("✅ Viaje finalizado");
-location.reload();
-
-}
-
-// 🔹 DISPONIBILIDAD
+// ======================
+// 🔹 6. CONFIGURAR DISPONIBILIDAD EN DRIVER.JS
+// ======================
 async function disponible(){
+  // 🔥 CORREGIDO: Mapeado al campo directo de tu modelo choferDni
+  const dniChofer = tripActual?.choferDni || tripActual?.chofer?.dni;
+  if(!dniChofer) { alert("DNI de chofer no asociado a este manifiesto"); return; }
 
-await fetch("/trips/chofer/disponibilidad",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-dni:tripActual?.chofer?.dni,
-disponible:true
-})
-});
-
-alert("Disponible");
-
+  try {
+    await fetch("/drivers/disponibilidad", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ dni: dniChofer, disponible: true })
+    });
+    alert("🟢 Has quedado configurado como DISPONIBLE en el mapa de flota");
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 async function noDisponible(){
+  const dniChofer = tripActual?.choferDni || tripActual?.chofer?.dni;
+  if(!dniChofer) { alert("DNI de chofer no asociado"); return; }
 
-await fetch("/trips/chofer/disponibilidad",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-dni:tripActual?.chofer?.dni,
-disponible:false
-})
-});
-
-alert("No disponible");
-
+  try {
+    await fetch("/drivers/disponibilidad", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ dni: dniChofer, disponible: false })
+    });
+    alert("🔴 Has quedado configurado como FUERA DE SERVICIO");
+  } catch(e) {
+    console.error(e);
+  }
 }
 
-// 🔹 INIT
-cargarCargas();
+// 🔥 CORREGIDO: Cambiado de cargarCargas() al nombre correcto de la función: cargarCarga()
+cargarCarga();
 
 </script>
 

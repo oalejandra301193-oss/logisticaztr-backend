@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Cliente sin usuario - Cargas</title>
@@ -77,10 +77,15 @@ input, select{
 </select>
 <input id="cantidad" placeholder="Cantidad (toneladas / bultos / pallets / pies)">
 
-<button onclick="calcularDistancia()">Calcular distancia</button>
+<!-- 🔒 CAMPOS OCULTOS PARA ALMACENAR LAS COORDENADAS REQUISITO -->
+<input type="hidden" id="origenLat">
+<input type="hidden" id="origenLng">
+<input type="hidden" id="destinoLat">
+<input type="hidden" id="destinoLng">
+
+<button onclick="calcularDistancia()">Calcular distancia por carretera</button>
 <button onclick="calcularFlete()">Calcular flete</button>
 <button onclick="crearCarga()">Publicar carga</button>
-<button onclick="pagarAdelanto()">Pagar adelanto</button>
 
 <div id="lista"></div>
 </div>
@@ -89,7 +94,7 @@ input, select{
 <div class="card">
 <input id="nombreApellido" placeholder="Nombre y apellido">
 <input id="comercio" placeholder="Nombre del comercio">
-<input id="cuit" placeholder="CUIT">
+<input id="cuit" placeholder="CUIT" oninput="cargarCargas()">
 <input id="telefono" placeholder="Teléfono">
 <input id="direccionDescarga" placeholder="Dirección de descarga">
 <input id="direccionCarga" placeholder="Dirección de Carga">
@@ -97,49 +102,48 @@ input, select{
 
 <script>
 // ======================
-// Cargar cargas
+// Cargar cargas vinculadas por CUIT
 // ======================
 async function cargarCargas(){
+  const cuitInput = document.getElementById("cuit").value;
+  const cuit = cuitInput.trim().replace(/\D/g,"");
 
-const cuitInput = document.getElementById("cuit").value;
-const cuit = cuitInput.trim().replace(/\D/g,"");
+  if(!cuit) return;
 
-if(!cuit) return;
+  const res = await fetch("/trips");
+  const cargas = await res.json();
 
-const res = await fetch("/trips");
-const cargas = await res.json();
+  const mias = cargas.filter(c => 
+    (c.clienteCUIT || "").replace(/\D/g,"") === cuit
+  );
 
-// 🔥 FILTRAR SOLO LAS DE ESTE CLIENTE
-const mias = cargas.filter(c => 
-  (c.clienteCUIT || "").replace(/\D/g,"") === cuit
-);
+  let html="";
 
-let html="";
+  mias.forEach(c=>{
+    let estadoClass="publicado";
+    if(c.estado==="EN_VIAJE") estadoClass="en_viaje";
+    if(c.estado==="FINALIZADO") estadoClass="finalizado";
 
-mias.forEach(c=>{
-  let estadoClass="publicado";
-  if(c.estado==="EN_VIAJE") estadoClass="en_viaje";
-  if(c.estado==="FINALIZADO") estadoClass="finalizado";
+    html+=`
+      <div class="card">
+        <b>Producto:</b> ${c.producto}<br>
+        <b>Origen:</b> ${c.origen}<br>
+        <b>Destino:</b> ${c.destino}<br>
+        <b>Precio:</b> $${c.valor}<br>
+        <b>Distancia:</b> ${c.distanciaKm || 0} km<br>
+        <b>Estado:</b> <span class="estado ${estadoClass}">${c.estado}</span><br><br>
 
-  html+=`
-    <div class="card">
-      <b>Producto:</b> ${c.producto}<br>
-      <b>Origen:</b> ${c.origen}<br>
-      <b>Destino:</b> ${c.destino}<br>
-      <b>Precio:</b> $${c.valor}<br>
-      <b>Estado:</b> <span class="estado ${estadoClass}">${c.estado}</span><br><br>
+        <button class="ver" onclick="pagarAdelanto('${c._id}')">💳 Pagar Adelanto</button>
+        <button class="eliminar" onclick="eliminarCarga('${c._id}')">Eliminar</button>
+      </div>
+    `;
+  });
 
-      <button class="eliminar" onclick="eliminarCarga('${c._id}')">Eliminar</button>
-    </div>
-  `;
-});
-
-document.getElementById("lista").innerHTML = html;
-
+  document.getElementById("lista").innerHTML = html;
 }
 
 // ======================
-// Crear carga
+// Crear carga (Alineado con el Backend)
 // ======================
 async function crearCarga(){
   const producto = document.getElementById("producto").value;
@@ -150,35 +154,54 @@ async function crearCarga(){
   const tipo = document.getElementById("tipoCarga").value;
   const cantidad = document.getElementById("cantidad").value;
 
-  const clienteId = localStorage.getItem("clienteId");
   const nombre = document.getElementById("nombreApellido").value;
   const comercio = document.getElementById("comercio").value;
   const cuitInput = document.getElementById("cuit").value;
-  const cuit = cuitInput.trim().replace(/\D/g,""); // 🔥 SOLO NÚMEROS
+  const cuit = cuitInput.trim().replace(/\D/g,""); 
   const telefono = document.getElementById("telefono").value;
   const direccionDescarga = document.getElementById("direccionDescarga").value;
   const direccionCarga = document.getElementById("direccionCarga").value;
 
+  // 🔒 Coordenadas extraídas de los campos ocultos
+  const origenLat = document.getElementById("origenLat").value;
+  const origenLng = document.getElementById("origenLng").value;
+  const destinoLat = document.getElementById("destinoLat").value;
+  const destinoLng = document.getElementById("destinoLng").value;
+
   if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad||
-     !nombre||!comercio||!cuit||!telefono||!direccionCarga||!direccionDescarga){
-    alert("⚠ Debe completar todos los datos");
+     !nombre||!comercio||!cuit||!telefono||!direccionCarga||!direccionDescarga||!origenLat){
+    alert("⚠ Debe completar todos los datos y calcular la distancia vial antes de publicar");
     return;
   }
 
   const data = {
-    producto, origen, destino, distanciaKm:distancia, valor, tipoCarga:tipo, cantidad,
-    clienteId, // 🔥 CLAVE
+    producto, 
+    origen, 
+    destino, 
+    distanciaKm: Number(distancia), // Convertido a número
+    valor: Number(valor),           // Convertido a número
+    tipoCarga: tipo, 
+    cantidad: Number(cantidad),     // Convertido a número
+    
+    // Al no haber cuenta, se envía null y el backend creará el registro fantasma opcional
+    clienteId: null, 
 
-  clienteNombre:nombre,
-  clienteComercio:comercio,
-  clienteCUIT:cuit,
-  clienteTelefono:telefono,
+    // Coordenadas requeridas por Mongoose
+    origenLat: Number(origenLat),
+    origenLng: Number(origenLng),
+    destinoLat: Number(destinoLat),
+    destinoLng: Number(destinoLng),
 
-  direccionDescarga,
-  direccionCarga,
+    clienteNombre: nombre,
+    clienteComercio: comercio,
+    clienteCUIT: cuit,
+    clienteTelefono: telefono,
 
-  estado:"PENDIENTE"
-};
+    // Nombres alineados con las propiedades reales de tu backend
+    direccionDescarga,
+    direccionCarga,
+    estado: "PENDIENTE"
+  };
 
   const res = await fetch("/trips",{
     method:"POST",
@@ -189,43 +212,67 @@ async function crearCarga(){
   if(!res.ok){ alert("❌ Error al guardar la carga"); return; }
   alert("✅ Carga enviada para aprobación");
   cargarCargas();
-  document.querySelectorAll("input").forEach(i => i.value = "");
+  
+  // Limpiamos solo los campos de la carga, reteniendo los datos del cliente para su comodidad
+  document.getElementById("producto").value = "";
+  document.getElementById("origen").value = "";
+  document.getElementById("destino").value = "";
+  document.getElementById("distancia").value = "";
+  document.getElementById("valor").value = "";
+  document.getElementById("cantidad").value = "";
 }
 
 // ======================
 // Eliminar carga
 // ======================
 async function eliminarCarga(id){
-  if(!confirm("Eliminar carga?")) return;
+  if(!confirm("¿Desea eliminar esta carga?")) return;
   await fetch("/trips/"+id,{method:"DELETE"});
   cargarCargas();
 }
 
 // ======================
-// Calcular distancia y flete
+// Calcular distancia real por carretera (OSRM Estable)
 // ======================
 async function calcularDistancia(){
   const origen = document.getElementById("origen").value;
   const destino = document.getElementById("destino").value;
   if(!origen || !destino){ alert("Ingrese origen y destino"); return; }
 
-  const res1 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${origen}`);
-  const data1 = await res1.json();
-  const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${destino}`);
-  const data2 = await res2.json();
-  if(!data1[0] || !data2[0]){ alert("No se pudo calcular la distancia"); return; }
+  try {
+    const res1 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(origen)}`);
+    const data1 = await res1.json();
+    const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destino)}`);
+    const data2 = await res2.json();
+    
+    if(!data1 || data1.length === 0 || !data2 || data2.length === 0){ 
+      alert("No se pudieron ubicar geográficamente las ciudades"); 
+      return; 
+    }
 
-  const lat1=parseFloat(data1[0].lat), lon1=parseFloat(data1[0].lon);
-  const lat2=parseFloat(data2[0].lat), lon2=parseFloat(data2[0].lon);
+    const lat1 = parseFloat(data1[0].lat), lon1 = parseFloat(data1[0].lon);
+    const lat2 = parseFloat(data2[0].lat), lon2 = parseFloat(data2[0].lon);
 
-  const R = 6371;
-  const dLat = (lat2-lat1) * Math.PI/180;
-  const dLon = (lon2-lon1) * Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  const c = 2 * Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  const distancia = R * c;
+    // Almacenamos en inputs internos
+    document.getElementById("origenLat").value = lat1;
+    document.getElementById("origenLng").value = lon1;
+    document.getElementById("destinoLat").value = lat2;
+    document.getElementById("destinoLng").value = lon2;
 
-  document.getElementById("distancia").value = Math.round(distancia);
+    const urlOSRM = `https://openstreetmap.de{lon1},${lat1};${lon2},${lat2}?overview=false`;
+    const resRoute = await fetch(urlOSRM);
+    const dataRoute = await resRoute.json();
+
+    if (dataRoute.code === "Ok" && dataRoute.routes && dataRoute.routes.length > 0) {
+      const kmReales = dataRoute.routes[0].distance / 1000;
+      document.getElementById("distancia").value = kmReales.toFixed(1);
+    } else {
+      alert("No se pudo trazar una ruta terrestre entre ambos puntos");
+    }
+  } catch(e) {
+    console.error(e);
+    alert("Error conectando al servidor de mapas viales");
+  }
 }
 
 function calcularFlete(){
@@ -245,26 +292,29 @@ function calcularFlete(){
 }
 
 // ======================
-// Pagar adelanto
+// Pagar adelanto moderno (Pasarela PayPal con redirección directa)
 // ======================
-async function pagarAdelanto(id, monto){
+async function pagarAdelanto(id){
+  if(!id) { alert("ID de viaje inválido"); return; }
 
-const res = await fetch("/crear-pago",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body: JSON.stringify({
-  monto,
-  tripId: id
-})
-});
+  const res = await fetch("/api/payments/crear-pago",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      tripId: id,
+      tipo: "adelanto"
+    })
+  });
 
-const data = await res.json();
+  const data = await res.json();
 
-// 🔥 REDIRECCION A PAYPAL REAL
-window.location = data.url;
+  if(!data.id){
+    alert("Error de PayPal al procesar la solicitud de cobro");
+    return;
+  }
 
+  // Redirección oficial segura a la interfaz de Sandbox de PayPal
+  window.location.href = `https://paypal.com{data.id}`;
 }
 
 // ======================
@@ -277,9 +327,7 @@ async function verViaje(){
   alert(`Carga en viaje:\nProducto: ${viajes[0].producto}\nEstado: ${viajes[0].estado}`);
 }
 
-// ======================
-// Inicializar
-// ======================
+// Inicializar al escribir CUIT
 cargarCargas();
 </script>
 

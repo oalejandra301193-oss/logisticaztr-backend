@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<title>Clientes activos - LogisticaZTR</title>
+<meta charset="UTF-8">
+<title>Clientes activos - Logística ZTR</title>
 <style>
 body{
   background:#0f172a;
@@ -14,70 +15,100 @@ table{
   width:100%;
   border-collapse:collapse;
   margin-top:20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 th,td{
-  padding:12px;
+  padding:14px 12px;
   border-bottom:1px solid #334155;
   text-align:left;
+  font-size: 14px;
 }
 
 th{
   background:#1e293b;
+  color: #3b82f6;
+  font-weight: bold;
+}
+
+tr {
+  background: #111827;
+  transition: background 0.2s;
 }
 
 tr:hover{
-  background:#334155;
+  background:#1e293b;
+}
+
+.no-clientes {
+  text-align: center;
+  color: #9ca3af;
+  padding: 20px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>👤 Clientes activos</h1>
+<h1>👤 Panel de Control: Clientes Activos</h1>
 
 <table id="tablaClientes">
 <thead>
 <tr>
-<th>Nombre</th>
-<th>Email</th>
+<th>Razón Social / Nombre</th>
+<th>Comercio</th>
+<th>CUIT</th>
 <th>Teléfono</th>
-<th>Cargas publicadas</th>
+<th>Fletes Totales</th>
 </tr>
 </thead>
 
 <tbody>
+  <tr><td colspan="5" style="text-align: center; color: #9ca3af;">Sincronizando legajos con MongoDB Atlas...</td></tr>
 </tbody>
 </table>
 
 <script>
-const API = "https://logisticaztr-backend.onrender.com";
-
+// ==========================================
+// CARGAR CLIENTES DESDE EL ENDPOINT SINCRO
+// ==========================================
 async function cargarClientes(){
   try{
-    const res = await fetch(`${API}/api/clients`);
+    // 🔥 CORREGIDO: URL absoluta de Render removida para transformarla en ruta relativa nativa
+    // 🔥 CORREGIDO: Cambiado de /api/clients al endpoint real '/clientes' registrado en server.js
+    const res = await fetch("/clientes");
     if(!res.ok) throw new Error("Error al cargar clientes");
 
     const clientes = await res.json();
     const tabla = document.querySelector("#tablaClientes tbody");
     tabla.innerHTML="";
 
+    if(!clientes || clientes.length === 0) {
+      tabla.innerHTML = `<tr><td colspan="5" class="no-clientes">📋 No hay cuentas de clientes registradas en el sistema.</td></tr>`;
+      return;
+    }
+
     clientes.forEach(c=>{
+      // 🔥 CORREGIDO: Campos mapeados exactamente a los nombres en español de tu archivo Client.js
       tabla.innerHTML += `
       <tr>
-        <td>${c.name || "-"}</td>
-        <td>${c.email || "-"}</td>
-        <td>${c.phone || "-"}</td>
-        <td>${c.trips || 0}</td>
+        <td><b>${c.nombre || "-"}</b></td>
+        <td>${c.comercio || "-"}</td>
+        <td>${c.cuit || "-"}</td>
+        <td>${c.telefono || "-"}</td>
+        <td style="color: #10b981; font-weight: bold;">${c.viajes || 0} fletes</td>
       </tr>
       `;
     });
   }catch(err){
-    console.error(err);
-    document.querySelector("#tablaClientes tbody").innerHTML = `<tr><td colspan="4">❌ Error cargando clientes</td></tr>`;
+    console.error("❌ Error cargando lista de clientes:", err);
+    document.querySelector("#tablaClientes tbody").innerHTML = `<tr><td colspan="5" style="text-align: center; color: #dc2626; font-weight: bold;">❌ Error crítico al sincronizar datos desde el servidor.</td></tr>`;
   }
 }
 
+// Inicialización de arranque automático al cargar la vista web
 cargarClientes();
 </script>
 

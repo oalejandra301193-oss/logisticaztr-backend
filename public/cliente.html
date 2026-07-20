@@ -1,100 +1,280 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Clientes - Logistica ZTR</title>
+<title>Clientes - Logística ZTR</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Iconos modernos -->
+<link rel="stylesheet" href="https://cloudflare.com">
+
 <style>
-body{
-  font-family:Arial;
-  background:#f2f2f2;
-  padding:30px;
-}
+  /* Reset general e inicialización */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
 
-.caja{
-  background:white;
-  padding:30px;
-  border-radius:10px;
-  width:400px;
-  margin:auto;
-}
+  body {
+    background: #090d16; /* Fondo oscuro unificado en PC */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+  }
 
-h2{
-  text-align:center;
-}
+  /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+  .celular-container {
+    width: 100%;
+    max-width: 390px;
+    height: 760px;
+    background: #090d16;
+    
+    /* Fondo difuminado corporativo */
+    background: linear-gradient(to bottom, rgba(9, 13, 22, 0.7), rgba(9, 13, 22, 0.98)), 
+                url("https://unsplash.com");
+    background-size: cover;
+    background-position: center;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px 25px 25px 25px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  }
 
-input{
-  display:block;
-  margin-bottom:10px;
-  padding:10px;
-  width:100%;
-}
+  /* Adaptación para smartphones reales */
+  @media (max-width: 480px) {
+    body { padding: 0; }
+    .celular-container {
+      max-width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+      padding: 45px 25px 30px 25px;
+    }
+  }
 
-button{
-  padding:12px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  width:100%;
-  margin-top:5px;
-}
+  .header-branding {
+    text-align: center;
+    z-index: 2;
+  }
 
-.publicar{
-  background:#2ecc71;
-  color:white;
-}
+  h1 {
+    color: white;
+    font-size: 24px;
+    font-weight: 800;
+  }
 
-.login{
-  background:#3498db;
-  color:white;
-}
+  .sub {
+    color: #9ca3af;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  /* Cuerpo scrollable interno */
+  .body-app {
+    z-index: 2;
+    width: 100%;
+    flex: 1;
+    overflow-y: auto;
+    margin: 15px 0;
+    padding-right: 2px;
+  }
+  .body-app::-webkit-scrollbar { width: 4px; }
+  .body-app::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  .section-title {
+    font-size: 12px;
+    color: #3b82f6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 15px 0 6px 0;
+    font-weight: 700;
+  }
+
+  .card {
+    background: #1f2937;
+    padding: 14px;
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+  }
+
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  input {
+    width: 100%;
+    background: #111827;
+    border: 1px solid #374151;
+    padding: 12px;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  input:focus { border-color: #3b82f6; }
+  input[readonly] { background: #0f172a; color: #9ca3af; cursor: not-allowed; }
+
+  /* Botoneras móviles */
+  button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-login { background: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+  .btn-login:hover { background: #1d4ed8; }
+
+  .btn-publicar { background: #10b981; color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); margin-top: 10px; }
+  .btn-publicar:hover { background: #059669; }
+
+  .btn-calc { background: transparent; color: #60a5fa; border: 1px solid #374151; padding: 10px; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+  .btn-calc:hover { background: #111827; }
 </style>
 </head>
 
 <body>
 
-<div class="caja">
+  <!-- 📱 CONTENEDOR SMARTPHONE ADAPTABLE -->
+  <div class="celular-container">
+    
+    <!-- Superior: Encabezado -->
+    <div class="header-branding">
+      <h1>Panel de Cargas</h1>
+      <p class="sub">Publicá de forma rápida o ingresá con tu cuenta</p>
+    </div>
 
-<h2>📦 Clientes</h2>
+    <!-- Centro: Formulario Modular Scrollable -->
+    <div class="body-app">
+      <button class="btn-login" onclick="window.location='/login-cliente.html'">
+        <i class="fa-solid fa-right-to-bracket"></i> Ingresar con mi Usuario
+      </button>
 
-<p>Podés publicar una carga sin crear cuenta o ingresar con tu usuario.</p>
+      <div class="section-title">📦 Datos del Flete</div>
+      <div class="card">
+        <div class="form-group"><input id="producto" placeholder="Producto a transportar"></div>
+        <div class="form-group"><input id="origen" placeholder="Ciudad de origen (Ej: Mendoza)"></div>
+        <div class="form-group"><input id="destino" placeholder="Ciudad de destino (Ej: Cordoba)"></div>
+        
+        <button class="btn-calc" onclick="calcularDistancia()"><i class="fa-solid fa-route"></i> Calcular distancia vial</button>
+        
+        <div class="form-group"><input id="distancia" placeholder="Distancia KM por carretera" readonly></div>
+        <div class="form-group"><input id="valor" placeholder="Valor estimado del viaje ($)"></div>
+      </div>
 
-<button class="login" onclick="window.location='/login-cliente.html'">Ingresar con usuario</button>
+      <!-- 🔒 VARIABLES GEOGRÁFICAS INYECTADAS AL ESQUEMA MONGOOSE -->
+      <input type="hidden" id="origenLat">
+      <input type="hidden" id="origenLng">
+      <input type="hidden" id="destinoLat">
+      <input type="hidden" id="destinoLng">
 
-<br><br>
+      <div class="section-title">👤 Datos de Contacto Cliente</div>
+      <div class="card">
+        <div class="form-group"><input id="nombre" placeholder="Nombre completo o Empresa"></div>
+        <div class="form-group"><input id="direccion" placeholder="Dirección Base Operativa"></div>
+        <div class="form-group"><input id="cuit" placeholder="Número de CUIT"></div>
+        <div class="form-group"><input id="telefono" type="tel" placeholder="Teléfono celular"></div>
+      </div>
+    </div>
 
-<h3>Publicar carga</h3>
+    <!-- Inferior: Acción de Envío -->
+    <div class="footer-actions">
+      <button class="btn-publicar" onclick="crear()">
+        <i class="fa-solid fa-share-nodes"></i> Enviar y Publicar Carga
+      </button>
+    </div>
 
-<input id="producto" placeholder="Producto">
-<input id="origen" placeholder="Origen">
-<input id="destino" placeholder="Destino">
-<input id="valor" placeholder="Valor del viaje">
-
-<h3>Datos del cliente</h3>
-
-<input id="nombre" placeholder="Nombre o empresa">
-<input id="direccion" placeholder="Dirección">
-<input id="cuit" placeholder="CUIT">
-<input id="telefono" placeholder="Teléfono">
-
-<button class="publicar" onclick="crear()">Publicar carga</button>
-
-</div>
+  </div>
 
 <script>
-const API = "https://logisticaztr-backend.onrender.com";
+// ==========================================
+// CALCULAR DISTANCIA REAL POR ASCOMPLETO (OSRM)
+// ==========================================
+async function calcularDistancia(){
+  const origen = document.getElementById("origen").value.trim();
+  const destino = document.getElementById("destino").value.trim();
+  if(!origen || !destino){ alert("Por favor ingrese origen y destino"); return; }
 
+  try {
+    const res1 = await fetch(`https://openstreetmap.org{encodeURIComponent(origen)}`);
+    const data1 = await res1.json();
+    const res2 = await fetch(`https://openstreetmap.org{encodeURIComponent(destino)}`);
+    const data2 = await res2.json();
+    
+    if(!data1 || data1.length === 0 || !data2 || data2.length === 0){ 
+      alert("No se pudieron localizar los puntos geográficos de las ciudades"); 
+      return; 
+    }
+
+    const lat1 = parseFloat(data1[0].lat), lon1 = parseFloat(data1[0].lon);
+    const lat2 = parseFloat(data2[0].lat), lon2 = parseFloat(data2[0].lon);
+
+    document.getElementById("origenLat").value = lat1;
+    document.getElementById("origenLng").value = lon1;
+    document.getElementById("destinoLat").value = lat2;
+    document.getElementById("destinoLng").value = lon2;
+
+    const urlOSRM = `https://openstreetmap.de{lon1},${lat1};${lon2},${lat2}?overview=false`;
+    const resRoute = await fetch(urlOSRM);
+    const dataRoute = await resRoute.json();
+
+    if (dataRoute.code === "Ok" && dataRoute.routes && dataRoute.routes.length > 0) {
+      const kmReales = dataRoute.routes[0].distance / 1000;
+      document.getElementById("distancia").value = kmReales.toFixed(1);
+    } else {
+      alert("No se pudo trazar una trayectoria terrestre de carretera");
+    }
+  } catch(e) {
+    console.error(e);
+    alert("Error de red conectando al servidor vial");
+  }
+}
+
+// ==========================================
+// ENVIAR FORMULARIO AL BACKEND EXPRESS
+// ==========================================
 async function crear(){
-  const producto = document.getElementById("producto").value;
-  const origen = document.getElementById("origen").value;
-  const destino = document.getElementById("destino").value;
-  const valor = document.getElementById("valor").value;
-  const nombre = document.getElementById("nombre").value;
-  const direccion = document.getElementById("direccion").value;
-  const cuit = document.getElementById("cuit").value;
-  const telefono = document.getElementById("telefono").value;
+  const producto = document.getElementById("producto").value.trim();
+  const origen = document.getElementById("origen").value.trim();
+  const destino = document.getElementById("destino").value.trim();
+  const distancia = document.getElementById("distancia").value;
+  const valor = document.getElementById("valor").value.trim();
+  const nombre = document.getElementById("nombre").value.trim();
+  const direccion = document.getElementById("direccion").value.trim();
+  const cuit = document.getElementById("cuit").value.trim();
+  const telefono = document.getElementById("telefono").value.trim();
 
-  if(!producto || !origen || !destino || !valor || !nombre || !direccion || !cuit || !telefono){
-    alert("⚠ Todos los campos son obligatorios");
+  const origenLat = document.getElementById("origenLat").value;
+  const origenLng = document.getElementById("origenLng").value;
+  const destinoLat = document.getElementById("destinoLat").value;
+  const destinoLng = document.getElementById("destinoLng").value;
+
+  if(!producto || !origen || !destino || !valor || !nombre || !direccion || !cuit || !telefono || !origenLat){
+    alert("⚠ Todos los campos son obligatorios. Recuerde calcular la distancia antes de publicar.");
     return;
   }
 
@@ -102,33 +282,43 @@ async function crear(){
     producto,
     origen,
     destino,
-    valor,
+    distanciaKm: Number(distancia), // Forzado a formato numérico estricto
+    valor: Number(valor),           // Forzado a formato numérico estricto
     clienteNombre: nombre,
-    clienteDireccion: direccion,
     clienteCUIT: cuit,
     clienteTelefono: telefono,
+    
+    // Inyectamos las coordenadas requeridas por tu backend unificado
+    origenLat: Number(origenLat),
+    origenLng: Number(origenLng),
+    destinoLat: Number(destinoLat),
+    destinoLng: Number(destinoLng),
+    
+    // Nombres alineados con el modelo ClientSchema de tu base de datos
+    direccionCarga: direccion,
+    direccionDescarga: direccion,
     estado: "PENDIENTE"
   };
 
-  try{
-    const res = await fetch(`${API}/trips`,{
-      method:"POST",
-      headers: {"Content-Type":"application/json"},
+    try {
+    // 🔥 CORREGIDO: Ruta relativa nativa compatible con local y producción en Render
+    const res = await fetch("/trips", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     });
 
-    if(!res.ok) throw new Error("Error al enviar la carga");
+    if(!res.ok) throw new Error("Error en inserción");
 
-    alert("✅ Carga enviada correctamente.\nNuestro equipo revisará los datos y aprobará la publicación antes de que los choferes puedan verla.");
+    alert("✅ Carga enviada correctamente.\nNuestro equipo revisará las coordenadas y aprobará la publicación en el panel logístico.");
     
-    // Limpiar campos
+    // Limpiar el formulario completo
     document.querySelectorAll("input").forEach(input => input.value = "");
-  }catch(err){
+  } catch(err) {
     console.error(err);
-    alert("❌ Error al enviar la carga");
+    alert("❌ Ocurrió un error en el servidor al intentar guardar la carga rápida");
   }
 }
 </script>
-
 </body>
 </html>

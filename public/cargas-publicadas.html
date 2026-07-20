@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Cargas publicadas - ZTR</title>
@@ -21,10 +21,25 @@ h2{
   border-radius:10px;
   cursor:pointer;
   transition:0.3s;
+  border-left: 5px solid #64748b;
 }
 .card:hover{
   background:#334155;
 }
+/* Colores de estado visuales para el operador */
+.estado-pendiente { border-left-color: #f59e0b; }
+.estado-publicado { border-left-color: #10b981; }
+
+.badge-estado {
+  float: right;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+.bg-pendiente { background: #7c2d12; color: #fdba74; }
+.bg-publicado { background: #064e3b; color: #6ee7b7; }
+
 .detalle{
   margin-top:10px;
   padding:10px;
@@ -43,54 +58,64 @@ h2{
 </head>
 <body>
 
-<h2>📦 Cargas publicadas</h2>
+<h2>📦 Control de Cargas y Postulaciones</h2>
 
-<div id="lista"></div>
+<div id="lista">Cargando fletes...</div>
 
 <script>
 
-// Cargar cargas publicadas
+// Cargar cargas activas en el sistema
 async function cargar(){
   try{
     const res = await fetch("/trips");
     const viajes = await res.json();
 
-    const publicadas = viajes.filter(v => v.estado === "PUBLICADO");
+    // 🔥 OPTIMIZADO: Ahora filtramos tanto las PENDIENTES como las PUBLICADAS 
+    // para que puedas hacer pruebas completas de punta a punta
+    const activas = viajes.filter(v => v.estado === "PUBLICADO" || v.estado === "PENDIENTE");
 
     let html = "";
 
-    if(publicadas.length === 0){
-      html = "<p>No hay cargas publicadas</p>";
+    if(activas.length === 0){
+      html = "<p>No hay cargas registradas en este momento</p>";
     }
 
-    publicadas.forEach(v => {
+    activas.forEach(v => {
+      const esPendiente = v.estado === "PENDIENTE";
+      const claseCard = esPendiente ? "estado-pendiente" : "estado-publicado";
+      const claseBadge = esPendiente ? "bg-pendiente" : "bg-publicado";
+
       html += `
-        <div class="card" onclick="toggle('${v._id}')">
+        <div class="card ${claseCard}" onclick="toggle('${v._id}', event)">
+          <span class="badge-estado ${claseBadge}">${v.estado}</span>
           <b>📦 ${v.producto || "-"}</b><br>
-          📍 ${v.origen} → ${v.destino}<br>
-          📏 ${v.distanciaKm || "-"} km<br>
-          💰 $${v.valor || "-"}
+          📍 Origen: ${v.origen} ➔ Destino: ${v.destino}<br>
+          Ancho/Ruta Vial: ${v.distanciaKm || "-"} km<br>
+          💰 Flete Estimado: $${v.valor || "-"}
           
           <div id="det-${v._id}" class="detalle">
-            <hr>
-            <b>👤 Cliente</b><br>
+            <hr style="border-color: #1e293b; margin: 10px 0;">
+            <b>👤 Datos del Cliente de Carga</b><br>
             Nombre: ${v.clienteNombre || "-"}<br>
             Teléfono: ${v.clienteTelefono || "-"}<br>
             CUIT: ${v.clienteCUIT || "-"}<br>
-            DirecciónDescarga: ${v.clienteDireccionDescarga || "-"}<br>
-            DirecciónCarga: ${v.clienteDireccionCarga || "-"}<br><br>
+            
+            <!-- 🔥 REPARADO: Variables mapeadas con el nombre real de tu base de datos -->
+            🚚 Cargar en: ${v.clienteDireccionCarga || v.direccionCarga || "-"}<br>
+            📍 Descargar en: ${v.clienteDireccionDescarga || v.direccionDescarga || "-"}<br><br>
 
-            <b>🚛 Postulaciones</b><br>
+            <b>🚛 Postulaciones de Choferes Recibidas</b><br>
             ${
               v.postulaciones && v.postulaciones.length > 0
               ? v.postulaciones.map(p => `
                 <div>
-                  👤 ${p.nombre || "-"}<br>
-                  📞 ${p.telefono || "-"}<br>
-                  🚛 ${p.patente1 || "-"}
+                  👤 <b>Chofer:</b> ${p.nombre || "-"}<br>
+                  📞 <b>Teléfono:</b> ${p.telefono || "-"}<br>
+                  🪪 <b>DNI:</b> ${p.dni || "-"}<br>
+                  🚛 <b>Patente Chasis:</b> ${p.patente1 || "-"}
                 </div>
               `).join("")
-              : "Sin postulaciones"
+              : "<i>Sin transportistas postulados por el momento</i>"
             }
           </div>
         </div>
@@ -100,13 +125,16 @@ async function cargar(){
     document.getElementById("lista").innerHTML = html;
 
   }catch(error){
-    console.error("ERROR:", error);
-    document.getElementById("lista").innerHTML = "❌ Error cargando datos";
+    console.error("❌ Error en la carga de fletes:", error);
+    document.getElementById("lista").innerHTML = "❌ Error al sincronizar datos logísticos";
   }
 }
 
-// Mostrar/ocultar detalles
-function toggle(id){
+// Mostrar/ocultar detalles de forma inteligente sin interrumpir clicks internos
+function toggle(id, event){
+  // Si hacen clic en una postulación interna, evitamos colapsar el menú
+  if (event.target.tagName === 'BUTTON') return;
+  
   const div = document.getElementById("det-"+id);
   div.style.display = (div.style.display === "block") ? "none" : "block";
 }

@@ -1,22 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Choferes activos</title>
 
 <style>
 body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:20px;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
 }
-
+h2 {
+  margin-bottom:20px;
+}
 .card{
-background:#1e293b;
-padding:15px;
-margin-bottom:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border-left: 5px solid #10b981; /* Borde verde brillante que indica chofer activo/disponible */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+.badge-online {
+  float: right;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  background: #064e3b;
+  color: #6ee7b7;
+  border: 1px solid #10b981;
+}
+.no-choferes {
+  padding: 20px;
+  background: #1e293b;
+  border-radius: 10px;
+  text-align: center;
+  color: #9ca3af;
 }
 </style>
 
@@ -24,51 +45,55 @@ border-radius:10px;
 
 <body>
 
-<h2>🟢 Choferes activos</h2>
+<h2>🟢 Choferes Activos en Servicio</h2>
 
-<div id="lista"></div>
+<div id="lista">Sincronizando flota disponible...</div>
 
 <script>
 
 async function cargar(){
+  try{
+    // 🔥 Petición nativa directa hacia tu endpoint de Mongoose
+    const res = await fetch("/drivers");
+    const drivers = await res.json();
 
-try{
+    let html = "";
+    let contadorDisponibles = 0;
 
-// 🔥 AHORA SI: drivers reales
-const res = await fetch("/drivers");
-const drivers = await res.json();
+    drivers.forEach(d=>{
+      // Filtramos estrictamente a los transportistas que tengan la disponibilidad activa
+      if(d.disponible){
+        contadorDisponibles++;
 
-let html = "";
+        html += `
+          <div class="card">
+            <span class="badge-online">DISPONIBLE</span>
+            👨‍✈️ <b>Nombre:</b> ${d.nombre || "-"} ${d.apellido || ""}<br>
+            📞 <b>Teléfono celular:</b> ${d.telefono || "-"}<br>
+            🚛 <b>Patente Chasis:</b> ${d.patente1 || "-"}<br>
+            📍 <b>Estado GPS:</b> ${d.ultimaUbicacion && d.ultimaUbicacion.lat ? "📡 Señal en vivo activa" : "⚠️ Sin coordenadas de rastreo"}
+          </div>
+        `;
+      }
+    });
 
-drivers.forEach(d=>{
+    // 🔴 CONTROL SINO HAY CHOFERES DISPONIBLES EN EL MOMENTO
+    if(contadorDisponibles === 0){
+      html = '<div class="no-choferes">🚛 En este momento no hay choferes activos reportados en disponibilidad.</div>';
+    }
 
-// SOLO DISPONIBLES
-if(d.disponible){
+    document.getElementById("lista").innerHTML = html;
 
-html += `
-<div class="card">
-
-👨‍✈️ ${d.nombre || "-"} ${d.apellido || ""} <br>
-📞 ${d.telefono || "-"} <br>
-🚛 ${d.patente1 || "-"} <br>
-
-📍 ${d.ultimaUbicacion ? "Ubicación activa" : "Sin ubicación"}
-
-</div>
-`;
-
+  }catch(err){
+    console.error("❌ Error sincronizando choferes activos:", err);
+    document.getElementById("lista").innerHTML = "<p>❌ Error crítico al conectar con el servidor de flota.</p>";
+  }
 }
 
-});
+// 🔄 REFRESCO AUTOMÁTICO EN TIEMPO REAL (Cada 10 segundos consulta a MongoDB)
+setInterval(cargar, 10000);
 
-document.getElementById("lista").innerHTML = html;
-
-}catch(err){
-console.error(err);
-}
-
-}
-
+// Ejecución inicial de arranque al abrir la pestaña
 cargar();
 
 </script>

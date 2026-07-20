@@ -1,97 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Postulaciones</title>
+<title>Postulaciones - Logística ZTR</title>
 
 <style>
 body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:20px;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:20px;
 }
-
+h2 {
+  margin-bottom:20px;
+}
 .card{
-background:#1e293b;
-padding:15px;
-margin-bottom:10px;
-border-radius:10px;
+  background:#1e293b;
+  padding:15px;
+  margin-bottom:15px;
+  border-radius:10px;
+  border-left: 5px solid #3b82f6; /* Detalle azul de control logístico */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+.chofer-item {
+  border-top: 1px solid #334155;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+.badge-estado {
+  float: right;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  background: #1e293b;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+}
+.fecha-postula {
+  font-size: 11px;
+  color: #6b7280;
+  float: right;
+}
+.no-postulaciones {
+  padding: 20px;
+  background: #1e293b;
+  border-radius: 10px;
+  text-align: center;
+  color: #9ca3af;
 }
 </style>
-
 </head>
 
 <body>
 
-<h2>📋 Postulaciones</h2>
+<h2>📋 Listado Global de Postulaciones</h2>
 
-<div id="lista">Cargando...</div>
+<div id="lista">Sincronizando el historial de postulaciones...</div>
 
 <script>
 
+// Cargar viajes con postulaciones desde la base de datos
 async function cargar(){
+  try{
+    const res = await fetch("/trips");
 
-try{
+    // 🔴 VALIDAR RESPUESTA
+    if(!res.ok){
+      throw new Error("Error HTTP " + res.status);
+    }
 
-const res = await fetch("/trips");
+    const viajes = await res.json();
+    let html = "";
+    let contadorPostulaciones = 0;
 
-// 🔴 VALIDAR RESPUESTA
-if(!res.ok){
-throw new Error("Error HTTP " + res.status);
+    viajes.forEach(v=>{
+      // Validamos si el viaje tiene transportistas anotados [13]
+      if(v.postulaciones && v.postulaciones.length > 0){
+        contadorPostulaciones++;
+
+        // Creamos la cabecera de la tarjeta con los datos de la carga una sola vez [13]
+        html += `
+          <div class="card">
+            <span class="badge-estado">${v.estado}</span>
+            🚛 <b>Producto requerido:</b> ${v.producto || "-"}<br>
+            📍 <b>Trayecto:</b> ${v.origen || "-"} ➔ ${v.destino || "-"}<br>
+            📏 <b>Distancia flete:</b> ${v.distanciaKm || 0} km<br>
+            💰 <b>Precio ofrecido:</b> $${v.valor || 0}
+        `;
+
+        // Iteramos los choferes que se postularon a este viaje en específico [13]
+        v.postulaciones.forEach(p=>{
+          // Formateamos la fecha guardada en Trip.js para mostrarla limpia
+          const fechaFormateada = p.fecha ? new Date(p.fecha).toLocaleDateString('es-AR') : "-";
+
+          html += `
+            <div class="chofer-item">
+              <span class="fecha-postula">📅 Anotado: ${fechaFormateada}</span>
+              👤 <b>Chofer:</b> ${p.nombre || "Sin nombre"}<br>
+              📞 <b>Teléfono de contacto:</b> ${p.telefono || "-"}<br>
+              🪪 <b>DNI:</b> ${p.dni || "-"}<br>
+              🚛 <b>Patente Chasis:</b> ${p.patente1 || "-"}
+            </div>
+          `;
+        });
+
+        html += `</div>`; // Cerramos la tarjeta de la carga
+      }
+    });
+
+    // 🔴 SI NO HAY POSTULACIONES REGISTRADAS EN NINGÚN VIAJE
+    if(contadorPostulaciones === 0){
+      html = '<div class="no-postulaciones">📋 Todavía no se han registrado postulaciones de choferes en el sistema.</div>';
+    }
+
+    document.getElementById("lista").innerHTML = html;
+
+  }catch(error){
+    console.error("❌ Error cargando postulaciones globales:", error);
+    document.getElementById("lista").innerHTML = "<p class='no-postulaciones'>❌ Error al sincronizar el historial de postulaciones.</p>";
+  }
 }
 
-const viajes = await res.json();
-
-let html = "";
-
-viajes.forEach(v=>{
-
-if(v.postulaciones && v.postulaciones.length > 0){
-
-v.postulaciones.forEach(p=>{
-
-html += `
-<div class="card">
-
-🚛 <b>${v.producto || "-"}</b><br>
-${v.origen || "-"} → ${v.destino || "-"}
-
-<br><br>
-
-👤 ${p.nombre || "Sin nombre"}<br>
-📞 ${p.telefono || "-"}
-
-</div>
-`;
-
-});
-
-}
-
-});
-
-// 🔴 SI NO HAY POSTULACIONES
-if(html === ""){
-html = "<p>No hay postulaciones todavía</p>";
-}
-
-document.getElementById("lista").innerHTML = html;
-
-}catch(error){
-
-console.error("❌ Error cargando postulaciones:", error);
-
-document.getElementById("lista").innerHTML =
-"<p>Error cargando postulaciones</p>";
-
-}
-
-}
-
-// 🔄 ACTUALIZAR CADA 15 SEGUNDOS
+// 🔄 ACTUALIZAR CADA 15 SEGUNDOS DE FORMA CONTROLADA
 setInterval(cargar, 15000);
 
+// Ejecución inicial de arranque
 cargar();
 
 </script>

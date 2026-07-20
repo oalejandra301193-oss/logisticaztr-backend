@@ -1,265 +1,409 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>App Cliente ZTR</title>
+<title>Mi Perfil Cliente - Logística ZTR</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Iconos modernos -->
+<link rel="stylesheet" href="https://cloudflare.com">
+
 <style>
-body{
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-  padding:20px;
-}
+  /* Reset general e inicialización */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
 
-.card{
-  background:#1e293b;
-  padding:20px;
-  margin:10px 0;
-  border-radius:10px;
-}
+  body {
+    background: #090d16; /* Fondo oscuro unificado en PC */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+  }
 
-input{
-  display:block;
-  margin:5px 0;
-  padding:8px;
-  width:100%;
-}
+  /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+  .celular-container {
+    width: 100%;
+    max-width: 390px;
+    height: 760px;
+    background: #111827; /* Gris azulado profundo mate */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    border-radius: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  }
 
-button{
-  padding:10px;
-  margin-top:10px;
-  cursor:pointer;
-}
+  /* Adaptación para pantallas de teléfonos reales */
+  @media (max-width: 480px) {
+    body { padding: 0; }
+    .celular-container {
+      max-width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+    }
+  }
 
-img{
-  border-radius:10px;
-}
+  /* Barra Superior de la App */
+  .header-app {
+    background: #1f2937;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    z-index: 10;
+  }
+
+  .header-app h2 {
+    font-size: 18px;
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* 📦 CUERPO INTERNO SCROLLABLE */
+  .body-app {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+    background: #090d16;
+  }
+
+  .body-app::-webkit-scrollbar { width: 4px; }
+  .body-app::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  .section-title {
+    font-size: 13px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 15px 0 8px 0;
+    font-weight: 600;
+  }
+
+  .card {
+    background: #1f2937;
+    padding: 16px;
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    margin-bottom: 15px;
+  }
+
+  /* Inputs estilizados para smartphone */
+  .form-group {
+    margin-bottom: 12px;
+    position: relative;
+  }
+
+  input[type="text"], input[type="tel"] {
+    width: 100%;
+    background: #111827;
+    border: 1px solid #374151;
+    padding: 12px 14px;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus { border-color: #2563eb; }
+
+  input[type="file"] {
+    width: 100%;
+    background: #111827;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid #374151;
+    color: #9ca3af;
+    font-size: 12px;
+    margin-top: 5px;
+  }
+
+  /* Botoneras premium */
+  button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-guardar { background: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+  .btn-guardar:hover { background: #1d4ed8; }
+
+  .btn-portal { background: #10b981; color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); margin-top: 10px; }
+  .btn-portal:hover { background: #059669; }
+
+  .btn-editar { background: transparent; color: #60a5fa; border: 1px solid #374151; padding: 10px; font-size: 13px; }
+  .btn-editar:hover { background: #1f2937; }
+
+  .avatar-cliente {
+    width: 70px;
+    height: 70px;
+    border-radius: 14px;
+    object-fit: cover;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .perfil-info-text {
+    font-size: 14px;
+    color: #cbd5e1;
+    line-height: 1.6;
+  }
+
+  .ranking-row {
+    padding: 10px 0;
+    border-bottom: 1px solid #374151;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .ranking-row:last-child { border-bottom: none; }
 </style>
 </head>
 
 <body>
 
-<h2>📦 App Cliente</h2>
+  <!-- 📱 CONTENEDOR SMARTPHONE ADAPTABLE -->
+  <div class="celular-container">
+    
+    <!-- Barra Superior -->
+    <div class="header-app">
+      <h2><i class="fa-solid fa-box" style="color: #10b981;"></i> Panel Cliente</h2>
+      <i class="fa-solid fa-circle-user" style="color: #9ca3af; font-size: 20px;"></i>
+    </div>
 
-<h3>👤 Mi perfil</h3>
+    <!-- Cuerpo con Scroll Interno -->
+    <div class="body-app">
+      
+      <!-- Bloque A: Formulario de Edición (Oculto dinámicamente si hay perfil) -->
+      <div class="section-title" id="titleForm">👤 Mi Perfil Comercial</div>
+      <div id="formPerfil" class="card">
+        <div class="form-group"><input id="nombreApellido" placeholder="Nombre y apellido"></div>
+        <div class="form-group"><input id="comercio" placeholder="Nombre del comercio"></div>
+        <div class="form-group"><input id="telefono" type="tel" placeholder="Teléfono corporativo"></div>
+        <div class="form-group"><input id="direccionCarga" placeholder="Dirección Base de Carga"></div>
+        <div class="form-group"><input id="direccionDescarga" placeholder="Dirección Base de Descarga"></div>
+        
+        <div class="form-group">
+          <label style="font-size: 12px; color: #9ca3af;">Logo de la Empresa</label>
+          <input type="file" id="logoCliente">
+        </div>
+        <input id="cuit" placeholder="CUIT" style="display:none;">
 
-<div id="formPerfil" class="card">
+        <button class="btn-guardar" onclick="guardarPerfil()"><i class="fa-solid fa-floppy-disk"></i> Guardar Perfil</button>
+      </div>
 
-<input id="nombreApellido" placeholder="Nombre y apellido">
-<input id="comercio" placeholder="Nombre del comercio">
-<input id="telefono" placeholder="Teléfono">
-<input id="direccionDescarga" placeholder="Dirección de descarga">
-<input id="direccionCarga" placeholder="Dirección de Carga">
+      <!-- Bloque B: Vista del Perfil Procesado -->
+      <div id="perfilVista"></div>
 
-<input type="file" id="logoCliente">
-<input id="cuit" placeholder="CUIT" style="display:none;">
+      <!-- Botón de acceso al portal logístico de fletes -->
+      <button onclick="irPortal()" id="btnPortal" class="btn-portal" style="display:none;">
+        <i class="fa-solid fa-truck-ramp-box"></i> Ir a mi Portal Logístico
+      </button>
 
-<button onclick="guardarPerfil()">Guardar perfil</button>
+      <!-- Bloque C: Ranking de Clientes Activos -->
+      <div class="section-title">🏆 Ranking de Clientes Activos</div>
+      <div id="ranking" class="card">Cargando métricas...</div>
 
-</div>
+    </div>
 
-<div id="perfilVista"></div>
+    <!-- Barra de navegación inferior decorativa -->
+    <div style="background:#1f2937; padding:12px; text-align:center; font-size:11px; color:#6b7280; border-top:1px solid rgba(255,255,255,0.05);">
+      Logística ZTR &copy; 2026
+    </div>
 
-<button onclick="irPortal()" id="btnPortal" style="display:none;">
-Ir a mi portal
-</button>
-
-<div id="ranking"></div>
+  </div>
 
 <script>
 
 // =======================
-// CREAR / EDITAR PERFIL
+// CREAR / EDITAR PERFIL COMERCIAL
 // =======================
-
 async function guardarPerfil(){
+  const clienteId = localStorage.getItem("clienteId");
 
-const clienteId = localStorage.getItem("clienteId")
+  if(!clienteId){
+    alert("Acceso no autorizado. Inicie sesión nuevamente.");
+    window.location = "login-cliente.html";
+    return;
+  }
 
-// 🔴 SI NO HAY ID → NO PERMITIR
-if(!clienteId){
-  alert("Tenés que iniciar sesión")
-  window.location = "login-cliente.html"
-  return
-}
+  const nombre = document.getElementById("nombreApellido").value.trim();
+  const comercio = document.getElementById("comercio").value.trim();
+  const telefono = document.getElementById("telefono").value.trim();
+  const direccionDescarga = document.getElementById("direccionDescarga").value.trim();
+  const direccionCarga = document.getElementById("direccionCarga").value.trim();
 
-const nombre = document.getElementById("nombreApellido").value
-const comercio = document.getElementById("comercio").value
-const telefono = document.getElementById("telefono").value
-const direccionDescarga = document.getElementById("direccionDescarga").value
-const direccionCarga = document.getElementById("direccionCarga").value
+  if(!nombre){
+    alert("El nombre y apellido son campos obligatorios");
+    return;
+  }
 
-if(!nombre){
-  alert("El nombre es obligatorio");
-  return;
-}
+  const formData = new FormData();
+  formData.append("nombre", nombre);
+  formData.append("comercio", comercio);
+  formData.append("telefono", telefono);
+  formData.append("direccionDescarga", direccionDescarga);
+  formData.append("direccionCarga", direccionCarga);
 
-const formData = new FormData();
+  const file = document.getElementById("logoCliente").files[0];
+  if(file){
+    formData.append("logo", file);
+  }
 
-formData.append("nombre",nombre)
-formData.append("comercio",comercio)
-formData.append("telefono",telefono)
-formData.append("direccionDescarga",direccionDescarga)
-formData.append("direccionCarga",direccionCarga)
+  try {
+    // 🔥 CORREGIDO: Ruta relativa limpia alineada con Express
+    const res = await fetch("/clientes/" + clienteId, {
+      method: "PUT",
+      body: formData
+    });
 
-// 🔥 ARCHIVO
-const file = document.getElementById("logoCliente").files[0]
-if(file){
-  formData.append("logo",file)
-}
-
-// 🔥 SIEMPRE EDITAR (NUNCA CREAR)
-const res = await fetch("/clientes/"+clienteId,{
-  method:"PUT",
-  body:formData
-})
-
-if(res.ok){
-
-  alert("Perfil actualizado")
-
-  mostrarPerfil()
-
-}else{
-  alert("Error guardando perfil")
-}
-
+    if(res.ok){
+      alert("✅ Perfil comercial actualizado de forma exitosa");
+      mostrarPerfil();
+    } else {
+      alert("❌ Error guardando datos en el servidor");
+    }
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 // =======================
-// MOSTRAR PERFIL
+// RENDERIZAR VISTA DE PERFIL ACTIVADO
 // =======================
-
 async function mostrarPerfil(){
+  const id = localStorage.getItem("clienteId");
+  if(!id) return;
 
-const id = localStorage.getItem("clienteId")
+  try {
+    const res = await fetch("/clientes/" + id);
+    const c = await res.json();
 
-if(!id) return
+    const imgLogo = c.logo 
+      ? `<img src="/uploads/clientes/${c.logo}" class="avatar-cliente">`
+      : `<div style="font-size:12px; color:#6b7280; margin-bottom:10px;"><i class="fa-solid fa-building-shield"></i> Sin logotipo adjunto</div>`;
 
-const res = await fetch("/clientes/"+id)
-const c = await res.json()
+    document.getElementById("perfilVista").innerHTML = `
+      <div class="card" style="border-left: 5px solid #10b981;">
+        ${imgLogo}
+        <div class="perfil-info-text">
+          <b>👤 Responsable:</b> ${c.nombre}<br>
+          🏪 <b>Comercio:</b> ${c.comercio || "-"}<br>
+          📞 <b>Teléfono flete:</b> ${c.telefono || "-"}<br>
+          🪪 <b>CUIT:</b> ${c.cuit || "-"}<br>
+          <hr style="border-color:#374151; margin:10px 0;">
+          🚚 <b>Carga Base:</b> ${c.direccionCarga || "-"}<br>
+          📍 <b>Descarga Base:</b> ${c.direccionDescarga || "-"}
+        </div>
+        <br>
+        <button class="btn-editar" onclick="editarPerfil()"><i class="fa-solid fa-pen-to-square"></i> Editar datos</button>
+      </div>
+    `;
 
-console.log("CLIENTE:", c)
-
-let html = `
-<div class="card">
-
-${c.logo 
-  ? `<img src="https://logisticaztr-backend.onrender.com/uploads/clientes/${c.logo}" width="100"><br><br>`
-  : `<div>Sin logo</div>`
+    // Contraemos dinámicamente el formulario para que la vista móvil quede limpia
+    document.getElementById("formPerfil").style.display = "none";
+    document.getElementById("titleForm").style.display = "none";
+    document.getElementById("btnPortal").style.display = "block";
+  } catch(e) {
+    console.error(e);
+  }
 }
-
-<b>${c.nombre}</b><br>
-🏪 ${c.comercio || "-"}<br>
-📞 ${c.telefono || "-"}<br>
-CUIT: ${c.cuit || "-"}<br>
-
-🚚 Carga: ${c.direccionCarga || "-"}<br>
-📍 Descarga: ${c.direccionDescarga || "-"}<br>
-
-<br>
-
-<button onclick="editarPerfil()">Editar perfil</button>
-
-</div>
-`
-
-document.getElementById("perfilVista").innerHTML = html
-
-// 🔥 OCULTAR FORM
-document.getElementById("formPerfil").style.display = "none"
-
-// 🔥 MOSTRAR BOTÓN PORTAL
-document.getElementById("btnPortal").style.display = "block"
-
-// 🔥 OCULTAR CUIT
-document.getElementById("cuit").style.display = "none"
-
-}
-
-// =======================
-// EDITAR PERFIL
-// =======================
 
 function editarPerfil(){
-document.getElementById("formPerfil").style.display = "block"
+  document.getElementById("formPerfil").style.display = "block";
+  document.getElementById("titleForm").style.display = "block";
 }
-
-// =======================
-// IR AL PORTAL
-// =======================
 
 function irPortal(){
-window.location = "cliente-portal.html"
+  window.location = "cliente-portal.html";
 }
 
 // =======================
-// VERIFICAR PERFIL
+// VERIFICAR SESIÓN DE ENTRADA
 // =======================
-
 async function verificarPerfil(){
+  const id = localStorage.getItem("clienteId");
+  if(!id) return;
 
-const id = localStorage.getItem("clienteId")
-
-if(!id) return
-
-const res = await fetch("/clientes/"+id)
-
-if(res.ok){
-mostrarPerfil()
+  const res = await fetch("/clientes/" + id);
+  if(res.ok){
+    mostrarPerfil();
+  }
 }
 
-}
-
-verificarPerfil()
+verificarPerfil();
 
 // =======================
-// RANKING
+// CALCULAR METRICAS DEL RANKING CORPORATIVO
 // =======================
-
 async function ranking(){
+  try {
+    const res = await fetch("/trips");
+    const viajes = await res.json();
 
-const res = await fetch("/trips")
-const viajes = await res.json()
+    let clientes = {};
 
-let clientes = {}
+    viajes.forEach(v=>{
+      if(!v.clienteCUIT) return;
 
-viajes.forEach(v=>{
+      if(!clientes[v.clienteCUIT]){
+        clientes[v.clienteCUIT]={
+          nombre: v.clienteNombre || "Cliente Rápido",
+          viajes: 0
+        }
+      }
+      clientes[v.clienteCUIT].viajes++;
+    });
 
-if(!v.clienteCUIT) return
+    const lista = Object.values(clientes).sort((a,b)=> b.viajes - a.viajes);
 
-if(!clientes[v.clienteCUIT]){
-clientes[v.clienteCUIT]={
-nombre:v.clienteNombre,
-viajes:0
+    let html = "";
+
+    lista.slice(0,5).forEach((c, i)=>{
+      html += `
+        <div class="ranking-row">
+          <span><b>#${i+1}</b> ${c.nombre}</span>
+          <span style="color:#10b981; font-weight:bold;">${c.viajes} viajes</span>
+        </div>
+      `;
+    });
+
+    if(html === "") html = "<i>No se registran métricas logísticas para computar el podio</i>";
+    document.getElementById("ranking").innerHTML = html;
+  } catch(e) {
+    console.error(e);
+    document.getElementById("ranking").innerHTML = "Error cargando ranking";
+  }
 }
-}
 
-clientes[v.clienteCUIT].viajes++
-
-})
-
-const lista = Object.values(clientes)
-.sort((a,b)=> b.viajes - a.viajes)
-
-let html = "<h3>🏆 Ranking clientes</h3>"
-
-lista.slice(0,5).forEach((c,i)=>{
-html += `${i+1}. ${c.nombre} (${c.viajes} viajes)<br>`
-})
-
-document.getElementById("ranking").innerHTML = html
-
-}
-
-ranking()
-
+ranking();
 </script>
-
 </body>
 </html>
-

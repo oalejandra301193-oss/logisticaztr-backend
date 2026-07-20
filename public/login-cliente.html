@@ -1,160 +1,297 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Cliente - Logística ZTR</title>
+  
+  <!-- Iconos modernos para refinar los campos de texto -->
+  <link rel="stylesheet" href="https://cloudflare.com">
 
-<meta charset="UTF-8">
-<title>LogisticaZTR - Cliente</title>
+  <style>
+    /* Reset básico e inicialización */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    body {
+      background: #090d16; /* Fondo oscuro unificado en PC */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
 
-<style>
+    /* 📱 CONTENEDOR CELULAR RESPONSIVO UNIFICADO */
+    .celular-container {
+      width: 100%;
+      max-width: 390px;
+      height: 740px;
+      background: #090d16;
+      
+      /* Imagen de camión de fondo difuminado suave para mantener consistencia */
+      background: linear-gradient(to bottom, rgba(9, 13, 22, 0.65), rgba(9, 13, 22, 0.98)), 
+                  url("https://unsplash.com");
+      background-size: cover;
+      background-position: center;
+      
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 45px 25px 25px 25px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    }
 
-body{
-margin:0;
-font-family:'Poppins',sans-serif;
-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
+    /* Adaptación para pantallas de teléfonos reales */
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .celular-container {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        padding: 55px 25px 30px 25px;
+      }
+    }
 
-background:
-linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)),
-url("https://images.unsplash.com/photo-1601584115197-04ecc0da31d7");
+    /* Superior: Identidad visual */
+    .header-branding {
+      text-align: center;
+      z-index: 2;
+    }
 
-background-size:cover;
-background-position:center;
-color:white;
-}
+    .logo-mini {
+      background: linear-gradient(135deg, #10b981, #047857); /* Degradé verde esmeralda para el cliente */
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 15px auto;
+      box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+    }
 
-.login-box{
+    .logo-mini span {
+      font-size: 20px;
+      font-weight: 900;
+      color: white;
+      letter-spacing: 0.5px;
+    }
 
-background:rgba(0,0,0,0.75);
-padding:40px;
-border-radius:10px;
-width:320px;
-text-align:center;
+    h2 {
+      color: white;
+      font-size: 24px;
+      font-weight: 800;
+    }
 
-box-shadow:0 0 20px rgba(0,0,0,0.5);
+    .sub {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-top: 4px;
+    }
 
-}
+    /* Centro: Formulario e Inputs */
+    .body-login {
+      z-index: 2;
+      width: 100%;
+      margin-top: -40px;
+    }
 
-h1{
-margin-bottom:20px;
-}
+    .form-group {
+      margin-bottom: 16px;
+      position: relative;
+    }
 
-input{
+    .form-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 16px;
+      transition: color 0.3s;
+    }
 
-width:100%;
-padding:12px;
-margin:10px 0;
-border:none;
-border-radius:6px;
+    input {
+      width: 100%;
+      background: #1f2937;
+      border: 1px solid #374151;
+      padding: 14px 14px 14px 45px;
+      border-radius: 12px;
+      color: white;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.3s;
+    }
 
-}
+    input:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+    }
 
-button{
+    input:focus + i {
+      color: #10b981;
+    }
 
-width:100%;
-padding:12px;
-margin-top:10px;
+    /* Botonera */
+    button {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
 
-background:#2ecc71;
-border:none;
-color:white;
-font-size:16px;
-border-radius:6px;
-cursor:pointer;
+    .btn-ingresar {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn-ingresar:hover { background: #059669; transform: translateY(-1px); }
 
-}
+    .btn-volver {
+      background: rgba(31, 41, 55, 0.6);
+      color: #9ca3af;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      padding: 8px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .btn-volver:hover { background: #1f2937; color: white; }
 
-button:hover{
-background:#27ae60;
-}
+    /* Footer: Registro */
+    .footer-login {
+      text-align: center;
+      z-index: 2;
+    }
 
-.logo{
-font-size:22px;
-margin-bottom:20px;
-font-weight:600;
-}
+    .footer-login p {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
 
-</style>
+    .registro-link {
+      color: #10b981;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      transition: color 0.2s;
+    }
+    .registro-link:hover { color: #059669; text-decoration: underline; }
 
+    button:active { transform: translateY(1px); }
+  </style>
 </head>
-
 <body>
 
-<div class="login-box">
+  <!-- 📱 CONTENEDOR CELULAR UNIFICADO -->
+  <div class="celular-container">
+    
+    <!-- Superior: Encabezado -->
+    <div class="header-branding">
+      <div class="logo-mini"><span>ZTR</span></div>
+      <h2>Ingreso Cliente</h2>
+      <p class="sub">Acceso al panel de fletes y mis cargas</p>
+    </div>
 
-<div class="logo">🚛 LogisticaZTR</div>
+    <!-- Centro: Formulario -->
+    <div class="body-login">
+      <div class="form-group">
+        <input id="email" type="email" placeholder="Correo electrónico">
+        <i class="fa-solid fa-envelope"></i>
+      </div>
 
-<h3>Ingreso Cliente</h3>
+      <div class="form-group">
+        <input id="password" type="password" placeholder="Contraseña">
+        <i class="fa-solid fa-lock"></i>
+      </div>
 
-<input id="email" placeholder="Email">
+      <button class="btn-ingresar" onclick="loginCliente()">Ingresar</button>
+      
+      <button class="btn-volver" onclick="window.location='/inicio.html'">
+        <i class="fa-solid fa-arrow-left"></i> Volver al Inicio
+      </button>
+    </div>
 
-<input id="password" type="password" placeholder="Contraseña">
+    <!-- Inferior: Crear Cuenta -->
+    <div class="footer-login">
+      <p>¿No tenés cuenta?</p>
+      <a class="registro-link" href="registro-cliente.html">
+        <i class="fa-solid fa-user-plus"></i> Registrarme como Cliente
+      </a>
+    </div>
 
-<button onclick="loginCliente()">Ingresar</button>
+  </div>
 
-<p>No tenés cuenta?</p>
+  <script>
+    // ==========================================
+    // EJECUTAR INICIO DE SESIÓN ASÍNCRONO CLIENTE
+    // ==========================================
+    async function loginCliente(){
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
 
-<br><br>
+      if(!email || !password){
+        alert("Por favor completá los datos");
+        return;
+      }
 
-<a href="registro-cliente.html">
-Registrarme
-</a>
+      try {
+        const res = await fetch("/api/auth/cliente/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
 
-</div>
+        if(!res.ok){
+          alert("Datos incorrectos");
+          return;
+        }
 
-<script>
+        const data = await res.json();
 
-async function loginCliente(){
+        // 🔥 VALIDACIÓN CLAVE
+        if(!data._id){
+          alert("Error: cliente sin ID");
+          return;
+        }
 
-const email = document.getElementById("email").value
-const password = document.getElementById("password").value
+        // 🔥 GUARDADO EN STORAGE
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("clienteId", data._id);
+        localStorage.setItem("clienteCUIT", (data.cuit || "").trim());
 
-if(!email || !password){
-  alert("Completá los datos")
-  return
-}
+        console.log("CLIENTE GUARDADO:", data);
 
-const res = await fetch("/api/auth/cliente/login",{
-  method:"POST",
-  headers:{
-    "Content-Type":"application/json"
-  },
-  body:JSON.stringify({ email, password })
-})
+        // Marcar tipo de sesión activa
+        localStorage.setItem("tipoCliente", "registrado");
 
-if(!res.ok){
-  alert("Datos incorrectos")
-  return
-}
+        // Redirección directa hacia el nuevo panel móvil unificado
+        window.location = "/app-cliente.html";
 
-const data = await res.json()
-
-// 🔥 VALIDACIÓN CLAVE
-if(!data._id){
-  alert("Error: cliente sin ID")
-  return
-}
-
-// 🔥 GUARDADO CORRECTO
-localStorage.setItem("token", data.token)
-localStorage.setItem("clienteId", data._id)
-localStorage.setItem("clienteCUIT", (data.cuit || "").trim())
-
-console.log("CLIENTE GUARDADO:", data);
-
-// 🔥 IMPORTANTE: marcar que es cliente con cuenta
-localStorage.setItem("tipoCliente", "registrado")
-
-window.location = "/app-cliente.html"
-
-}
-
-</script>
+      } catch(err) {
+        console.error("❌ Error de red en autenticación:", err);
+        alert("Error de red intentando conectar con el servidor de seguridad");
+      }
+    }
+  </script>
 
 </body>
-
 </html>
