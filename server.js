@@ -69,6 +69,7 @@ app.use("/api/company", companyRoutes);
 app.use("/ranking", rankingRoutes);
 app.use("/drivers", driversRoutes);
 app.use("/trips", require("./routes/trips"));
+app.use("/api/payments", require("./routes/payments"));
 
 // 🔁 HOME
 app.get("/", (req,res)=>{
@@ -76,19 +77,29 @@ app.get("/", (req,res)=>{
 });
 
 // 🔹 DISTANCIA
-function distancia(lat1,lon1,lat2,lon2){
-  const R = 6371;
-  const dLat = (lat2-lat1) * Math.PI/180;
-  const dLon = (lon2-lon1) * Math.PI/180;
+// 🔹 NUEVA FUNCIÓN: DISTANCIA REAL POR CARRETERA (OSRM)
+async function distancia(lat1, lon1, lat2, lon2) {
+  try {
+    // IMPORTANTE: OSRM recibe primero Longitud y luego Latitud (lon,lat;lon,lat)
+    const url = `https://project-osrm.org{lon1},${lat1};${lon2},${lat2}?overview=false`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
 
-  const a =
-    Math.sin(dLat/2)**2 +
-    Math.cos(lat1*Math.PI/180) *
-    Math.cos(lat2*Math.PI/180) *
-    Math.sin(dLon/2)**2;
-
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    if (data.code === "Ok" && data.routes && data.routes.length > 0) {
+      // OSRM devuelve la distancia en metros. La dividimos por 1000 para pasarla a Kilómetros.
+      const distanciaEnKm = data.routes[0].distance / 1000;
+      return parseFloat(distanciaEnKm.toFixed(1)); // Devuelve los km con un decimal (ej: 1028.5)
+    }
+    return 0;
+  } catch (error) {
+    console.error("❌ Error en OSRM calculando ruta terrestre:", error);
+    return 0;
+  }
 }
+
+// Hacemos que la función esté disponible en otros archivos si es necesario
+app.set("calcularDistancia", distancia);
 
 app.get("/capturar-pago", async (req,res)=>{
 
