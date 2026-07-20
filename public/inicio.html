@@ -6,7 +6,7 @@
   <title>Logística ZTR - Bienvenido</title>
 
   <style>
-    /* Reset e inicialización */
+    /* Reset básico */
     * {
       margin: 0;
       padding: 0;
@@ -15,7 +15,7 @@
     }
 
     body {
-      background: #090d16;
+      background: #090d16; /* Fondo ultra oscuro de fondo para la PC */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -23,25 +23,32 @@
       margin: 0;
     }
 
-    /* 📱 CONTENEDOR CON TAMAÑO FIJO DE CELULAR + IMAGEN DE CAMIÓN DE RUTA ARGENTINA */
+    /* 📱 CONTENEDOR MÓVIL HÍBRIDO (Tamaño celular en PC / Pantalla completa en celular) */
     .celular-container {
       width: 100%;
-      max-width: 400px;
-      height: 100vh; /* Se estira a pantalla completa en el celular */
-      max-height: 840px; 
+      max-width: 410px; /* Ancho perfecto de celular moderno */
+      height: 100vh;    /* En celular toma el alto completo de la pantalla */
+      max-height: 840px; /* En PC se limita a una altura de smartphone elegante */
+      background: #090d16; /* Color de fondo idéntico a tu foto del móvil */
       
-      /* FONDO: Camión pesado en ruta con un filtro oscuro encima para que resalten los botones */
-      background: linear-gradient(to bottom, rgba(9, 13, 22, 0.6), rgba(9, 13, 22, 0.95)), 
-                  url("https://unsplash.com");
-      background-size: cover;
-      background-position: center;
+      /* Si quieres activar la foto del camión de fondo más adelante, descomenta la línea de abajo borrando las barras: */
+      /* background: linear-gradient(to bottom, rgba(9, 13, 22, 0.7), rgba(9, 13, 22, 0.95)), url("https://unsplash.com"); background-size: cover; background-position: center; */
       
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 50px 25px 30px 25px;
+      padding: 45px 25px 25px 25px;
       position: relative;
       overflow: hidden;
+    }
+
+    /* En pantallas de PC añadimos bordes redondeados y sombra para que parezca un celular flotando */
+    @media (min-height: 841px) and (min-width: 411px) {
+      .celular-container {
+        border-radius: 32px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      }
     }
 
     /* Superior: Encabezado */
@@ -53,21 +60,19 @@
     h1 {
       color: white;
       font-size: 28px;
-      font-weight: 900;
-      letter-spacing: 1px;
-      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+      font-weight: 800;
+      letter-spacing: 0.5px;
     }
 
     .sub {
-      color: #cbd5e1;
+      color: #9ca3af;
       font-size: 14px;
       margin-top: 6px;
       font-weight: 500;
-      letter-spacing: 0.5px;
-      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+      letter-spacing: 0.3px;
     }
 
-    /* 🔥 LOGO CENTRAL CORPORATIVO "ZTR" EN TEXTO REAL */
+    /* 🔥 LOGO CENTRAL CORPORATIVO "ZTR" - DISEÑO EN TEXTO IDENTICO A TU CAPTURA */
     .logo-central-container {
       display: flex;
       justify-content: center;
@@ -78,45 +83,43 @@
 
     .logo-badge {
       background: linear-gradient(135deg, #1d4ed8, #0b1329);
-      width: 120px;
-      height: 120px;
-      border-radius: 30px; /* Bordes redondeados modernos */
+      width: 130px;
+      height: 130px;
+      border-radius: 32px; /* Esquinas curvas suaves como en la foto */
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.5), 
-                  0 0 0 6px rgba(255, 255, 255, 0.05);
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 35px rgba(37, 99, 235, 0.45), 
+                  0 0 0 6px rgba(255, 255, 255, 0.03);
+      border: 2px solid rgba(255, 255, 255, 0.15);
     }
 
-    /* Estilo metalizado para las letras ZTR */
     .logo-texto-ztr {
-      font-size: 32px;
+      font-size: 36px;
       font-weight: 900;
       color: white;
       letter-spacing: 2px;
       line-height: 1;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
     }
 
-    /* Subtexto logístico inferior */
     .logo-texto-sub {
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 700;
       color: #60a5fa;
-      letter-spacing: 2px;
-      margin-top: 6px;
+      letter-spacing: 2.5px;
+      margin-top: 8px;
       text-transform: uppercase;
     }
 
-    /* Centro-Abajo: Botones de acceso */
+    /* Centro-Abajo: Grupo de Botoneras */
     .buttons-group {
       width: 100%;
       z-index: 2;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
+      margin-bottom: 10px;
     }
 
     .btn-perfil {
@@ -133,9 +136,21 @@
       transition: all 0.2s ease-in-out;
     }
 
-    /* Botón Cliente */
+    /* 🟠 BOTÓN NUEVO: Publicar sin registrarse (Exclusivo Clientes) */
+    .publicar-anonimo {
+      background: #f59e0b; /* Color naranja/ámbar llamativo */
+      color: white;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .publicar-anonimo:hover {
+      background: #d97706;
+      transform: translateY(-2px);
+    }
+
+    /* 🟢 Botón Cliente Normal Registrado */
     .cliente {
-      background: #10b981;
+      background: #10b981; /* Verde esmeralda idéntico a tu foto */
       color: white;
       box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
     }
@@ -145,9 +160,9 @@
       transform: translateY(-2px);
     }
 
-    /* Botón Chofer */
+    /* 🔵 Botón Chofer Obligatorio */
     .chofer {
-      background: #3b82f6;
+      background: #3b82f6; /* Azul brillante idéntico a tu foto */
       color: white;
       box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
     }
@@ -168,9 +183,9 @@
     }
 
     .admin {
-      background: rgba(31, 41, 55, 0.6);
+      background: rgba(31, 41, 55, 0.5);
       color: #9ca3af;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       padding: 10px 20px;
       font-size: 13px;
       font-weight: 600;
@@ -187,16 +202,16 @@
 </head>
 <body>
 
-  <!-- 📱 CONTENEDOR VIRTUAL DE SMARTPHONE -->
+  <!-- 📱 CONTENEDOR SMARTPHONE ADAPTABLE -->
   <div class="celular-container">
     
-    <!-- Superior: Encabezado -->
+    <!-- Encabezado corporativo -->
     <div class="header-branding">
       <h1>LOGÍSTICA ZTR</h1>
       <div class="sub">Plataforma Logística Inteligente</div>
     </div>
 
-    <!-- 🔥 Centro: Logo Corporativo Real "ZTR" -->
+    <!-- Centro: Logo en recuadro azul -->
     <div class="logo-central-container">
       <div class="logo-badge">
         <span class="logo-texto-ztr">ZTR</span>
@@ -204,18 +219,27 @@
       </div>
     </div>
 
-    <!-- Centro-Abajo: Botonera -->
+    <!-- Grupo de ingresos con tus nuevas reglas de negocio -->
     <div class="buttons-group">
+      
+      <!-- Opción A: Cliente publica directo y rápido (va directo al portal sin validar token de login) -->
+      <button class="btn-perfil publicar-anonimo" onclick="window.location='/cliente-portal.html'">
+        Publicar Carga Rápida
+      </button>
+
+      <!-- Opción B: Cliente registrado tradicional -->
       <button class="btn-perfil cliente" onclick="window.location='/login-cliente.html'">
         Ingresar como Cliente
       </button>
 
+      <!-- Opción C: Chofer registrado obligatorio -->
       <button class="btn-perfil chofer" onclick="window.location='/login-chofer.html'">
         Ingresar como Chofer
       </button>
+      
     </div>
 
-    <!-- Inferior: Panel Técnico de Acceso -->
+    <!-- Acceso Técnico Administrativo -->
     <div class="footer-section">
       <button class="admin" onclick="window.location='/login.html'">
         Acceso Admin
@@ -226,4 +250,5 @@
 
 </body>
 </html>
+
 
