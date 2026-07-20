@@ -4,12 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Logística ZTR - Bienvenido</title>
-  
-  <!-- Iconos modernos para refinar el diseño -->
-  <link rel="stylesheet" href="https://cloudflare.com">
 
   <style>
-    /* Reset e inicialización de pantalla */
+    /* Reset e inicialización */
     * {
       margin: 0;
       padding: 0;
@@ -18,42 +15,38 @@
     }
 
     body {
-      background: #090d16; /* Fondo oscuro moderno en PC */
+      background: #090d16;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 10px;
+      margin: 0;
     }
 
-    /* 📱 CONTENEDOR CON TAMAÑO FIJO DE CELULAR + IMAGEN DE FONDO */
+    /* 📱 CONTENEDOR CON TAMAÑO FIJO DE CELULAR + IMAGEN DE CAMIÓN DE RUTA ARGENTINA */
     .celular-container {
       width: 100%;
-      max-width: 400px; /* Ancho real de smartphone moderno */
-      height: 760px;    /* Proporción móvil vertical */
-      max-height: 92vh; /* Evita desbordes en monitores chicos */
+      max-width: 400px;
+      height: 100vh; /* Se estira a pantalla completa en el celular */
+      max-height: 840px; 
       
-      /* 🔥 NUEVO FONDO: Camión Scania pesado moderno con overlay oscuro para legibilidad */
-      background: linear-gradient(to bottom, rgba(17, 24, 39, 0.45), rgba(17, 24, 39, 0.95)), 
+      /* FONDO: Camión pesado en ruta con un filtro oscuro encima para que resalten los botones */
+      background: linear-gradient(to bottom, rgba(9, 13, 22, 0.6), rgba(9, 13, 22, 0.95)), 
                   url("https://unsplash.com");
       background-size: cover;
       background-position: center;
       
-      border-radius: 28px; /* Esquinas redondeadas estilo celular premium */
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); /* Sombra profunda */
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 35px 25px;
+      padding: 50px 25px 30px 25px;
       position: relative;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    /* Superior: Nombre de la empresa */
+    /* Superior: Encabezado */
     .header-branding {
       text-align: center;
-      margin-top: 20px;
       z-index: 2;
     }
 
@@ -61,102 +54,107 @@
       color: white;
       font-size: 28px;
       font-weight: 900;
-      letter-spacing: 0.5px;
-      text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+      letter-spacing: 1px;
+      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
     }
 
     .sub {
-      color: #e5e7eb;
+      color: #cbd5e1;
       font-size: 14px;
       margin-top: 6px;
       font-weight: 500;
-      letter-spacing: 0.2px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
     }
 
-    /* 🔥 LOGO CENTRAL FLOTANTE E INTELIGENTE */
+    /* 🔥 LOGO CENTRAL CORPORATIVO "ZTR" EN TEXTO REAL */
     .logo-central-container {
       display: flex;
       justify-content: center;
       align-items: center;
       flex-direction: column;
-      margin-top: -30px;
       z-index: 2;
     }
 
     .logo-badge {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      width: 100px;
-      height: 100px;
-      border-radius: 28px;
+      background: linear-gradient(135deg, #1d4ed8, #0b1329);
+      width: 120px;
+      height: 120px;
+      border-radius: 30px; /* Bordes redondeados modernos */
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.4), 
-                  0 0 0 8px rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.5), 
+                  0 0 0 6px rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
-    .logo-badge i {
-      font-size: 48px;
+    /* Estilo metalizado para las letras ZTR */
+    .logo-texto-ztr {
+      font-size: 32px;
+      font-weight: 900;
       color: white;
+      letter-spacing: 2px;
+      line-height: 1;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
     }
 
-    /* Centro-Abajo: Botones principales de acceso */
+    /* Subtexto logístico inferior */
+    .logo-texto-sub {
+      font-size: 9px;
+      font-weight: 700;
+      color: #60a5fa;
+      letter-spacing: 2px;
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    /* Centro-Abajo: Botones de acceso */
     .buttons-group {
       width: 100%;
       z-index: 2;
       display: flex;
       flex-direction: column;
-      gap: 15px;
-      margin-bottom: 10px;
+      gap: 16px;
     }
 
-    /* Estilo común de botones móviles */
     .btn-perfil {
       width: 100%;
       padding: 16px;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 700;
       border: none;
       border-radius: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      backdrop-filter: blur(4px); /* Efecto difuminado frosted glass de fondo */
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease-in-out;
     }
 
-    .btn-perfil i {
-      font-size: 18px;
-    }
-
-    /* Botón Cliente - Modernizado con leve transparencia */
+    /* Botón Cliente */
     .cliente {
-      background: rgba(16, 185, 129, 0.95); /* Verde esmeralda */
+      background: #10b981;
       color: white;
-      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
     }
 
     .cliente:hover {
       background: #059669;
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
     }
 
-    /* Botón Chofer - Modernizado con leve transparencia */
+    /* Botón Chofer */
     .chofer {
-      background: rgba(59, 130, 246, 0.95); /* Azul brillante */
+      background: #3b82f6;
       color: white;
-      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.25);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
     }
 
     .chofer:hover {
       background: #2563eb;
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
     }
 
     .btn-perfil:active {
@@ -170,31 +168,26 @@
     }
 
     .admin {
-      background: rgba(31, 41, 55, 0.7);
+      background: rgba(31, 41, 55, 0.6);
       color: #9ca3af;
       border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 8px 16px;
+      padding: 10px 20px;
       font-size: 13px;
-      font-weight: 500;
-      border-radius: 8px;
+      font-weight: 600;
+      border-radius: 10px;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      backdrop-filter: blur(4px);
       transition: all 0.2s;
     }
 
     .admin:hover {
       background: #1f2937;
       color: white;
-      border-color: rgba(255, 255, 255, 0.2);
     }
   </style>
 </head>
 <body>
 
-  <!-- 📱 CONTENEDOR VIRTUAL DE SMARTPHONE CON NUEVO ASPECTO -->
+  <!-- 📱 CONTENEDOR VIRTUAL DE SMARTPHONE -->
   <div class="celular-container">
     
     <!-- Superior: Encabezado -->
@@ -203,28 +196,29 @@
       <div class="sub">Plataforma Logística Inteligente</div>
     </div>
 
-    <!-- 🔥 Centro: Logo de la Empresa Logística ZTR -->
+    <!-- 🔥 Centro: Logo Corporativo Real "ZTR" -->
     <div class="logo-central-container">
       <div class="logo-badge">
-        <i class="fa-solid fa-truck-moving"></i>
+        <span class="logo-texto-ztr">ZTR</span>
+        <span class="logo-texto-sub">LOGÍSTICA</span>
       </div>
     </div>
 
-    <!-- Centro-Abajo: Botonera de Aplicación Móvil -->
+    <!-- Centro-Abajo: Botonera -->
     <div class="buttons-group">
       <button class="btn-perfil cliente" onclick="window.location='/login-cliente.html'">
-        <i class="fa-solid fa-briefcase"></i> Ingresar como Cliente
+        Ingresar como Cliente
       </button>
 
       <button class="btn-perfil chofer" onclick="window.location='/login-chofer.html'">
-        <i class="fa-solid fa-id-card"></i> Ingresar como Chofer
+        Ingresar como Chofer
       </button>
     </div>
 
     <!-- Inferior: Panel Técnico de Acceso -->
     <div class="footer-section">
       <button class="admin" onclick="window.location='/login.html'">
-        <i class="fa-solid fa-lock-open"></i> Acceso Admin
+        Acceso Admin
       </button>
     </div>
 
@@ -232,3 +226,4 @@
 
 </body>
 </html>
+
