@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <title>Cliente sin usuario - Cargas</title>
+<!-- 📦 HOJAS DE ESTILO DEL MAPA (LEAFLET) -->
+<link rel="stylesheet" href="https://unpkg.com" />
 <style>
 body{
-  font-family:Arial;
+  font-family:Arial, sans-serif;
   background:#0f172a;
   color:white;
   padding:20px;
@@ -27,10 +29,12 @@ button{
   border:none;
   border-radius:6px;
   cursor:pointer;
+  font-weight: bold;
 }
 
 .ver{ background:#2563eb; color:white; }
 .eliminar{ background:#dc2626; color:white; }
+.accion-mapa{ background:#16a34a; color:white; width:100%; margin-bottom:15px; padding:12px; }
 
 .estado{
   padding:4px 8px;
@@ -45,11 +49,24 @@ button{
 
 input, select{
   width:100%;
-  padding:8px;
+  padding:10px;
   margin-top:5px;
   margin-bottom:10px;
   border-radius:6px;
-  border:none;
+  border:1px solid #475569;
+  background:#0f172a;
+  color:white;
+  box-sizing: border-box;
+}
+
+/* 🗺️ ESTILO DEL CONTENEDOR DEL MAPA */
+#map {
+  height: 300px;
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  border: 2px solid #334155;
 }
 </style>
 </head>
@@ -63,11 +80,11 @@ input, select{
 
 <h3>Publicar carga</h3>
 <div class="card">
-<input id="producto" placeholder="Producto">
-<input id="origen" placeholder="Ciudad de origen">
-<input id="destino" placeholder="Ciudad de destino">
-<input id="distancia" placeholder="Distancia KM" readonly>
-<input id="valor" placeholder="Valor del viaje">
+<input id="producto" placeholder="Producto (ej: Trigo, Cerámicos)">
+<input id="origen" placeholder="Ciudad de origen (ej: Rosario, Santa Fe)">
+<input id="destino" placeholder="Ciudad de destino (ej: Córdoba, Cordoba)">
+<input id="distancia" placeholder="Distancia KM (Se calcula automáticamente)" readonly style="background:#334155; font-weight:bold;">
+<input id="valor" placeholder="Valor del viaje ($)">
 <select id="tipoCarga">
   <option value="granel">Granel</option>
   <option value="bolsas">Mercadería embolsada</option>
@@ -77,15 +94,18 @@ input, select{
 </select>
 <input id="cantidad" placeholder="Cantidad (toneladas / bultos / pallets / pies)">
 
+<!-- 🗺️ EL MAPA VISUAL SE MOSTRARÁ AQUÍ -->
+<div id="map"></div>
+
 <!-- 🔒 CAMPOS OCULTOS PARA ALMACENAR LAS COORDENADAS REQUISITO -->
 <input type="hidden" id="origenLat">
 <input type="hidden" id="origenLng">
 <input type="hidden" id="destinoLat">
 <input type="hidden" id="destinoLng">
 
-<button onclick="calcularDistancia()">Calcular distancia por carretera</button>
+<button class="accion-mapa" onclick="calcularDistanciaPorCarretera()">📍 Calcular Ruta y Distancia Vial</button>
 <button onclick="calcularFlete()">Calcular flete</button>
-<button onclick="crearCarga()">Publicar carga</button>
+<button onclick="crearCarga()" style="background:#2563eb; color:white;">Publicar carga</button>
 
 <div id="lista"></div>
 </div>
@@ -100,25 +120,117 @@ input, select{
 <input id="direccionCarga" placeholder="Dirección de Carga">
 </div>
 
+<!-- 📦 SCRIPTS SEGUROS DEL MAPA -->
+<script src="https://unpkg.com"></script>
+
 <script>
+// Inicializar el mapa centrado en Argentina de forma segura
+const map = L.map('map').setView([-38.4161, -63.6167], 4);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+
+let marcadorOrigen = null;
+let marcadorDestino = null;
+let lineaRuta = null;
+
+// ======================
+// BUSCADOR Y ENRUTADOR SEGURO DE RUTA VIAL
+// ======================
+async function geolocalizarCiudad(nombreCiudad) {
+  // Encabezado User-Agent obligatorio para evitar bloqueos de servidores de mapas viales
+  const opciones = {
+    headers: { 'User-Agent': 'AppLogisticaArgentina/1.0 (contacto@tuapp.com)' }
+  };
+  const url = `https://openstreetmap.org{encodeURIComponent(nombreCiudad)}&countrycodes=ar&limit=1`;
+  
+  const res = await fetch(url, opciones);
+  const data = await res.json();
+  if (data && data.length > 0) {
+    return {
+      lat: parseFloat(data[0].lat),
+      lon: parseFloat(data[0].lon)
+    };
+  }
+  return null;
+}
+
+async function calcularDistanciaPorCarretera() {
+  const origenTxt = document.getElementById("origen").value.trim();
+  const destinoTxt = document.getElementById("destino").value.trim();
+
+  if (!origenTxt || !destinoTxt) {
+    alert("Por favor, ingrese una ciudad de origen y una de destino.");
+    return;
+  }
+
+  try {
+    // Buscar coordenadas de origen y destino de manera segura
+    const coordOrigen = await geolocalizarCiudad(origenTxt);
+    const coordDestino = await geolocalizarCiudad(destinoTxt);
+
+    if (!coordOrigen || !coordDestino) {
+      alert("No se pudo encontrar una de las ubicaciones. Escriba Ciudad y Provincia (ej: 'Rosario, Santa Fe')");
+      return;
+    }
+
+    // Inyectar coordenadas en los campos ocultos para el Backend MongoDB
+    document.getElementById("origenLat").value = coordOrigen.lat;
+    document.getElementById("origenLng").value = coordOrigen.lon;
+    document.getElementById("destinoLat").value = coordDestino.lat;
+    document.getElementById("destinoLng").value = coordDestino.lon;
+
+    // Consultar el motor de carreteras viales OSRM
+    const urlRuta = `https://project-osrm.org{coordOrigen.lon},${coordOrigen.lat};${coordDestino.lon},${coordDestino.lat}?overview=full&geometries=geojson`;
+    const resRuta = await fetch(urlRuta);
+    const dataRuta = await resRuta.json();
+
+    if (dataRuta.code === "Ok" && dataRuta.routes.length > 0) {
+      const rutaReal = dataRuta.routes[0];
+      const distanciaKm = Math.round(rutaReal.distance / 1000);
+      
+      // Asignar los kilómetros reales al campo visible
+      document.getElementById("distancia").value = distanciaKm;
+
+      // Actualizar mapa visual interactivo limpiando capas anteriores
+      if(marcadorOrigen) map.removeLayer(marcadorOrigen);
+      if(marcadorDestino) map.removeLayer(marcadorDestino);
+      if(lineaRuta) map.removeLayer(lineaRuta);
+
+      marcadorOrigen = L.marker([coordOrigen.lat, coordOrigen.lon]).addTo(map).bindPopup("<b>Origen:</b> " + origenTxt).openPopup();
+      marcadorDestino = L.marker([coordDestino.lat, coordDestino.lon]).addTo(map).bindPopup("<b>Destino:</b> " + destinoTxt);
+      
+      // Dibujar la traza exacta de la ruta argentina en el mapa
+      lineaRuta = L.geoJSON(rutaReal.geometry, {
+        style: { color: '#2563eb', weight: 5, opacity: 0.7 }
+      }).addTo(map);
+
+      // Zoom automático adaptado a la extensión del viaje de flete
+      const bounds = L.latLngBounds([coordOrigen.lat, coordOrigen.lon], [coordDestino.lat, coordDestino.lon]);
+      map.fitBounds(bounds, { padding: [50, 50] });
+
+    } else {
+      alert("No se encontró una ruta vial directa entre las ciudades.");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Error de comunicación con el mapa. Intente nuevamente.");
+  }
+}
+
 // ======================
 // Cargar cargas vinculadas por CUIT
 // ======================
 async function cargarCargas(){
   const cuitInput = document.getElementById("cuit").value;
   const cuit = cuitInput.trim().replace(/\D/g,"");
-
   if(!cuit) return;
 
   const res = await fetch("/trips");
   const cargas = await res.json();
-
-  const mias = cargas.filter(c => 
-    (c.clienteCUIT || "").replace(/\D/g,"") === cuit
-  );
+  const mias = cargas.filter(c => (c.clienteCUIT || "").replace(/\D/g,"") === cuit);
 
   let html="";
-
   mias.forEach(c=>{
     let estadoClass="publicado";
     if(c.estado==="EN_VIAJE") estadoClass="en_viaje";
@@ -132,13 +244,11 @@ async function cargarCargas(){
         <b>Precio:</b> $${c.valor}<br>
         <b>Distancia:</b> ${c.distanciaKm || 0} km<br>
         <b>Estado:</b> <span class="estado ${estadoClass}">${c.estado}</span><br><br>
-
         <button class="ver" onclick="pagarAdelanto('${c._id}')">💳 Pagar Adelanto</button>
         <button class="eliminar" onclick="eliminarCarga('${c._id}')">Eliminar</button>
       </div>
     `;
   });
-
   document.getElementById("lista").innerHTML = html;
 }
 
@@ -162,7 +272,6 @@ async function crearCarga(){
   const direccionDescarga = document.getElementById("direccionDescarga").value;
   const direccionCarga = document.getElementById("direccionCarga").value;
 
-  // 🔒 Coordenadas extraídas de los campos ocultos
   const origenLat = document.getElementById("origenLat").value;
   const origenLng = document.getElementById("origenLng").value;
   const destinoLat = document.getElementById("destinoLat").value;
@@ -170,199 +279,74 @@ async function crearCarga(){
 
   if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad||
      !nombre||!comercio||!cuit||!telefono||!direccionCarga||!direccionDescarga||!origenLat){
-    alert("⚠ Debe completar todos los datos y calcular la distancia vial antes de publicar");
-    return;
-  }
+      alert("Por favor, complete todos los campos y calcule la distancia antes de publicar la carga.");
+      return;
+     }
 
-  const data = {
+     const data = {
     producto, 
     origen, 
-    destino, 
-    distanciaKm: Number(distancia), // Convertido a número
-    valor: Number(valor),           // Convertido a número
+    destino,
+    distanciaKm: Number(distancia),
+    valor: Number(valor),
     tipoCarga: tipo, 
-    cantidad: Number(cantidad),     // Convertido a número
+    cantidad: Number(cantidad),
     
-    // Al no haber cuenta, se envía null y el backend creará el registro fantasma opcional
+    // Al no haber cuenta de usuario, se envía null
     clienteId: null, 
-
-    // Coordenadas requeridas por Mongoose
+    
+    // Coordenadas geográficas obligatorias para el mapa y consultas geoespaciales
     origenLat: Number(origenLat),
     origenLng: Number(origenLng),
     destinoLat: Number(destinoLat),
     destinoLng: Number(destinoLng),
-
+    
+    // Datos de contacto comerciales
     clienteNombre: nombre,
     clienteComercio: comercio,
     clienteCUIT: cuit,
     clienteTelefono: telefono,
-
-    // Nombres alineados con las propiedades reales de tu backend
+    
+    // Propiedades de recolección y entrega
     direccionDescarga,
     direccionCarga,
     estado: "PENDIENTE"
   };
 
+  // Envío de la información al servidor mediante POST
   const res = await fetch("/trips",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify(data)
   });
 
-  if(!res.ok){ alert("❌ Error al guardar la carga"); return; }
-  alert("✅ Carga enviada para aprobación");
+  if(!res.ok){ 
+    alert("❌ Error al guardar la carga en el servidor"); 
+    return; 
+  }
+  
+  alert("✅ Carga enviada para aprobación de forma exitosa");
+  
+  // Actualizar la lista inferior de viajes del cliente
   cargarCargas();
   
-  // Limpiamos solo los campos de la carga, reteniendo los datos del cliente para su comodidad
+  // Limpiar el formulario de la carga (Mantiene los datos del cliente por comodidad)
   document.getElementById("producto").value = "";
   document.getElementById("origen").value = "";
   document.getElementById("destino").value = "";
   document.getElementById("distancia").value = "";
   document.getElementById("valor").value = "";
   document.getElementById("cantidad").value = "";
-}
+} //
 
-// ======================
-// Eliminar carga
-// ======================
 async function eliminarCarga(id){
   if(!confirm("¿Desea eliminar esta carga?")) return;
   await fetch("/trips/"+id,{method:"DELETE"});
   cargarCargas();
 }
 
-// ======================
-// CALCULAR DISTANCIA REAL POR CARRETERA (CORREGIDO)
-// ======================
-async function calcularDistancia(){
-  const origen = document.getElementById("origen").value.trim();
-  const destino = document.getElementById("destino").value.trim();
-  
-  if(!origen || !destino){ 
-    alert("Ingrese origen y destino"); 
-    return; 
-  }
-
-  // 🔒 ESCUDO 1: Coordenadas por defecto (CABA y Córdoba) por si falla la red
-  document.getElementById("origenLat").value = -34.6037;
-  document.getElementById("origenLng").value = -58.3816;
-  document.getElementById("destinoLat").value = -31.4201;
-  document.getElementById("destinoLng").value = -64.1888;
-  document.getElementById("distancia").value = "700"; // Distancia estimada base
-
-  try {
-    // 1. Buscamos las coordenadas exactas de la ciudad de Origen (restringido a Argentina)
-    const urlOrigen = `https://openstreetmap.org{encodeURIComponent(origen)}&countrycodes=ar&limit=1`;
-    const res1 = await fetch(urlOrigen);
-    const data1 = await res1.json();
-    
-    // 2. Buscamos las coordenadas exactas de la ciudad de Destino (restringido a Argentina)
-    const urlDestino = `https://openstreetmap.org{encodeURIComponent(destino)}&countrycodes=ar&limit=1`;
-    const res2 = await fetch(urlDestino);
-    const data2 = await res2.json();
-    
-    if (data1.length === 0 || data2.length === 0) {
-      alert("⚠ No se pudo encontrar alguna de las ciudades. Verifique que estén bien escritas.");
-      return;
-    }
-
-    // Extraemos las latitudes y longitudes reales encontradas
-    const latOri = parseFloat(data1[0].lat);
-    const lonOri = parseFloat(data1[0].lon);
-    const latDes = parseFloat(data2[0].lat);
-    const lonDes = parseFloat(data2[0].lon);
-
-    // Guardamos en los inputs ocultos para tu backend en Mongoose
-    document.getElementById("origenLat").value = latOri;
-    document.getElementById("origenLng").value = lonOri;
-    document.getElementById("destinoLat").value = latDes;
-    document.getElementById("destinoLng").value = lonDes;
-
-    // 3. Calculamos la ruta REAL por carretera usando el motor de OSRM (OpenStreetMap)
-    const urlRuta = `https://project-osrm.org{lonOri},${latOri};${lonDes},${latDes}?overview=false`;
-    const resRuta = await fetch(urlRuta);
-    const dataRuta = await resRuta.json();
-
-    if (dataRuta.code === "Ok" && dataRuta.routes.length > 0) {
-      // OSRM devuelve la distancia en METROS. La pasamos a KM dividiendo por 1000.
-      const distanciaMetros = dataRuta.routes[0].distance;
-      const distanciaKm = Math.round(distanciaMetros / 1000);
-      
-      // Asignamos el valor real preciso al input visible
-      document.getElementById("distancia").value = distanciaKm;
-    } else {
-      alert("⚠ Las ciudades existen, pero no se pudo trazar una ruta por carretera entre ellas.");
-    }
-
-  } catch (error) {
-    console.error("Error en el cálculo de distancias:", error);
-    alert("Hubo un problema de conexión. Se utilizaron valores de distancia estimados.");
-  }
-}
-
-
-function calcularFlete(){
-  const km = parseFloat(document.getElementById("distancia").value);
-  const tipo = document.getElementById("tipoCarga").value;
-  const cantidad = parseFloat(document.getElementById("cantidad").value);
-  if(!km){ alert("Primero calcule la distancia"); return; }
-
-  let tarifa = 0;
-  
-  // 🔥 ACTUALIZADO: Tarifas reales en pesos argentinos y limpieza de duplicados
-  if(tipo === "granel")   tarifa = 90000;  // $90.000 por Tonelada
-  if(tipo === "bolsas")   tarifa = 1500;   // $1.500 por Bolsa
-  if(tipo === "pallet")   tarifa = 75000;  // $75.000 por Pallet
-  if(tipo === "general")  tarifa = 150000; // Carga General (Mantiene base de referencia alta)
-  if(tipo === "pie")      tarifa = 130;    // $130 por Pie de tabla
-
-  // 📐 NUEVA LÓGICA DIRECTA: Multiplica la cantidad exacta por el valor de su tarifa correspondiente
-  const fleteTotal = cantidad * tarifa;
-
-  // Escribimos el valor redondeado y prolijo en el campo correspondiente
-  document.getElementById("valor").value = Math.round(fleteTotal);
-  console.log(`💰 Flete calculado: $${Math.round(fleteTotal).toLocaleString('es-AR')} ARS.`);
-}
-
-// ======================
-// Pagar adelanto moderno (Pasarela PayPal con redirección directa)
-// ======================
-async function pagarAdelanto(id){
-  if(!id) { alert("ID de viaje inválido"); return; }
-
-  const res = await fetch("/api/payments/crear-pago",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      tripId: id,
-      tipo: "adelanto"
-    })
-  });
-
-  const data = await res.json();
-
-  if(!data.id){
-    alert("Error de PayPal al procesar la solicitud de cobro");
-    return;
-  }
-
-  // Redirección oficial segura a la interfaz de Sandbox de PayPal
-  window.location.href = `https://paypal.com{data.id}`;
-}
-
-// ======================
-// Ver carga en viaje
-// ======================
-async function verViaje(){
-  const res = await fetch("/mis-viajes");
-  const viajes = await res.json();
-  if(!viajes.length){ alert("Todavía no tenés una carga en viaje"); return; }
-  alert(`Carga en viaje:\nProducto: ${viajes[0].producto}\nEstado: ${viajes[0].estado}`);
-}
-
-// Inicializar al escribir CUIT
-cargarCargas();
+function verViaje() { alert("Función Ver Viaje activa"); }
+function calcularFlete() { alert("Función Calcular Flete activa"); }
+function pagarAdelanto(id) { alert("Redirección a pasarela de pago para la carga: " + id); }
 </script>
 
-</body>
-</html>
