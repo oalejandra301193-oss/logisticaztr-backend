@@ -74,18 +74,17 @@ app.get("/", (req,res)=>{
   res.redirect("/inicio-app.html");
 });
 
-// 🔹 NUEVA FUNCIÓN REPARADA: DISTANCIA REAL POR CARRETERA (OSRM)
+// 🔹 FUNCIÓN REPARADA: DISTANCIA REAL POR CARRETERA (OSRM)
 async function distancia(lat1, lon1, lat2, lon2) {
   try {
     if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
     
-    // 🔥 CORREGIDO: URL oficial y bien estructurada (Longitud primero, luego Latitud)
+    // 🔥 CORREGIDO: URL estructurada completa con subdominio oficial para evitar caídas
     const url = `https://openstreetmap.de{lon1},${lat1};${lon2},${lat2}?overview=false`;
     
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: { "User-Agent": "LogisticaZTR_App" } });
     const data = await response.json();
 
-    // 🔥 CORREGIDO: Validación segura de la respuesta antes de mapear la propiedad distance
     if (data.code === "Ok" && data.routes && data.routes.length > 0) {
       const distanciaEnKm = data.routes[0].distance / 1000;
       return parseFloat(distanciaEnKm.toFixed(1)); 
@@ -99,6 +98,48 @@ async function distancia(lat1, lon1, lat2, lon2) {
 
 // Compartir función con el enrutador de trips
 app.set("calcularDistancia", distancia);
+
+// 🔥 NUEVO ENDPOINT INTEGRADO: CALCULAR RUTA DE SERVIDOR A SERVIDOR (EVITA BLOQUEOS DE CORS)
+app.get("/api/mapas/calcular-ruta", async (req, res) => {
+  try {
+    const { origen, destino } = req.query;
+    if (!origen || !destino) return res.status(400).json({ error: "Faltan ciudades" });
+
+    const headers = { "User-Agent": "LogisticaZTR_Backend_Secure" };
+    
+    // 1. Buscamos coordenadas en Nominatim de servidor a servidor sin bloqueos de navegador
+    const res1 = await fetch(`https://openstreetmap.org{encodeURIComponent(origen)}`, { headers });
+    const data1 = await res1.json();
+    const res2 = await fetch(`https://openstreetmap.org{encodeURIComponent(destino)}`, { headers });
+    const data2 = await res2.json();
+
+    if (!data1 || data1.length === 0 || !data2 || data2.length === 0) {
+      return res.status(400).json({ error: "No se pudieron localizar las ciudades ingresadas" });
+    }
+
+    const lat1 = parseFloat(data1[0].lat), lon1 = parseFloat(data1[0].lon);
+    const lat2 = parseFloat(data2[0].lat), lon2 = parseFloat(data2[0].lon);
+
+    // 2. Calculamos los kilómetros exactos por asfalto usando la función interna
+    const kmReales = await distancia(lat1, lon1, lat2, lon2);
+
+    if (kmReales > 0) {
+      return res.json({
+        distanciaKm: kmReales,
+        origenLat: lat1,
+        origenLng: lon1,
+        destinoLat: lat2,
+        destinoLng: lon2
+      });
+    } else {
+      return res.status(400).json({ error: "No se pudo trazar una ruta terrestre por carretera" });
+    }
+
+  } catch (error) {
+    console.error("❌ Error en endpoint de mapas:", error);
+    res.status(500).json({ error: "Error interno calculando trayectoria" });
+  }
+});
 
 // 🔹 ANTIGUA RUTA DE CAPTURA DE PAGOS (Mantenida por compatibilidad)
 app.get("/capturar-pago", async (req,res)=>{
@@ -155,7 +196,7 @@ app.get("/trips/cliente/:clienteId", async (req, res) => {
     res.json(trips);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error obteniendo viajes" });
+    res.status(500).json({ error: "Error obtaining viajes" });
   }
 });
 
@@ -269,7 +310,6 @@ app.get("/choferes-cercanos", async (req, res) => {
     const choferes = await Driver.find({ disponible: true });
     const cercanos = [];
 
-    // Evaluamos la distancia de cada chofer mediante bucle asíncronizado obligatorio
     for (const c of choferes) {
       if (c.ultimaUbicacion && c.ultimaUbicacion.lat && c.ultimaUbicacion.lng) {
         const d = await distancia(
@@ -278,27 +318,31 @@ app.get("/choferes-cercanos", async (req, res) => {
           parseFloat(c.ultimaUbicacion.lat), 
           parseFloat(c.ultimaUbicacion.lng)
         );
-        // Si el recorrido vial real es menor a 100 Kilómetros, califica
         if (d > 0 && d < 100) {
           cercanos.push(c);
         }
-      }
+              }
     }
     res.json(cercanos);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error procesando mapa de choferes cercanos" });
+    res.status(500).json({ error: "Error procesando mapa" });
   }
 });
 
 // 🔹 RANKING
-app.get("/ranking",async(req,res)=>{
-  const top = await Trip.aggregate([
-    { $group:{ _id:"$choferDni", promedio:{ $avg:"$ratingChofer" } } },
-    { $sort:{ promedio:-1 } },
-    { $limit:5 }
-  ]);
-  res.json(top);
+app.get("/ranking", async (req, res) => {
+  try {
+    const top = await Trip.aggregate([
+      { $group: { _id: "$choferDni", promedio: { $avg: "$ratingChofer" } } },
+      { $sort: { promedio: -1 } },
+      { $limit: 5 }
+    ]);
+    res.json(top);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo ranking" });
+  }
 });
 
 // INICIAR SERVIDOR
@@ -307,3 +351,5 @@ server.listen(PORT, () => {
   console.log(`✅ Mongo conectado`);
   console.log(`🚀 Servidor en puerto ${PORT}`);
 });
+
+
