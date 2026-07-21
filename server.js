@@ -79,8 +79,8 @@ async function distancia(lat1, lon1, lat2, lon2) {
   try {
     if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
     
-    // 🔥 CORREGIDO: URL estructurada completa con subdominio oficial para evitar caídas
-    const url = `https://openstreetmap.de{lon1},${lat1};${lon2},${lat2}?overview=false`;
+    // 🔥 CORREGIDO: URL e interpolación correctas usando el ruteador oficial de OSRM
+    const url = `https://project-osrm.org{lon1},${lat1};${lon2},${lat2}?overview=false`;
     
     const response = await fetch(url, { headers: { "User-Agent": "LogisticaZTR_App" } });
     const data = await response.json();
@@ -99,7 +99,7 @@ async function distancia(lat1, lon1, lat2, lon2) {
 // Compartir función con el enrutador de trips
 app.set("calcularDistancia", distancia);
 
-// 🔥 NUEVO ENDPOINT INTEGRADO: CALCULAR RUTA DE SERVIDOR A SERVIDOR (EVITA BLOQUEOS DE CORS)
+// 🔥 NUEVO ENDPOINT INTEGRADO: CALCULAR RUTA DE SERVIDOR A SERVIDOR (CORREGIDO)
 app.get("/api/mapas/calcular-ruta", async (req, res) => {
   try {
     const { origen, destino } = req.query;
@@ -107,10 +107,13 @@ app.get("/api/mapas/calcular-ruta", async (req, res) => {
 
     const headers = { "User-Agent": "LogisticaZTR_Backend_Secure" };
     
-    // 1. Buscamos coordenadas en Nominatim de servidor a servidor sin bloqueos de navegador
-    const res1 = await fetch(`https://openstreetmap.org{encodeURIComponent(origen)}`, { headers });
+    // 🔥 CORREGIDO: Llamadas estructuradas con subdominio de API y país restringido a Argentina
+    const urlOri = `https://openstreetmap.org{encodeURIComponent(origen)}&countrycodes=ar&limit=1`;
+    const urlDes = `https://openstreetmap.org{encodeURIComponent(destino)}&countrycodes=ar&limit=1`;
+
+    const res1 = await fetch(urlOri, { headers });
     const data1 = await res1.json();
-    const res2 = await fetch(`https://openstreetmap.org{encodeURIComponent(destino)}`, { headers });
+    const res2 = await fetch(urlDes, { headers });
     const data2 = await res2.json();
 
     if (!data1 || data1.length === 0 || !data2 || data2.length === 0) {
@@ -120,7 +123,7 @@ app.get("/api/mapas/calcular-ruta", async (req, res) => {
     const lat1 = parseFloat(data1[0].lat), lon1 = parseFloat(data1[0].lon);
     const lat2 = parseFloat(data2[0].lat), lon2 = parseFloat(data2[0].lon);
 
-    // 2. Calculamos los kilómetros exactos por asfalto usando la función interna
+    // Calculamos los kilómetros exactos por asfalto usando la función interna integrada
     const kmReales = await distancia(lat1, lon1, lat2, lon2);
 
     if (kmReales > 0) {
@@ -140,6 +143,7 @@ app.get("/api/mapas/calcular-ruta", async (req, res) => {
     res.status(500).json({ error: "Error interno calculando trayectoria" });
   }
 });
+
 
 // 🔹 ANTIGUA RUTA DE CAPTURA DE PAGOS (Mantenida por compatibilidad)
 app.get("/capturar-pago", async (req,res)=>{

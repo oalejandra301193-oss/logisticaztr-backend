@@ -6,76 +6,25 @@
 <!-- 📦 HOJAS DE ESTILO DEL MAPA (LEAFLET) -->
 <link rel="stylesheet" href="https://unpkg.com" />
 <style>
-body{
-  font-family:Arial, sans-serif;
-  background:#0f172a;
-  color:white;
-  padding:20px;
-}
-
+body{ font-family:Arial, sans-serif; background:#0f172a; color:white; padding:20px; }
 h2,h3{ margin-bottom:20px; }
-
-.card{
-  background:#1e293b;
-  padding:15px;
-  margin-bottom:15px;
-  border-radius:10px;
-}
-
-button{
-  padding:8px 12px;
-  margin-top:8px;
-  margin-right:5px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-weight: bold;
-}
-
+.card{ background:#1e293b; padding:15px; margin-bottom:15px; border-radius:10px; }
+button{ padding:8px 12px; margin-top:8px; margin-right:5px; border:none; border-radius:6px; cursor:pointer; font-weight: bold; }
 .ver{ background:#2563eb; color:white; }
 .eliminar{ background:#dc2626; color:white; }
 .accion-mapa{ background:#16a34a; color:white; width:100%; margin-bottom:15px; padding:12px; }
-
-.estado{
-  padding:4px 8px;
-  border-radius:5px;
-  font-size:12px;
-  margin-left:10px;
-}
-
+.estado{ padding:4px 8px; border-radius:5px; font-size:12px; margin-left:10px; }
 .publicado{background:#334155}
 .en_viaje{background:#16a34a}
 .finalizado{background:#64748b}
-
-input, select{
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  margin-bottom:10px;
-  border-radius:6px;
-  border:1px solid #475569;
-  background:#0f172a;
-  color:white;
-  box-sizing: border-box;
-}
-
-/* 🗺️ CONTENEDOR DEL MAPA REPARADO CON ALTURA FIJA */
-#map {
-  height: 350px;
-  width: 100%;
-  border-radius: 8px;
-  margin-top: 10px;
-  margin-bottom: 15px;
-  border: 2px solid #334155;
-  background: #0f172a;
-}
+input, select{ width:100%; padding:10px; margin-top:5px; margin-bottom:10px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; box-sizing: border-box; }
+#map { height: 350px; width: 100%; border-radius: 8px; margin-top: 10px; margin-bottom: 15px; border: 2px solid #334155; background: #0f172a; }
 </style>
 </head>
 
 <body>
 
 <h2>📦 Cliente sin cuenta</h2>
-
 <button onclick="window.location='registro-cliente.html'">Registrarme como cliente</button>
 <button onclick="verViaje()">Ver carga en viaje</button>
 
@@ -83,7 +32,7 @@ input, select{
 <div class="card">
 <input id="producto" placeholder="Producto (ej: Trigo, Cerámicos)">
 <input id="origen" placeholder="Ciudad de origen (ej: Rosario, Santa Fe)">
-<input id="destino" placeholder="Ciudad de destino (ej: Córdoba, Cordoba)">
+<input id="destino" placeholder="Ciudad de destino (ej: Córdoba, Córdoba)">
 <input id="distancia" placeholder="Distancia KM (Se calcula automáticamente)" readonly style="background:#334155; font-weight:bold;">
 <input id="valor" placeholder="Valor del viaje ($)">
 <select id="tipoCarga">
@@ -95,10 +44,9 @@ input, select{
 </select>
 <input id="cantidad" placeholder="Cantidad (toneladas / bultos / pallets / pies)">
 
-<!-- 🗺️ EL MAPA VISUAL SE MOSTRARÁ AQUÍ -->
 <div id="map"></div>
 
-<!-- 🔒 CAMPOS OCULTOS PARA ALMACENAR LAS COORDENADAS REQUISITO -->
+<!-- 🔒 CAMPOS OCULTOS REQUISITO -->
 <input type="hidden" id="origenLat">
 <input type="hidden" id="origenLng">
 <input type="hidden" id="destinoLat">
@@ -121,11 +69,10 @@ input, select{
 <input id="direccionCarga" placeholder="Dirección de Carga">
 </div>
 
-<!-- 📦 SCRIPTS SEGUROS DEL MAPA -->
+<!-- 📦 SCRIPTS DEL MAPA -->
 <script src="https://unpkg.com"></script>
 
 <script>
-// Inicializar el mapa centrado en Argentina de forma segura
 const map = L.map('map').setView([-38.4161, -63.6167], 4);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap'
@@ -136,31 +83,7 @@ let marcadorDestino = null;
 let lineaRuta = null;
 
 // ======================
-// GEOLOCALIZACIÓN DE CIUDADES
-// ======================
-async function geolocalizarCiudad(nombreCiudad) {
-  const opciones = {
-    headers: { 'User-Agent': 'AppLogisticaArgentina/1.0 (contacto@tuapp.com)' }
-  };
-  const url = `https://openstreetmap.org{encodeURIComponent(nombreCiudad)}&countrycodes=ar&limit=1`;
-  
-  try {
-    const res = await fetch(url, opciones);
-    const data = await res.json();
-    if (data && data.length > 0) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lon: parseFloat(data[0].lon)
-      };
-    }
-  } catch(e) {
-    console.error("Error geolocalizando: ", e);
-  }
-  return null;
-}
-
-// ======================
-// CALCULAR DISTANCIA REAL POR CARRETERA
+// CONSULTA COORDINADA AL BACKEND (EVITA ERRORES CORS)
 // ======================
 async function calcularDistanciaPorCarretera() {
   const origenTxt = document.getElementById("origen").value.trim();
@@ -171,89 +94,49 @@ async function calcularDistanciaPorCarretera() {
     return;
   }
 
-  const opcionesSeguras = {
-    headers: { 'User-Agent': 'AppLogisticaArgentina/1.0 (contacto@tuapp.com)' }
-  };
-
   try {
-    const coordOrigen = await geolocalizarCiudad(origenTxt);
-    const coordDestino = await geolocalizarCiudad(destinoTxt);
+    // Llamamos directamente a TU SERVIDOR en Render usando el endpoint seguro que creaste
+    const res = await fetch(`/api/mapas/calcular-ruta?origen=${encodeURIComponent(origenTxt)}&destino=${encodeURIComponent(destinoTxt)}`);
+    const data = await res.json();
 
-    if (!coordOrigen || !coordDestino) {
-      alert("No se pudo encontrar una de las ubicaciones. Pruebe agregando la provincia (ej: 'Rosario, Santa Fe')");
+    if (!res.ok) {
+      alert(`⚠ ${data.error || "Error al trazar la ruta"}`);
       return;
     }
 
-    // Inyectar coordenadas en los campos ocultos para el Backend
-    document.getElementById("origenLat").value = coordOrigen.lat;
-    document.getElementById("origenLng").value = coordOrigen.lon;
-    document.getElementById("destinoLat").value = coordDestino.lat;
-    document.getElementById("destinoLng").value = coordDestino.lon;
+    // Guardamos los datos devueltos por el backend en los campos del formulario
+    document.getElementById("distancia").value = data.distanciaKm;
+    document.getElementById("origenLat").value = data.origenLat;
+    document.getElementById("origenLng").value = data.origenLng;
+    document.getElementById("destinoLat").value = data.destinoLat;
+    document.getElementById("destinoLng").value = data.destinoLng;
 
-    // Actualizar marcadores iniciales en el mapa
+    // Actualizar elementos visuales en el mapa interactivo
     if(marcadorOrigen) map.removeLayer(marcadorOrigen);
     if(marcadorDestino) map.removeLayer(marcadorDestino);
     if(lineaRuta) map.removeLayer(lineaRuta);
 
-    marcadorOrigen = L.marker([coordOrigen.lat, coordOrigen.lon]).addTo(map).bindPopup("<b>Origen:</b> " + origenTxt).openPopup();
-    marcadorDestino = L.marker([coordDestino.lat, coordDestino.lon]).addTo(map).bindPopup("<b>Destino:</b> " + destinoTxt);
+    marcadorOrigen = L.marker([data.origenLat, data.origenLng]).addTo(map).bindPopup(`<b>Origen:</b> ${origenTxt}`).openPopup();
+    marcadorDestino = L.marker([data.destinoLat, data.destinoLng]).addTo(map).bindPopup(`<b>Destino:</b> ${destinoTxt}`);
 
-    // Consultar el motor vial OSRM
-    const urlRuta = `https://project-osrm.org{coordOrigen.lon},${coordOrigen.lat};${coordDestino.lon},${coordDestino.lat}?overview=full&geometries=geojson`;
-    
-    try {
-      const resRuta = await fetch(urlRuta, opcionesSeguras);
-      const dataRuta = await resRuta.json();
+    // Trazamos una línea guía en tu mapa entre ambos puntos
+    lineaRuta = L.polyline([[data.origenLat, data.origenLng], [data.destinoLat, data.destinoLng]], {
+      color: '#2563eb',
+      weight: 5,
+      opacity: 0.7
+    }).addTo(map);
 
-      if (dataRuta.code === "Ok" && dataRuta.routes && dataRuta.routes.length > 0) {
-        const rutaReal = dataRuta.routes[0];
-        const distanciaKm = Math.round(rutaReal.distance / 1000);
-        
-        document.getElementById("distancia").value = distanciaKm;
-
-        // Dibujar ruta exacta
-        lineaRuta = L.geoJSON(rutaReal.geometry, {
-          style: { color: '#2563eb', weight: 5, opacity: 0.7 }
-        }).addTo(map);
-
-      } else {
-        throw new Error();
-      }
-
-    } catch (errorOSRM) {
-      // Escudo matemático de respaldo por si el servidor externo falla
-      const distanciaEstimada = calcularLineaRectaConCurvas(coordOrigen.lat, coordOrigen.lon, coordDestino.lat, coordDestino.lon);
-      document.getElementById("distancia").value = distanciaEstimada;
-
-      lineaRuta = L.polyline([
-        [coordOrigen.lat, coordOrigen.lon],
-        [coordDestino.lat, coordDestino.lon]
-      ], {color: '#f59e0b', weight: 4, dashArray: '5, 10'}).addTo(map);
-    }
-
-    // Corregido: Ajuste dinámico de zoom sin errores de sintaxis
-    const bounds = L.latLngBounds([coordOrigen.lat, coordOrigen.lon], [coordDestino.lat, coordDestino.lon]);
-    map.fitBounds(bounds, { padding: [50, 50] });
+    const bounds = L.latLngBounds([data.origenLat, data.origenLng], [data.destinoLat, data.destinoLng]);
+    map.fitBounds(bounds, { padding: [30, 30] });
 
   } catch (error) {
     console.error(error);
-    alert("Error general al procesar el mapa.");
+    alert("Error general procesando el ruteo a través del servidor.");
   }
 }
 
-function calcularLineaRectaConCurvas(lat1, lon1, lat2, lon2) {
-  const RadioTierra = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return Math.round((RadioTierra * c) * 1.16); 
-}
-
 // ======================
-// CALCULAR FLETE AUTOMÁTICO (REPARADO Y RE-ESTABLECIDO)
+// CALCULAR FLETE AUTOMÁTICO
 // ======================
 function calcularFlete() {
   const distancia = Number(document.getElementById("distancia").value);
@@ -264,11 +147,8 @@ function calcularFlete() {
     return;
   }
 
-  // Lógica comercial base: Tarifa estimada de $180 por kilómetro por tonelada/bulto
   const tarifaPorKmPorBulto = 180; 
   const precioSugerido = distancia * cantidad * tarifaPorKmPorBulto;
-
-  // Inyectar el resultado matemático directamente en el campo "Valor del viaje"
   document.getElementById("valor").value = Math.round(precioSugerido);
 }
 
@@ -298,10 +178,6 @@ async function cargarCargas(){
         <b>Precio:</b> $${c.valor}<br>
         <b>Distancia:</b> ${c.distanciaKm || 0} km<br>
         <b>Estado:</b> <span class="estado ${estadoClass}">${c.estado}</span><br><br>
-
-        // ======================
-// BOTONES Y LISTADO DE CARGAS VINCULADAS
-// ======================
         <button class="ver" onclick="pagarAdelanto('${c._id}')">💳 Pagar Adelanto</button>
         <button class="eliminar" onclick="eliminarCarga('${c._id}')">Eliminar</button>
       </div>
@@ -313,7 +189,7 @@ async function cargarCargas(){
 // ======================
 // CREAR CARGA
 // ======================
-async function crearCarga() {
+async function crearCarga(){
   const producto = document.getElementById("producto").value;
   const origen = document.getElementById("origen").value;
   const destino = document.getElementById("destino").value;
@@ -325,7 +201,7 @@ async function crearCarga() {
   const nombre = document.getElementById("nombreApellido").value;
   const comercio = document.getElementById("comercio").value;
   const cuitInput = document.getElementById("cuit").value;
-  const cuit = cuitInput.trim().replace(/\D/g, "");
+  const cuit = cuitInput.trim().replace(/\D/g,""); 
   const telefono = document.getElementById("telefono").value;
   const direccionDescarga = document.getElementById("direccionDescarga").value;
   const direccionCarga = document.getElementById("direccionCarga").value;
@@ -335,21 +211,19 @@ async function crearCarga() {
   const destinoLat = document.getElementById("destinoLat").value;
   const destinoLng = document.getElementById("destinoLng").value;
 
-  if (!producto || !origen || !destino || !distancia || !valor || !tipo || !cantidad ||
-      !nombre || !comercio || !cuit || !telefono || !direccionCarga || !direccionDescarga || !origenLat) {
+  if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad||
+     !nombre||!comercio||!cuit||!telefono||!direccionCarga||!direccionDescarga||!origenLat){
     alert("⚠ Debe completar todos los datos y calcular la distancia vial antes de publicar");
     return;
   }
 
   const data = {
-    producto,
-    origen,
-    destino,
+    producto, origen, destino,
     distanciaKm: Number(distancia),
     valor: Number(valor),
-    tipoCarga: tipo,
+    tipoCarga: tipo, 
     cantidad: Number(cantidad),
-    clienteId: null,
+    clienteId: null, 
     origenLat: Number(origenLat),
     origenLng: Number(origenLng),
     destinoLat: Number(destinoLat),
@@ -363,30 +237,31 @@ async function crearCarga() {
     estado: "PENDIENTE"
   };
 
-  const res = await fetch("/trips", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
+  const res = await fetch("/trips",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
   });
 
-  if (!res.ok) { 
-    alert("❌ Error al guardar la carga"); 
-    return; 
-  }
-  
+  if(!res.ok){ alert("❌ Error al guardar la carga"); return; }
   alert("✅ Carga enviada para aprobación");
   cargarCargas();
-
+  
+  document.getElementById("producto").value = "";
+  document.getElementById("origen").value = "";
+  document.getElementById("destino").value = "";
+  document.getElementById("distancia").value = "";
+    // Limpieza de campos del formulario
   document.getElementById("producto").value = "";
   document.getElementById("origen").value = "";
   document.getElementById("destino").value = "";
   document.getElementById("distancia").value = "";
   document.getElementById("valor").value = "";
   document.getElementById("cantidad").value = "";
-}
+} // <-- Llave que cierra la función crearCarga()
 
 // ======================
-// ELIMINAR CARGA Y FUNCIONES AUXILIARES
+// FUNCIONES AUXILIARES Y ACCIONES DE CARGAS
 // ======================
 async function eliminarCarga(id) {
   if (!confirm("¿Desea eliminar esta carga?")) return;
