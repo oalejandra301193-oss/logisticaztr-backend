@@ -59,14 +59,15 @@ input, select{
   box-sizing: border-box;
 }
 
-/* 🗺️ ESTILO DEL CONTENEDOR DEL MAPA */
+/* 🗺️ CONTENEDOR DEL MAPA REPARADO CON ALTURA FIJA */
 #map {
-  height: 300px;
+  height: 350px;
   width: 100%;
   border-radius: 8px;
   margin-top: 10px;
   margin-bottom: 15px;
   border: 2px solid #334155;
+  background: #0f172a;
 }
 </style>
 </head>
@@ -135,26 +136,32 @@ let marcadorDestino = null;
 let lineaRuta = null;
 
 // ======================
-// BUSCADOR Y ENRUTADOR SEGURO DE RUTA VIAL
+// GEOLOCALIZACIÓN DE CIUDADES
 // ======================
 async function geolocalizarCiudad(nombreCiudad) {
-  // Encabezado User-Agent obligatorio para evitar bloqueos de servidores de mapas viales
   const opciones = {
     headers: { 'User-Agent': 'AppLogisticaArgentina/1.0 (contacto@tuapp.com)' }
   };
   const url = `https://openstreetmap.org{encodeURIComponent(nombreCiudad)}&countrycodes=ar&limit=1`;
   
-  const res = await fetch(url, opciones);
-  const data = await res.json();
-  if (data && data.length > 0) {
-    return {
-      lat: parseFloat(data[0].lat),
-      lon: parseFloat(data[0].lon)
-    };
+  try {
+    const res = await fetch(url, opciones);
+    const data = await res.json();
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon)
+      };
+    }
+  } catch(e) {
+    console.error("Error geolocalizando: ", e);
   }
   return null;
 }
 
+// ======================
+// CALCULAR DISTANCIA REAL POR CARRETERA
+// ======================
 async function calcularDistanciaPorCarretera() {
   const origenTxt = document.getElementById("origen").value.trim();
   const destinoTxt = document.getElementById("destino").value.trim();
@@ -164,62 +171,109 @@ async function calcularDistanciaPorCarretera() {
     return;
   }
 
+  const opcionesSeguras = {
+    headers: { 'User-Agent': 'AppLogisticaArgentina/1.0 (contacto@tuapp.com)' }
+  };
+
   try {
-    // Buscar coordenadas de origen y destino de manera segura
     const coordOrigen = await geolocalizarCiudad(origenTxt);
     const coordDestino = await geolocalizarCiudad(destinoTxt);
 
     if (!coordOrigen || !coordDestino) {
-      alert("No se pudo encontrar una de las ubicaciones. Escriba Ciudad y Provincia (ej: 'Rosario, Santa Fe')");
+      alert("No se pudo encontrar una de las ubicaciones. Pruebe agregando la provincia (ej: 'Rosario, Santa Fe')");
       return;
     }
 
-    // Inyectar coordenadas en los campos ocultos para el Backend MongoDB
+    // Inyectar coordenadas en los campos ocultos para el Backend
     document.getElementById("origenLat").value = coordOrigen.lat;
     document.getElementById("origenLng").value = coordOrigen.lon;
     document.getElementById("destinoLat").value = coordDestino.lat;
     document.getElementById("destinoLng").value = coordDestino.lon;
 
-    // Consultar el motor de carreteras viales OSRM
+    // Actualizar marcadores iniciales en el mapa
+    if(marcadorOrigen) map.removeLayer(marcadorOrigen);
+    if(marcadorDestino) map.removeLayer(marcadorDestino);
+    if(lineaRuta) map.removeLayer(lineaRuta);
+
+    marcadorOrigen = L.marker([coordOrigen.lat, coordOrigen.lon]).addTo(map).bindPopup("<b>Origen:</b> " + origenTxt).openPopup();
+    marcadorDestino = L.marker([coordDestino.lat, coordDestino.lon]).addTo(map).bindPopup("<b>Destino:</b> " + destinoTxt);
+
+    // Consultar el motor vial OSRM
     const urlRuta = `https://project-osrm.org{coordOrigen.lon},${coordOrigen.lat};${coordDestino.lon},${coordDestino.lat}?overview=full&geometries=geojson`;
-    const resRuta = await fetch(urlRuta);
-    const dataRuta = await resRuta.json();
+    
+    try {
+      const resRuta = await fetch(urlRuta, opcionesSeguras);
+      const dataRuta = await resRuta.json();
 
-    if (dataRuta.code === "Ok" && dataRuta.routes.length > 0) {
-      const rutaReal = dataRuta.routes[0];
-      const distanciaKm = Math.round(rutaReal.distance / 1000);
-      
-      // Asignar los kilómetros reales al campo visible
-      document.getElementById("distancia").value = distanciaKm;
+      if (dataRuta.code === "Ok" && dataRuta.routes && dataRuta.routes.length > 0) {
+        const rutaReal = dataRuta.routes[0];
+        const distanciaKm = Math.round(rutaReal.distance / 1000);
+        
+        document.getElementById("distancia").value = distanciaKm;
 
-      // Actualizar mapa visual interactivo limpiando capas anteriores
-      if(marcadorOrigen) map.removeLayer(marcadorOrigen);
-      if(marcadorDestino) map.removeLayer(marcadorDestino);
-      if(lineaRuta) map.removeLayer(lineaRuta);
+        // Dibujar ruta exacta
+        lineaRuta = L.geoJSON(rutaReal.geometry, {
+          style: { color: '#2563eb', weight: 5, opacity: 0.7 }
+        }).addTo(map);
 
-      marcadorOrigen = L.marker([coordOrigen.lat, coordOrigen.lon]).addTo(map).bindPopup("<b>Origen:</b> " + origenTxt).openPopup();
-      marcadorDestino = L.marker([coordDestino.lat, coordDestino.lon]).addTo(map).bindPopup("<b>Destino:</b> " + destinoTxt);
-      
-      // Dibujar la traza exacta de la ruta argentina en el mapa
-      lineaRuta = L.geoJSON(rutaReal.geometry, {
-        style: { color: '#2563eb', weight: 5, opacity: 0.7 }
-      }).addTo(map);
+      } else {
+        throw new Error();
+      }
 
-      // Zoom automático adaptado a la extensión del viaje de flete
-      const bounds = L.latLngBounds([coordOrigen.lat, coordOrigen.lon], [coordDestino.lat, coordDestino.lon]);
-      map.fitBounds(bounds, { padding: [50, 50] });
+    } catch (errorOSRM) {
+      // Escudo matemático de respaldo por si el servidor externo falla
+      const distanciaEstimada = calcularLineaRectaConCurvas(coordOrigen.lat, coordOrigen.lon, coordDestino.lat, coordDestino.lon);
+      document.getElementById("distancia").value = distanciaEstimada;
 
-    } else {
-      alert("No se encontró una ruta vial directa entre las ciudades.");
+      lineaRuta = L.polyline([
+        [coordOrigen.lat, coordOrigen.lon],
+        [coordDestino.lat, coordDestino.lon]
+      ], {color: '#f59e0b', weight: 4, dashArray: '5, 10'}).addTo(map);
     }
+
+    // Corregido: Ajuste dinámico de zoom sin errores de sintaxis
+    const bounds = L.latLngBounds([coordOrigen.lat, coordOrigen.lon], [coordDestino.lat, coordDestino.lon]);
+    map.fitBounds(bounds, { padding: [50, 50] });
+
   } catch (error) {
     console.error(error);
-    alert("Error de comunicación con el mapa. Intente nuevamente.");
+    alert("Error general al procesar el mapa.");
   }
 }
 
+function calcularLineaRectaConCurvas(lat1, lon1, lat2, lon2) {
+  const RadioTierra = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return Math.round((RadioTierra * c) * 1.16); 
+}
+
 // ======================
-// Cargar cargas vinculadas por CUIT
+// CALCULAR FLETE AUTOMÁTICO (REPARADO Y RE-ESTABLECIDO)
+// ======================
+function calcularFlete() {
+  const distancia = Number(document.getElementById("distancia").value);
+  const cantidad = Number(document.getElementById("cantidad").value);
+
+  if (!distancia || !cantidad) {
+    alert("⚠ Primero ingrese la cantidad y calcule la distancia vial.");
+    return;
+  }
+
+  // Lógica comercial base: Tarifa estimada de $180 por kilómetro por tonelada/bulto
+  const tarifaPorKmPorBulto = 180; 
+  const precioSugerido = distancia * cantidad * tarifaPorKmPorBulto;
+
+  // Inyectar el resultado matemático directamente en el campo "Valor del viaje"
+  document.getElementById("valor").value = Math.round(precioSugerido);
+}
+
+// ======================
+// CARGAR CARGAS VINCULADAS POR CUIT
 // ======================
 async function cargarCargas(){
   const cuitInput = document.getElementById("cuit").value;
@@ -244,6 +298,10 @@ async function cargarCargas(){
         <b>Precio:</b> $${c.valor}<br>
         <b>Distancia:</b> ${c.distanciaKm || 0} km<br>
         <b>Estado:</b> <span class="estado ${estadoClass}">${c.estado}</span><br><br>
+
+        // ======================
+// BOTONES Y LISTADO DE CARGAS VINCULADAS
+// ======================
         <button class="ver" onclick="pagarAdelanto('${c._id}')">💳 Pagar Adelanto</button>
         <button class="eliminar" onclick="eliminarCarga('${c._id}')">Eliminar</button>
       </div>
@@ -253,9 +311,9 @@ async function cargarCargas(){
 }
 
 // ======================
-// Crear carga (Alineado con el Backend)
+// CREAR CARGA
 // ======================
-async function crearCarga(){
+async function crearCarga() {
   const producto = document.getElementById("producto").value;
   const origen = document.getElementById("origen").value;
   const destino = document.getElementById("destino").value;
@@ -267,7 +325,7 @@ async function crearCarga(){
   const nombre = document.getElementById("nombreApellido").value;
   const comercio = document.getElementById("comercio").value;
   const cuitInput = document.getElementById("cuit").value;
-  const cuit = cuitInput.trim().replace(/\D/g,""); 
+  const cuit = cuitInput.trim().replace(/\D/g, "");
   const telefono = document.getElementById("telefono").value;
   const direccionDescarga = document.getElementById("direccionDescarga").value;
   const direccionCarga = document.getElementById("direccionCarga").value;
@@ -277,76 +335,71 @@ async function crearCarga(){
   const destinoLat = document.getElementById("destinoLat").value;
   const destinoLng = document.getElementById("destinoLng").value;
 
-  if(!producto||!origen||!destino||!distancia||!valor||!tipo||!cantidad||
-     !nombre||!comercio||!cuit||!telefono||!direccionCarga||!direccionDescarga||!origenLat){
-      alert("Por favor, complete todos los campos y calcule la distancia antes de publicar la carga.");
-      return;
-     }
+  if (!producto || !origen || !destino || !distancia || !valor || !tipo || !cantidad ||
+      !nombre || !comercio || !cuit || !telefono || !direccionCarga || !direccionDescarga || !origenLat) {
+    alert("⚠ Debe completar todos los datos y calcular la distancia vial antes de publicar");
+    return;
+  }
 
-     const data = {
-    producto, 
-    origen, 
+  const data = {
+    producto,
+    origen,
     destino,
     distanciaKm: Number(distancia),
     valor: Number(valor),
-    tipoCarga: tipo, 
+    tipoCarga: tipo,
     cantidad: Number(cantidad),
-    
-    // Al no haber cuenta de usuario, se envía null
-    clienteId: null, 
-    
-    // Coordenadas geográficas obligatorias para el mapa y consultas geoespaciales
+    clienteId: null,
     origenLat: Number(origenLat),
     origenLng: Number(origenLng),
     destinoLat: Number(destinoLat),
     destinoLng: Number(destinoLng),
-    
-    // Datos de contacto comerciales
     clienteNombre: nombre,
     clienteComercio: comercio,
     clienteCUIT: cuit,
     clienteTelefono: telefono,
-    
-    // Propiedades de recolección y entrega
     direccionDescarga,
     direccionCarga,
     estado: "PENDIENTE"
   };
 
-  // Envío de la información al servidor mediante POST
-  const res = await fetch("/trips",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
+  const res = await fetch("/trips", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
   });
 
-  if(!res.ok){ 
-    alert("❌ Error al guardar la carga en el servidor"); 
+  if (!res.ok) { 
+    alert("❌ Error al guardar la carga"); 
     return; 
   }
   
-  alert("✅ Carga enviada para aprobación de forma exitosa");
-  
-  // Actualizar la lista inferior de viajes del cliente
+  alert("✅ Carga enviada para aprobación");
   cargarCargas();
-  
-  // Limpiar el formulario de la carga (Mantiene los datos del cliente por comodidad)
+
   document.getElementById("producto").value = "";
   document.getElementById("origen").value = "";
   document.getElementById("destino").value = "";
   document.getElementById("distancia").value = "";
   document.getElementById("valor").value = "";
   document.getElementById("cantidad").value = "";
-} //
+}
 
-async function eliminarCarga(id){
-  if(!confirm("¿Desea eliminar esta carga?")) return;
-  await fetch("/trips/"+id,{method:"DELETE"});
+// ======================
+// ELIMINAR CARGA Y FUNCIONES AUXILIARES
+// ======================
+async function eliminarCarga(id) {
+  if (!confirm("¿Desea eliminar esta carga?")) return;
+  await fetch("/trips/" + id, { method: "DELETE" });
   cargarCargas();
 }
 
-function verViaje() { alert("Función Ver Viaje activa"); }
-function calcularFlete() { alert("Función Calcular Flete activa"); }
-function pagarAdelanto(id) { alert("Redirección a pasarela de pago para la carga: " + id); }
-</script>
+function verViaje() { 
+  alert("Función Ver Viaje activa"); 
+}
+
+function pagarAdelanto(id) { 
+  alert("Redirección a pasarela de pago para la carga: " + id); 
+}
+
 
