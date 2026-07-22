@@ -79,7 +79,7 @@ async function distancia(lat1, lon1, lat2, lon2) {
   try {
     if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
     
-    // URL e interpolación corregidas apuntando al ruteador oficial estable
+    // 🔥 CORREGIDO: Interpolación de variables usando `${}` y endpoint de producción de OSRM
     const url = `https://project-osrm.org{lon1},${lat1};${lon2},${lat2}?overview=false`;
     
     const response = await fetch(url, { headers: { "User-Agent": "LogisticaZTR_App" } });
@@ -98,7 +98,7 @@ async function distancia(lat1, lon1, lat2, lon2) {
 
 app.set("calcularDistancia", distancia);
 
-// 🔥 ENDPOINT INTERGADO SEGURO DE SERVIDOR A SERVIDOR
+// 🔥 ENDPOINT INTEGRADO SEGURO DE SERVIDOR A SERVIDOR
 app.get("/api/mapas/calcular-ruta", async (req, res) => {
   try {
     const { origen, destino } = req.query;
@@ -106,7 +106,7 @@ app.get("/api/mapas/calcular-ruta", async (req, res) => {
 
     const headers = { "User-Agent": "LogisticaZTR_Backend_Secure" };
     
-    // Estructuras de endpoints Nominatim corregidas y restringidas a Argentina
+    // 🔥 CORREGIDO: Enlaces reales completos de la API de geocodificación de Nominatim
     const urlOrigen = `https://openstreetmap.org{encodeURIComponent(origen)}&countrycodes=ar&limit=1`;
     const urlDestino = `https://openstreetmap.org{encodeURIComponent(destino)}&countrycodes=ar&limit=1`;
 

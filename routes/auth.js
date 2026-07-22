@@ -96,39 +96,48 @@ res.json({
 
 });
 
-// REGISTRO CLIENTE
-router.post("/cliente/register", async (req,res)=>{
+// ==========================================
+// REGISTRO CLIENTE (REPARADO Y SINCRO CON MODELO)
+// ==========================================
+router.post("/cliente/register", async (req, res) => {
+  try {
+    // 🔥 CORREGIDO: Se extraen las propiedades reales del formulario: direccionCarga y direccionDescarga
+    const { nombre, cuit, email, password, telefono, direccionCarga, direccionDescarga } = req.body;
 
-try{
+    // Control adicional de seguridad para que el CUIT tampoco se duplique en MongoDB Atlas
+    const existeEmail = await Cliente.findOne({ email });
+    if (existeEmail) {
+      return res.status(400).send("El correo electrónico ya se encuentra registrado");
+    }
 
-const {nombre,cuit,email,password,telefono,direccion} = req.body;
+    const existeCuit = await Cliente.findOne({ cuit });
+    if (existeCuit) {
+      return res.status(400).send("El número de CUIT comercial ya se encuentra registrado");
+    }
 
-const existe = await Cliente.findOne({email});
+    const hash = await bcrypt.hash(password, 10);
 
-if(existe){
-return res.status(400).send("Cliente ya existe");
-}
+    // 🔥 CORREGIDO: Mapeo exacto alineado al ClientSchema (Primer Archivo)
+    const nuevo = new Cliente({
+      nombre,
+      cuit,
+      email,
+      password: hash,
+      telefono,
+      direccionCarga: direccionCarga || direccionDescarga, // Soporte en caso de que un campo llegue vacío
+      direccionDescarga: direccionDescarga || direccionCarga,
+      comercio: nombre, // Valor por defecto inicial para evitar campos obligatorios nulos
+      viajes: 0,
+      archivos: []
+    });
 
-const hash = await bcrypt.hash(password,10);
+    await nuevo.save();
+    res.json({ ok: true });
 
-const nuevo = new Cliente({
-  nombre,
-  cuit,
-  email,
-  password:hash,
-  telefono,
-  direccion
-});
-
-await nuevo.save();
-
-res.json({ok:true});
-
-}catch(err){
-console.error(err);
-res.status(500).send("Error registrando cliente");
-}
-
+  } catch (err) {
+    console.error("❌ Error interno en registro de base de datos:", err);
+    res.status(500).send("Error interno del servidor al procesar el alta comercial");
+  }
 });
 
 router.post("/chofer/register", async (req,res)=>{
