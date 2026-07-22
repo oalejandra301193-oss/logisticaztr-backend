@@ -1,18 +1,19 @@
 const mongoose = require("mongoose");
 
 const ClientSchema = new mongoose.Schema({
-
   nombre: String,
   telefono: String,
   cuit: String,
+  
+  // Soporte dinámico para evitar que Mongoose rechace el registro si viene unificado
+  direccion: String, 
 
-  // 🔥 NUEVOS CAMPOS (CLAVE)
-  comercio: String,
-  direccionCarga: String,
-  direccionDescarga: String,
-  logo: String,
+  // 🔥 CAMPOS LOGÍSTICOS CON VALOR POR DEFECTO INICIAL
+  comercio: { type: String, default: "" },
+  direccionCarga: { type: String, default: "" },
+  direccionDescarga: { type: String, default: "" },
+  logo: { type: String, default: "" },
 
-  // 🔥 LOGIN
   email: String,
   password: String,
 
@@ -30,7 +31,6 @@ const ClientSchema = new mongoose.Schema({
     type: [String],
     default: []
   }
-
 });
 
 module.exports = mongoose.model("Client", ClientSchema);
