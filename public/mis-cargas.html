@@ -205,7 +205,7 @@ async function pagarAdelanto(id){
     }
 
     // 🔥 SOLUCIÓN: Redirección directa hacia la interfaz oficial de pagos en modo de prueba (Sandbox)
-    window.location.href = `https://paypal.com{data.id}`;
+    window.location.href = `https://paypal.com${data.id}`;
 
   }catch(err){
     console.error(err);
